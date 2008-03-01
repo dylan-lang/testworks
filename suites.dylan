@@ -172,6 +172,8 @@ define method execute-component
 	  add!(subresults, subresult)
 	end;
 	case
+          empty?(subresults) =>
+            #"not-implemented";
 	  every?(method (subresult)
 		   let status = subresult.result-status;
 		   status = #"passed" | status = #"not-executed"
@@ -186,3 +188,12 @@ define method execute-component
       end;
   values(subresults, status)
 end method execute-component;
+
+define method make-result
+    (suite :: <suite>, subresults :: <sequence>, status :: <result-status>)
+ => (result :: <component-result>)
+  make(<suite-result>,
+       name:         suite.component-name,
+       status:       status,
+       subresults:   subresults)
+end method make-result;

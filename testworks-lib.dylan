@@ -67,6 +67,7 @@ define module testworks
   // Tests
   export <test>,
          test-definer,
+         <test-unit>,
          \with-test-unit,
          test-function,
          perform-test,
@@ -104,6 +105,7 @@ define module testworks
          do-results,
 
          <check-result>,
+         <test-unit-result>,
          <benchmark-result>,
          $benchmark-result-divider,
          print-one-benchmark-result,
@@ -139,6 +141,5 @@ define module testworks
          do-check,
          do-check-condition,
          do-benchmark,
-         record-test-unit-crash,
          print-failure-reason;
 end module testworks;

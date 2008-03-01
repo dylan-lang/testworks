@@ -46,23 +46,26 @@ end method do-results;
 define method count-results
     (result :: <result>, #key test = always(#t))
  => (passes :: <integer>, failures :: <integer>, 
-     not-executed :: <integer>, crashes :: <integer>)
-  let passes        = 0;
-  let failures      = 0;
-  let not-executed  = 0;
-  let crashes       = 0;
+     not-executed :: <integer>, not-implemented :: <integer>,
+     crashes :: <integer>)
+  let passes          = 0;
+  let failures        = 0;
+  let not-executed    = 0;
+  let not-implemented = 0;
+  let crashes         = 0;
   do-results
     (method (result)
        select (result.result-status)
-	 #"passed"       => passes       := passes       + 1;
-	 #"failed"       => failures     := failures     + 1;
-	 #"not-executed" => not-executed := not-executed + 1;
-	 otherwise       => crashes      := crashes      + 1;
+	 #"passed"          => passes          := passes       + 1;
+	 #"failed"          => failures        := failures     + 1;
+	 #"not-executed"    => not-executed    := not-executed + 1;
+	 #"not-implemented" => not-implemented := not-implemented + 1;
+	 otherwise          => crashes         := crashes      + 1;
        end
      end,
      result,
      test: test);
-  values(passes, failures, not-executed, crashes)
+  values(passes, failures, not-executed, not-implemented, crashes)
 end method count-results;
 
 /*
@@ -232,17 +235,17 @@ define method print-result-summary
     (result :: <result>, name :: <string>,
      #key test = always(#t))
  => ()
-  let (passes, failures, not-executed, crashes)
+  let (passes, failures, not-executed, not-implemented, crashes)
     = count-results(result, test: test);
-  let total-results = passes + failures + crashes;
+  let total-results = passes + failures + not-implemented + crashes;
   test-output("  Ran %d %s%s %d passed (",
 	      total-results,
 	      name,
 	      if (total-results == 1) ": " else "s: " end,
 	      passes);
   print-percentage(passes, total-results);
-  test-output("), %d failed, %d not executed, %d crashed\n",
-	      failures, not-executed, crashes);
+  test-output("), %d failed, %d not executed, %d not implemented, %d crashed\n",
+	      failures, not-executed, not-implemented, crashes);
 end method print-result-summary;
 
 define method print-result-class-summary 
@@ -311,7 +314,7 @@ define method failures-report-function (result :: <result>) => ()
         (result, 
          test: method (result)
                  let status = result.result-status;
-                 status == #"failed" | instance?(status, <error>)
+                 status ~== #"passed" & status ~== #"not-executed"
                end);
       test-output("\n");
   end;

@@ -21,7 +21,11 @@ define constant <check-value-type>
 /// Result handling
 
 define constant <result-status>
-  = type-union(one-of(#"passed", #"failed", #"not-executed"), <error>);
+  = type-union(one-of(#"passed",
+                      #"failed",
+                      #"not-executed",
+                      #"not-implemented"),
+               <error>);
 
 define method status-name
     (status :: <result-status>) => (name :: <string>)
@@ -29,6 +33,7 @@ define method status-name
     #"passed"       => "passed";
     #"failed"       => "failed";
     #"not-executed" => "not executed";
+    #"not-implemented" => "not implemented";
     otherwise       => "crashed";
   end
 end method status-name;

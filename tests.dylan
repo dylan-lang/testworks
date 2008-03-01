@@ -12,7 +12,12 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define class <test> (<component>)
   constant slot test-function :: <function>, 
     required-init-keyword: function:;
+  constant slot test-allow-empty? :: <boolean>,
+    init-value: #f, init-keyword: allow-empty:;
 end class <test>;
+
+define class <test-unit> (<test>)
+end class <test-unit>;
 
 define constant $test-objects-table = make(<table>);
 
@@ -34,6 +39,14 @@ end;
 define method result-type-name
     (result :: <check-result>) => (name :: <string>)
   "Check"
+end;
+
+define class <test-unit-result> (<test-result>, <unit-result>)
+end;
+
+define method result-type-name
+    (result :: <test-unit-result>) => (name :: <string>)
+  "Test unit"
 end;
 
 define class <benchmark-result> (<unit-result>)
@@ -75,19 +88,16 @@ end macro test-definer;
 
 // with-test-unit macro
 
-//---*** Can we do something better than pretend this was a check?
-define method record-test-unit-crash
-    (name :: <string>, error :: <error>) => ()
-  let unit-name :: <byte-string>
-    = concatenate-as(<byte-string>, "Test unit ", name);
-  record-check(unit-name, error, error, #f)
-end method record-test-unit-crash;
-
 define macro with-test-unit
   { with-test-unit (?name:expression, ?keyword-args:*) ?test-body:body end }
     => { begin
-           let error = maybe-trap-errors(begin ?test-body; #f end);
-           error & record-test-unit-crash(?name, error)
+           let test
+             = make(<test-unit>,
+                    name: concatenate("Test unit ", ?name),
+                    function: method () ?test-body end,
+                    ?keyword-args);
+           let result = perform-test(test, report-function: #f);
+           *check-recording-function*(result);
          end; }
 end macro with-test-unit;
 
@@ -162,6 +172,8 @@ define method execute-component
         case
           instance?(error, <error>) =>
             error;
+          empty?(subresults) & ~test.test-allow-empty? =>
+            #"not-implemented";
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
                    result.result-status == #"passed"
                  end, 
@@ -173,6 +185,26 @@ define method execute-component
       end;
   values(subresults, status)
 end method execute-component;
+
+define method make-result
+    (test :: <test>, subresults :: <sequence>, status :: <result-status>)
+ => (result :: <component-result>)
+  make(<test-result>,
+       name:         test.component-name,
+       status:       status,
+       subresults:   subresults)
+end method make-result;
+
+define method make-result
+    (test :: <test-unit>, subresults :: <sequence>, status :: <result-status>)
+ => (result :: <component-result>)
+  make(<test-unit-result>,
+       name:         test.component-name,
+       status:       status,
+       subresults:   subresults,
+       operation:    test.test-function,
+       value:        #f)
+end method make-result;
 
 /// Some progress functions
 

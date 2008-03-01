@@ -98,13 +98,6 @@ define method maybe-execute-component
       else
 	values(#(), #"not-executed")
       end;
-  let result-class = select (component by instance?)
-                       <test>  => <test-result>;
-                       <suite> => <suite-result>;
-                     end;
-  make(result-class,
-       name:         component.component-name,
-       status:       perform-status,
-       subresults:   subresults)
+  make-result(component, subresults, perform-status)
 end method maybe-execute-component;
 
