@@ -130,11 +130,13 @@ define method check-protocol-class
     (protocol-spec :: <protocol-spec>, class-spec :: <class-spec>) => ()
   let title = spec-title(class-spec);
   let class = class-spec-class(class-spec);
-  with-test-unit (format-to-string("%s tests", title))
+  with-test-unit (format-to-string("class %s specification", title))
     check-instance?(format-to-string("Variable %s is a class", title),
 		    <class>, class);
     check-true(format-to-string("Variable %s has the correct superclasses", title),
 	       protocol-class-has-correct-superclasses?(protocol-spec, class));
+  end;
+  with-test-unit (format-to-string("class-test %s", title))
     check-protocol-class-instantiation(protocol-spec, class-spec);
     test-protocol-definition
       (protocol-spec, spec-name(protocol-spec), spec-name(class-spec))

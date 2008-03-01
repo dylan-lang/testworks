@@ -73,7 +73,7 @@ end method register-constant;
 define function check-protocol-variable
     (protocol-spec :: <protocol-spec>, variable-spec :: <variable-spec>) => ()
   let title = spec-title(variable-spec);
-  with-test-unit (format-to-string("%s tests", title))
+  with-test-unit (format-to-string("%s specification", title))
     check-instance?(format-to-string("Variable %s has the correct type", title),
 		    variable-spec-type(variable-spec),
 		    variable-spec-getter(variable-spec)());
@@ -81,7 +81,9 @@ define function check-protocol-variable
 	       begin
 		 let value = variable-spec-getter(variable-spec)();
 		 variable-spec-setter(variable-spec)(value) = value
-	       end);
+               end);
+  end;
+  with-test-unit (format-to-string("variable-test %s", title))
     test-protocol-definition
       (protocol-spec, spec-name(protocol-spec), spec-name(variable-spec))
   end
@@ -97,10 +99,12 @@ end function check-protocol-variables;
 define function check-protocol-constant
     (protocol-spec :: <protocol-spec>, constant :: <constant-spec>) => ()
   let title = spec-title(constant);
-  with-test-unit (format-to-string("%s tests", title))
+  with-test-unit (format-to-string("%s specification", title))
     check-instance?(format-to-string("Constant %s has the correct type", title),
 		    variable-spec-type(constant),
 		    variable-spec-getter(constant)());
+  end;
+  with-test-unit (format-to-string("constant-test %s", title))
     test-protocol-definition
       (protocol-spec, spec-name(protocol-spec), spec-name(constant))
   end

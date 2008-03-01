@@ -37,7 +37,7 @@ end method register-macro;
 define method check-protocol-macro
     (protocol-spec :: <protocol-spec>, macro-spec :: <macro-spec>) => ()
   let title = spec-title(macro-spec);
-  with-test-unit (format-to-string("%s tests", title))
+  with-test-unit (format-to-string("macro-test %s", title))
     test-protocol-definition
       (protocol-spec, spec-name(protocol-spec), spec-name(macro-spec))
   end

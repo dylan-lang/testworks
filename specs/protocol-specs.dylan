@@ -262,19 +262,19 @@ end macro protocol-spec-bindings-definer;
 
 define macro protocol-spec-suite-definer
   { define protocol-spec-suite ?protocol-name:name => ?spec:name end }
-    => { define test ?protocol-name ## "-protocol-classes-test" ()
+    => { define test ?protocol-name ## "-protocol-classes-test" (allow-empty: #t)
            check-protocol-classes(?spec)
          end;
-         define test ?protocol-name ## "-protocol-functions-test" ()
+         define test ?protocol-name ## "-protocol-functions-test" (allow-empty: #t)
            check-protocol-functions(?spec)
          end;
-         define test ?protocol-name ## "-protocol-variables-test" ()
+         define test ?protocol-name ## "-protocol-variables-test" (allow-empty: #t)
            check-protocol-variables(?spec)
          end;
-         define test ?protocol-name ## "-protocol-constants-test" ()
+         define test ?protocol-name ## "-protocol-constants-test" (allow-empty: #t)
            check-protocol-constants(?spec)
          end;
-         define test ?protocol-name ## "-protocol-macros-test" ()
+         define test ?protocol-name ## "-protocol-macros-test" (allow-empty: #t)
            check-protocol-macros(?spec)
          end;
          define suite ?protocol-name ## "-protocol-test-suite" ()

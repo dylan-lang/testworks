@@ -108,10 +108,12 @@ define function check-protocol-function
  => ()
   let title = spec-title(function-spec);
   let function = function-spec-function(function-spec);
-  with-test-unit (format-to-string("%s tests", title))
+  with-test-unit (format-to-string("%s specification", title))
     let (type, type-name) = protocol-function-type(protocol-spec, function);
     check-instance?(protocol-function-check-name(title, type-name),
 		    type, function);
+  end;
+  with-test-unit (format-to-string("function-test %s", title))
     test-protocol-definition
       (protocol-spec, spec-name(protocol-spec), spec-name(function-spec))
   end
