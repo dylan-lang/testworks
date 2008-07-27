@@ -109,8 +109,8 @@ define macro maybe-trap-errors
          else
            block ()
              maybe-trap-errors-body();
-           exception (the-error :: <error>)
-             the-error
+           exception (cond :: <condition>)
+             cond
            end;
          end; }
 end macro maybe-trap-errors; 
