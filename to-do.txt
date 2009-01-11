@@ -1,7 +1,3 @@
-* A way to designate a test category hierarchy and to run only
-  the tests up to a certain level.  Or to run exactly a specific level.
-  e.g., basic -> commit -> regress -> pound
-
 * A way to ask for a list of suites/tests/checks, optionally matching a
   substring.
 
@@ -18,3 +14,7 @@
   both a central log and to a log in the individual test directories.
   This can make it a lot easier to track down results for specific
   tests.
+
+* Is there setup/teardown support?  I forget.
+
+* Gather memory usage stats for all tests, not just benchmarks?
