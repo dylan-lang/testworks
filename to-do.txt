@@ -1,0 +1,20 @@
+* A way to designate a test category hierarchy and to run only
+  the tests up to a certain level.  Or to run exactly a specific level.
+  e.g., basic -> commit -> regress -> pound
+
+* A way to ask for a list of suites/tests/checks, optionally matching a
+  substring.
+
+* A way to debug a specific suite/test/check.  e.g., -debug "name of check"
+
+* Logging
+
+* -progress should display the test name BEFORE running it, not after.
+  And the test name should include the test hierarchy in it.
+
+* Command line should use --foo style not -foo
+
+* Ability to have a unique directory per test.  Logging should go to
+  both a central log and to a log in the individual test directories.
+  This can make it a lot easier to track down results for specific
+  tests.
