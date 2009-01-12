@@ -15,6 +15,5 @@
   This can make it a lot easier to track down results for specific
   tests.
 
-* Is there setup/teardown support?  I forget.
-
-* Gather memory usage stats for all tests, not just benchmarks?
+* Gather timing and memory usage stats for all tests, not just
+  benchmarks?
