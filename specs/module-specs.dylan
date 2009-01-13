@@ -16,7 +16,7 @@ define macro module-spec-definer
     => { define module-spec-protocol ?module-name ()
            ?specs
          end;
-         define module-spec-suite ?module-name ()
+         define module-spec-suite ?module-name (?options)
            ?specs
          end;
          }
