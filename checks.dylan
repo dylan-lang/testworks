@@ -240,8 +240,14 @@ define method print-failure-reason
      operation :: <check-operation-type>,
      value :: <check-value-type>)
  => ()
-  let reason = failure-reason(status, operation, value);
-  reason & test-output(" [%s]", reason)
+  block ()
+    let reason = failure-reason(status, operation, value);
+    if (reason)
+      test-output(" [%s]", reason);
+    end;
+  exception (ex :: <error>)
+    test-output(" [***error getting failure reason***]");
+  end;
 end method print-failure-reason;
 
 define method print-error
