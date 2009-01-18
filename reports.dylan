@@ -364,8 +364,14 @@ define method log-report-function (result :: <result>) => ()
           else
 	    let operation = result-operation(result);
 	    let value = result-value(result);
-	    let reason = failure-reason(status, operation, value);
-	    reason & test-output("Reason: %s\n", remove-newlines(reason));
+	    let reason = block ()
+                           failure-reason(status, operation, value)
+                         exception (ex :: <error>)
+                           "***error getting failure reason***"
+                         end;
+	    if (reason)
+              test-output("Reason: %s\n", remove-newlines(reason));
+            end;
             if (~reason & instance?(result, <benchmark-result>))
               test-output("Seconds: %s\nAllocation: %d bytes\n",
                           result-time(result), result-bytes(result) | 0);
