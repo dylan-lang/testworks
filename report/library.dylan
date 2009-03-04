@@ -12,20 +12,25 @@ define library testworks-report
   use io;
   use system;
   use testworks;
+  use xml-parser,
+    import: { xml-parser };
 
   export testworks-report;
 end library testworks-report;
 
 define module testworks-report
   use common-dylan;
-  use simple-io;
+  use format-out;
   use streams;
   use file-system;
   use operating-system;
   use threads,
     import: { dynamic-bind };
   use testworks;
+  use xml-parser,
+    prefix: "xml/";
 
   export read-log-file,
          perform-test-diff;
 end module testworks-report;
+
