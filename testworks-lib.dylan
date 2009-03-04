@@ -10,6 +10,8 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use common-dylan;
   use io;
+  use xml-parser,
+    import: { simple-xml, xml-parser };
 
   export testworks;
 end library testworks;
@@ -19,6 +21,8 @@ define module testworks
   use format-out;
   use threads,
     import: { dynamic-bind };
+  use simple-xml;
+  use xml-parser;
 
   // Debugging options
   export *debug?*,
@@ -55,6 +59,7 @@ define module testworks
   // Checks
   export check,
          check-condition,
+         check-no-condition,
          check-equal,
          check-false,
          check-no-errors,
@@ -124,7 +129,8 @@ define module testworks
          summary-report-function,
          failures-report-function,
          full-report-function,
-         log-report-function;
+         log-report-function,
+         xml-report-function;
 
   // Command line handling
   export run-test-application;
@@ -132,6 +138,7 @@ define module testworks
   // Internals for use by testworks-test-suite
   export $test-log-header,
          $test-log-footer,
+         $xml-version-header,
          *check-recording-function*,
          failure-reason,
          safe-error-to-string;

@@ -17,6 +17,15 @@ define constant $INVALID-REPORT-FUNCTION  = 5;
 define constant $INVALID-COMMAND-LINE-ARG = 6;
 define constant $INVALID-DEBUG-OPTION     = 7;
 
+define table $report-functions :: <string-table> = {
+    "none"     => null-report-function,
+    "full"     => full-report-function,
+    "summary"  => summary-report-function,
+    "failures" => failures-report-function,
+    "log"      => log-report-function,
+    "xml"      => xml-report-function
+    };
+
 // Encapsulates the components to be ignored
 
 define class <perform-criteria> (<perform-options>)
@@ -90,13 +99,7 @@ define method display-run-options
         full-progress-function => "full";
         null-progress-function => "none";
       end,
-      select (report-function)
-        full-report-function     => "full";
-        failures-report-function => "failures";
-        summary-report-function  => "summary";
-        null-report-function     => "none";
-        log-report-function      => "log";
-      end,
+      find-key($report-functions, curry(\=, report-function)),
       select (options.perform-debug?)
         #"crashes" => "crashes";
         #t         => "failures";
@@ -154,7 +157,7 @@ define method help-function (appname :: <string>) => ()
              "             [-debug [never | failures | crashes]]\n"
              "             [-quiet]\n"
              "             [-progress | -noprogress]\n"
-             "             [-report [none | full | failures | summary | log]]\n"
+             "             [-report [none | full | failures | summary | log | xml]]\n"
              "             [-suite <name1> <name2> ... ...]\n"
              "             [-test <name1> <name2> ... ...]\n"
              "             [-top]\n"
@@ -222,22 +225,12 @@ define method compute-application-options
         "noprogress" => 
           options.perform-progress-function := null-progress-function;
         "report" =>
-          report-function
-            := begin
-                 let function-name = pop(arguments);
-                 select (function-name by \=)
-                   "none"     => null-report-function;
-                   "full"     => full-report-function;
-                   "summary"  => summary-report-function;
-                   "failures" => failures-report-function;
-                   "log"      => log-report-function;
-                   otherwise =>
-                     application-error($INVALID-REPORT-FUNCTION,
-                                       "Report function '%s' not supported.\n"
-                                       "Use -help for available options\n",
-                                       function-name);
-                 end select
-               end;
+          let function-name = pop(arguments);
+          report-function := element($report-functions, function-name, default: #f)
+            | application-error($INVALID-REPORT-FUNCTION,
+                                "Report function '%s' not supported.\n"
+                                "Use -help for available options\n",
+                                function-name);
         "suite" =>
           run-suites
             := concatenate(run-suites, argument-value(option, arguments));
@@ -257,8 +250,6 @@ define method compute-application-options
             := concatenate(ignore-tests,  argument-value(option, arguments));
         "quiet" =>
           quiet? := #t;
-        "verbose" =>
-          quiet? := #f;
         otherwise =>
           application-warning($INVALID-COMMAND-LINE-ARG,
                               "Unknown command line keyword '%s': leaving for application.\n"
@@ -315,7 +306,7 @@ define method run-test-application
 
   // Run the appropriate test or suite
   block ()
-    unless (quiet?)
+    unless (quiet? | report-function = xml-report-function)
       display-run-options(start-suite, report-function, options)
     end;
     let result = #f;

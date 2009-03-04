@@ -65,6 +65,12 @@ define macro check-condition
                             end) }
 end macro check-condition;
 
+// Same as check-no-errors, for symmetry with check-condition...
+define macro check-no-condition
+  { check-no-condition(?check-name:expression, ?check-body:expression) }
+    => { check-true(?check-name, begin ?check-body; #t end) }
+end macro check-no-condition;
+
 define macro check-no-errors
   { check-no-errors(?check-name:expression, ?check-body:expression) }
     => { check-true(?check-name, begin ?check-body; #t end) }

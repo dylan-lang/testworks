@@ -46,7 +46,7 @@ end;
 
 define method result-type-name
     (result :: <test-unit-result>) => (name :: <string>)
-  "Test unit"
+  "Test-unit"
 end;
 
 define class <benchmark-result> (<unit-result>)
@@ -235,4 +235,4 @@ define method print-result-info
                          result.result-value)
   end
 end method print-result-info;
-    
+
