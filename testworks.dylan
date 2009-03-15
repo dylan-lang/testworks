@@ -25,7 +25,7 @@ define constant <result-status>
                       #"failed",
                       #"not-executed",
                       #"not-implemented"),
-               <error>);
+               <condition>);
 
 define method status-name
     (status :: <result-status>) => (name :: <string>)

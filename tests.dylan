@@ -168,10 +168,10 @@ define method execute-component
              options.perform-progress-function(result);
              result
            end)
-        let error = maybe-trap-errors(test.test-function());
+        let cond = maybe-trap-errors(test.test-function());
         case
-          instance?(error, <error>) =>
-            error;
+          instance?(cond, <condition>) =>
+            cond;
           empty?(subresults) & ~test.test-allow-empty? =>
             #"not-implemented";
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)

@@ -221,7 +221,7 @@ end method failure-reason;
 
 // Make two tries to get a nice error message and then give up!
 define function safe-error-to-string
-    (error :: <error>) => (string :: <string>)
+    (error :: <condition>) => (string :: <string>)
   block ()
     format-to-string("%s", error)
   exception (format-error :: <error>)
@@ -234,7 +234,7 @@ define function safe-error-to-string
 end function safe-error-to-string;
 
 define method failure-reason
-    (status :: <error>,
+    (status :: <condition>,
      operation :: <check-operation-type>,
      value :: <check-value-type>)
  => (string :: false-or(<string>))
@@ -257,7 +257,7 @@ define method print-failure-reason
 end method print-failure-reason;
 
 define method print-error
-    (error :: <error>) => ()
+    (error :: <condition>) => ()
   test-output(" [%s]", safe-error-to-string(error))
 end method print-error;
 

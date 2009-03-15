@@ -278,7 +278,7 @@ define method print-result-info
   next-method();
   let show-result? = if (test) test(result) else #t end;
   let status = result.result-status;
-  if (show-result? & instance?(status, <error>))
+  if (show-result? & instance?(status, <condition>))
     print-error(status);
   end;
   let subindent = concatenate(indent, "  ");
