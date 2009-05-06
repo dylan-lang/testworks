@@ -170,7 +170,7 @@ define method execute-component
            end)
         let cond = maybe-trap-errors(test.test-function());
         case
-          instance?(cond, <condition>) =>
+          instance?(cond, <serious-condition>) =>
             cond;
           empty?(subresults) & ~test.test-allow-empty? =>
             #"not-implemented";

@@ -156,7 +156,7 @@ define method do-check-condition
     instance?(condition-class, <error>) =>
       record-check(name, condition-class, condition-class, #f);
     otherwise =>
-      let function = check-arguments[1];
+      let body-of-check = check-arguments[1];
       let result
         = maybe-trap-errors
             (block (return)
@@ -165,7 +165,7 @@ define method do-check-condition
                      ignore(condition, next-handler);
                      return(#"passed")
                    end;
-               function();
+               body-of-check();
                #"failed"
              end);
       if (result == #"failed" & debug-failures?())
@@ -221,7 +221,7 @@ end method failure-reason;
 
 // Make two tries to get a nice error message and then give up!
 define function safe-error-to-string
-    (error :: <condition>) => (string :: <string>)
+    (error :: <serious-condition>) => (string :: <string>)
   block ()
     format-to-string("%s", error)
   exception (format-error :: <error>)
@@ -234,7 +234,7 @@ define function safe-error-to-string
 end function safe-error-to-string;
 
 define method failure-reason
-    (status :: <condition>,
+    (status :: <serious-condition>,
      operation :: <check-operation-type>,
      value :: <check-value-type>)
  => (string :: false-or(<string>))
@@ -257,7 +257,7 @@ define method print-failure-reason
 end method print-failure-reason;
 
 define method print-error
-    (error :: <condition>) => ()
+    (error :: <serious-condition>) => ()
   test-output(" [%s]", safe-error-to-string(error))
 end method print-error;
 

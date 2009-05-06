@@ -146,6 +146,7 @@ define test testworks-check-condition-test ()
 		check-condition($internal-check-name,
 				<test-error>,
 				begin
+                                  // default-handler for <warning> returns #f
 				  test-warning();
 				  success? := #t;
 				  test-error()

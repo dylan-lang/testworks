@@ -15,7 +15,7 @@ define constant <check-operation-type>
   = false-or(type-union(<function>, <error>, <string>, subclass(<condition>)));
 
 define constant <check-value-type>
-  = false-or(type-union(<sequence>, <condition>));
+  = false-or(type-union(<sequence>, <serious-condition>));
 
 
 /// Result handling
@@ -109,7 +109,7 @@ define macro maybe-trap-errors
          else
            block ()
              maybe-trap-errors-body();
-           exception (cond :: <condition>)
+           exception (cond :: <serious-condition>)
              cond
            end;
          end; }
