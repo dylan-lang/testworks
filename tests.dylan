@@ -88,6 +88,8 @@ end macro test-definer;
 
 // with-test-unit macro
 
+define thread variable *test-unit-options* = make(<perform-options>);
+
 define macro with-test-unit
   { with-test-unit (?name:expression, ?keyword-args:*) ?test-body:body end }
     => { begin
@@ -96,7 +98,8 @@ define macro with-test-unit
                     name: concatenate("Test unit ", ?name),
                     function: method () ?test-body end,
                     ?keyword-args);
-           let result = perform-test(test, report-function: #f);
+           let result = perform-component(test, *test-unit-options*,
+                                          report-function: #f);
            *check-recording-function*(result);
          end; }
 end macro with-test-unit;
@@ -167,7 +170,8 @@ define method execute-component
              add!(subresults, result);
              options.perform-progress-function(result);
              result
-           end)
+           end,
+         *test-unit-options* = options)
         let cond = maybe-trap-errors(test.test-function());
         case
           instance?(cond, <serious-condition>) =>

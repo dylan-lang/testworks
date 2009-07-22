@@ -145,6 +145,7 @@ define module testworks
 
   // Internals -- mostly due to macro hygiene failures
   export $test-objects-table,
+         *test-unit-options*,
          do-check,
          do-check-condition,
          do-benchmark,
