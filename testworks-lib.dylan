@@ -10,8 +10,6 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use common-dylan;
   use io;
-  use xml-parser,
-    import: { simple-xml, xml-parser };
 
   export testworks;
 end library testworks;
@@ -21,8 +19,6 @@ define module testworks
   use format-out;
   use threads,
     import: { dynamic-bind };
-  use simple-xml;
-  use xml-parser;
 
   // Debugging options
   export *debug?*,

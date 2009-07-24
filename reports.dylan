@@ -385,87 +385,108 @@ define method log-report-function (result :: <result>) => ()
   failures-report-function(result)
 end method log-report-function;
 
-define method generate-xml-report
-    (result :: <result>)
- => ()
-  let test-type = result-type-name(result);
-  let status = result.result-status;
-  let kids = make(<stretchy-vector>);
-  add!(kids, with-xml() name { text(result-name(result)) } end);
-  add!(kids, with-xml() status { text(status.status-name) } end);
-  if (instance?(result, <benchmark-result>))
-    add!(kids, with-xml()
-                 seconds { text(integer-to-string(result-seconds(result))) }
-               end);
-    add!(kids, with-xml()
-                 microseconds { text(integer-to-string(result-microseconds(result))) }
-               end);
-    add!(kids, with-xml()
-                 allocation { text(integer-to-string(result-bytes(result))) }
-               end);
-  end;
-  local method add-reason();
-          let operation = result-operation(result);
-          let value = result-value(result);
-          let reason = block ()
-                         failure-reason(status, operation, value)
-                       exception (ex :: <error>)
-                         "***error getting failure reason***"
-                       end;
-          if (reason)
-            add!(kids, with-xml() reason { text(reason) } end);
-          end;
-        end method;
-  if (object-class(result) = <test-unit-result>)
-    add-reason();
-    for (subresult in result-subresults(result))
-      add!(kids, generate-xml-report(subresult));
-    end;
-  elseif (instance?(result, <component-result>))
-    if (instance?(status, <error>))
-      add!(kids, with-xml() reason { text(safe-error-to-string(status)) } end);
-    end;
-    for (subresult in result-subresults(result))
-      add!(kids, generate-xml-report(subresult));
-    end
-  else
-    add-reason();
-  end;
-  make(<element>,
-       name: test-type,
-       children: kids,
-       attributes: #[])
-end method generate-xml-report;
+
+/// XML report
 
 define constant $xml-version-header
   = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>";
 
-define method xml-report-function
-    (result :: <result>) => ()
-  let pi = make(<processing-instruction>,
-                name: "xml",
-                attributes: vector(make(<attribute>,
-                                        name: "version",
-                                        value: "1.0"),
-                                   make(<attribute>,
-                                        name: "encoding",
-                                        value: "ISO-8859-1")));
-  let report = with-xml()
-                 test-report {
-                   do(collect(generate-xml-report(result)))
-                   /* failures-report-function needs to be able to output
-                      (preferably XML) to a string before this will work...
-                   summary {
-                     do (collect(with-xml()
-                                   text(failures-report-function(result))
-                                 end))
-                   }
-                   */
-                 }
-               end with-xml;
-  let doc = make(<document>,
-                 children: list(pi, report));
-  test-output("%s", doc);
-end method xml-report-function;
+define function xml-output-pcdata (text :: <string>) => ()
+  let text-size = text.size;
+  iterate loop (start = 0, i = 0)
+    if (i < text-size)
+      select (text[i])
+        '&' =>
+          test-output("%s&amp;", copy-sequence(text, start: start, end: i));
+          loop(i + 1, i + 1);
+          
+        '<' =>
+          test-output("%s&lt;", copy-sequence(text, start: start, end: i));
+          loop(i + 1, i + 1);
+          
+        '>' =>
+          test-output("%s&gt;", copy-sequence(text, start: start, end: i));
+          loop(i + 1, i + 1);
+          
+        otherwise =>
+          loop(start, i + 1);
+      end select;
+    else
+      test-output("%s",
+                  if (start = 0)
+                    text
+                  else
+                    copy-sequence(text, start: start)
+                  end);
+    end if;
+  end iterate;
+end function;
 
+define function do-xml-element (gi :: <string>, body :: <function>) => ()
+  test-output("<%s>", gi);
+  body();
+  test-output("</%s>\n", gi);
+end function;
 
+define method do-xml-result-body (result :: <result>) => ();
+  test-output("\n");
+  do-xml-element("name", curry(xml-output-pcdata, result.result-name));
+  let status = result.result-status;
+  do-xml-element("status", curry(xml-output-pcdata, status.status-name));
+end method;
+
+define method do-xml-result-body (result :: <check-result>) => ();
+  next-method();
+  let operation = result-operation(result);
+  let value = result-value(result);
+  let reason
+    = block ()
+        failure-reason(result.result-status, operation, value)
+      exception (ex :: <error>)
+        format-to-string("***error %s getting failure reason***", ex);
+      end;
+  if (reason)
+    do-xml-element("reason", curry(xml-output-pcdata, reason));
+  end if;
+end method;
+
+define method do-xml-result-body (result :: <benchmark-result>) => ();
+  next-method();
+  do-xml-element("seconds",
+                 method ()
+                   test-output("%d", result.result-seconds)
+                 end);
+  do-xml-element("microseconds",
+                 method ()
+                   test-output("%d", result.result-microseconds)
+                 end);
+  do-xml-element("allocation",
+                 method ()
+                   test-output("%d", result.result-bytes)
+                 end);
+end method;
+
+define method do-xml-result-body (result :: <component-result>) => ();
+  next-method();
+  let status = result.result-status;
+  if (instance?(status, <error>))
+    do-xml-element("reason",
+                   method ()
+                     xml-output-pcdata(safe-error-to-string(status));
+                   end);
+  end if;
+  do(do-xml-result, result-subresults(result));
+end method;
+
+define method do-xml-result (result :: <result>) => ();
+  do-xml-element(result-type-name(result), curry(do-xml-result-body, result));
+end method;
+
+define method xml-report-function (result :: <result>) => ()
+  test-output("%s\n", $xml-version-header);
+  do-xml-element("test-report",
+                 method ()
+                   test-output("\n");
+                   do-xml-result(result);
+                 end);
+end method;
