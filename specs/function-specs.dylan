@@ -207,8 +207,8 @@ define function check-protocol-function-parameters
              required.size >= actual-required-number);
 
   for (spec in required, specializer in actual-specializers, index from 0)
-    check-true(format-to-string("function %s argument %d type (%=)"
-                                  " is a supertype of the specified type (%=)",
+    check-true(format-to-string("function %s argument %d type %s"
+                                  " is a supertype of the specified type %s",
                                 title, index, specializer, spec),
                subtype?(spec, specializer));
   end for;
@@ -242,8 +242,8 @@ define function check-protocol-function-results
              actual-return-types.size <= required.size
                | rest?);
   for (spec in required, return-type in actual-return-types, index from 0)
-    check-true(format-to-string("function %s return value %d type (%=)"
-                                  " is a subtype of the specified type (%=)",
+    check-true(format-to-string("function %s return value %d type %s"
+                                  " is a subtype of the specified type %s",
                                 title, index, return-type, spec),
                subtype?(return-type, spec));
   end for;
