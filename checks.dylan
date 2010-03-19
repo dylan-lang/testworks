@@ -135,6 +135,7 @@ end method do-check;
 define method do-check-condition
     (name-function :: <function>, argument-function :: <function>) 
  => (status :: <result-status>)
+  // argument-function returns, e.g., vector(<arithmetic-error>, test-fn)
   let name = evaluate-name-function(name-function);
   let check-arguments = maybe-trap-errors(argument-function());
   let condition-class
@@ -143,7 +144,7 @@ define method do-check-condition
           (begin
              let class = check-arguments[0];
              unless (instance?(class, <class>))
-               error("Check collection class is not a class: %=", class)
+               error("check-condition class is not a class: %=", class)
              end;
              class
            end)
@@ -216,7 +217,17 @@ define method failure-reason
      operation :: subclass(<condition>),
      value :: <check-value-type>)
  => (reason :: false-or(<string>))
-  "expected condition not signaled"
+  format-to-string("condition %s was expected but no condition was signaled",
+                   operation)
+end method failure-reason;
+
+define method failure-reason
+    (status :: <serious-condition>,
+     operation :: subclass(<condition>),
+     value :: <check-value-type>)
+ => (string :: false-or(<string>))
+  format-to-string("condition %s expected, but %s was signaled",
+                   operation, status.object-class)
 end method failure-reason;
 
 // Make two tries to get a nice error message and then give up!
