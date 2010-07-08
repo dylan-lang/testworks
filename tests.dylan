@@ -172,6 +172,7 @@ define method execute-component
              result
            end,
          *test-unit-options* = options)
+        test-output("Running test %s\n", component-name(test));
         let cond = maybe-trap-errors(test.test-function());
         case
           instance?(cond, <serious-condition>) =>
