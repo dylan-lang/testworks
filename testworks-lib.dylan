@@ -10,6 +10,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use common-dylan;
   use io;
+  use system;
 
   export testworks;
 end library testworks;
@@ -17,6 +18,8 @@ end library testworks;
 define module testworks
   use common-dylan;
   use format-out;
+  use standard-io;
+  use streams;
   use threads,
     import: { dynamic-bind };
 

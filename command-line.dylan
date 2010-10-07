@@ -165,6 +165,7 @@ define method help-function (appname :: <string>) => ()
              "             [-ignore-suite <name1> <name2> ... ...]\n"
              "             [-ignore-test <name1> <name2> ... ...]\n",
              appname);
+  force-output(*standard-output*);
   exit-application($HELP);
 end method help-function;
 
@@ -328,6 +329,7 @@ define method run-test-application
                    allocation, plural(allocation));
       end if;
       format-out("\n");
+      force-output(*standard-output*);
     end profiling;
     result
   afterwards
