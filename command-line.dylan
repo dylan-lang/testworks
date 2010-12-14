@@ -157,6 +157,7 @@ define method help-function (appname :: <string>) => ()
              "             [-debug [never | failures | crashes]]\n"
              "             [-quiet]\n"
              "             [-progress | -noprogress]\n"
+             "             [-noannounce]\n"
              "             [-report [none | full | failures | summary | log | xml]]\n"
              "             [-suite <name1> <name2> ... ...]\n"
              "             [-test <name1> <name2> ... ...]\n"
@@ -221,10 +222,12 @@ define method compute-application-options
                end;
         "nodebug" => 
           options.perform-debug? := #f;
-        "progress" => 
+        "progress" =>
           options.perform-progress-function := full-progress-function;
+          options.perform-announce-function := announce-component;
         "noprogress" => 
           options.perform-progress-function := null-progress-function;
+          options.perform-announce-function := method (component) end;
         "report" =>
           let function-name = pop(arguments);
           report-function := element($report-functions, function-name, default: #f)

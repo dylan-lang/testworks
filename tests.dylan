@@ -19,6 +19,16 @@ end class <test>;
 define class <test-unit> (<test>)
 end class <test-unit>;
 
+define method component-type-name
+    (test :: <test>) => (type-name :: <string>)
+  "test"
+end;
+
+define method component-type-name
+    (test-unit :: <test-unit>) => (type-name :: <string>)
+  "test unit"
+end;
+
 define constant $test-objects-table = make(<table>);
 
 define method find-test-object
@@ -109,7 +119,7 @@ end macro with-test-unit;
 define method perform-test
     (test :: <test>,
      #key tags                     = $all,
-          announce-function        = #f,
+          announce-function        = *announce-function*,
           announce-checks?         = *announce-checks?*,
           progress-format-function = *format-function*,
           report-format-function   = *format-function*,
@@ -133,7 +143,7 @@ end method perform-test;
 define method perform-test
     (function :: <function>,
      #key tags                     = $all,
-          announce-function        = #f,
+          announce-function        = *announce-function*,
           announce-checks?         = *announce-checks?*,
           progress-format-function = *format-function*,
           report-format-function   = *format-function*,

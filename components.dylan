@@ -22,6 +22,14 @@ define class <component> (<object>)
     init-keyword: tags:;
 end class <component>;
 
+define generic component-type-name
+    (component :: <component>) => (type-name :: <string>);
+
+define method component-type-name
+    (component :: <component>) => (type-name :: <string>)
+  "component"
+end;
+
 
 /// Result handling
 

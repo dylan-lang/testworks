@@ -18,6 +18,11 @@ define class <suite> (<component>)
     init-keyword: cleanup-function:;
 end class <suite>;
 
+define method component-type-name
+    (suite :: <suite>) => (type-name :: <string>)
+  "suite"
+end;
+
 define variable *all-suites*
   = make(<suite>, 
          name: "All Defined Suites",
