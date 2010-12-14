@@ -157,7 +157,6 @@ define method help-function (appname :: <string>) => ()
              "             [-debug [never | failures | crashes]]\n"
              "             [-quiet]\n"
              "             [-progress | -noprogress]\n"
-             "             [-noannounce]\n"
              "             [-report [none | full | failures | summary | log | xml]]\n"
              "             [-suite <name1> <name2> ... ...]\n"
              "             [-test <name1> <name2> ... ...]\n"
