@@ -157,22 +157,39 @@ define method do-check-condition
       record-check(name, condition-class, condition-class, #f);
     otherwise =>
       let body-of-check = check-arguments[1];
+      let actual-condition = #f;
       let result
-        = maybe-trap-errors
-            (block (return)
-               let handler condition-class
-                 = method (condition :: <condition>, next-handler :: <function>)
-                     ignore(condition, next-handler);
-                     return(#"passed")
+        = block (return)
+            let handler <serious-condition>
+               = method (cond :: <condition>, next-handler :: <function>)
+                   actual-condition := cond;
+                   if (*debug?*)
+                     next-handler();
+                   else
+                     return(cond);
                    end;
-               body-of-check();
-               #"failed"
-             end);
+                 end;
+            let handler condition-class
+               = method (condition :: <condition>, next-handler :: <function>)
+                   ignore(condition, next-handler);
+                   return(#"passed")
+                 end;
+            body-of-check();
+            #"failed"
+          exception (r :: <simple-restart>,
+                     init-arguments: vector(format-string:, "Skip this check",
+                                            format-arguments:, #[]))
+            #"failed"
+          end block;
       if (result == #"failed" & debug-failures?())
-        break("Check condition failed: %s", name)
+        break("Check condition failed: %s (%s)",
+              name,
+              format-to-string("Expected %s to be signaled but got %s.",
+                               condition-class,
+                               actual-condition | "no error"));
       end;
       record-check(name, result, condition-class, #f)
-  end
+  end case
 end method do-check-condition;
 
 
