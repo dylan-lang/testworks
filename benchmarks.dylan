@@ -98,7 +98,9 @@ define function time-to-string
  => (seconds :: <string>)
   if (seconds & microseconds)
     format-to-string("%s.%s",
-                     integer-to-string(seconds, size: pad-seconds-to, fill: ' '),
+                     integer-to-string(seconds,
+                                       size: pad-seconds-to | 6,
+                                       fill: ' '),
                      integer-to-string(microseconds, size: 6))
   else
     "N/A"
