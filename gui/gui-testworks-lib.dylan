@@ -7,7 +7,7 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library gui-testworks
-  use functional-dylan;
+  use common-dylan;
   use testworks, export: all;
   use duim;
 
@@ -15,7 +15,7 @@ define library gui-testworks
 end library gui-testworks;
 
 define module gui-testworks
-  use functional-dylan;
+  use common-dylan;
   use testworks, export: all;
   use threads;
   use duim;
