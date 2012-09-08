@@ -6,15 +6,72 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-// constants for various application exit values
+define function parse-command-line
+    (args :: <sequence>) => (parser :: <argument-list-parser>)
+  let parser = make(<argument-list-parser>);
+  // TODO(cgay): <choice-option> = never|crashes|failures|none|#f
+  // where #f means --debug was used with no option value.
+  add-option-parser-by-type(parser,
+                            <optional-parameter-option-parser>,
+                            long-options: #("debug"),
+                            default: "no",
+                            description: "Enter the debugger on failure: "
+                              "no|crashes|failures");
+  add-option-parser-by-type(parser,
+                            <simple-option-parser>,
+                            long-options: #("progress"),
+                            negative-long-options: #("noprogress"),
+                            default: #f,
+                            description: "Show progress as tests are run.");
+  add-option-parser-by-type(parser,
+                            <simple-option-parser>,
+                            long-options: #("verbose"),
+                            negative-long-options: #("quiet"),
+                            default: #t,
+                            description: "Adjust output verbosity.");
+  add-option-parser-by-type(parser,
+                            <simple-option-parser>,
+                            long-options: #("profile"),
+                            default: #f,
+                            description: "Turn on code profiling.");
+  add-option-parser-by-type(parser,
+                            <parameter-option-parser>,
+                            long-options: #("report"),
+                            default: "failures",
+                            description: "Type of final report to generate: "
+                              "none|full|failures|summary|log|xml");
+  // TODO(cgay): Make test and suite names use one namespace or
+  // a hierarchical naming scheme these four options are reduced
+  // to tests/suites specified as regular arguments plus --ignore. 
+  add-option-parser-by-type(parser,
+                            <repeated-parameter-option-parser>,
+                            long-options: #("suite"),
+                            description: "Run only these named suites.  May be "
+                              "used multiple times.");
+  add-option-parser-by-type(parser,
+                            <repeated-parameter-option-parser>,
+                            long-options: #("test"),
+                            description: "Run only these named tests.  May be "
+                              "used multiple times.");
+  add-option-parser-by-type(parser,
+                            <repeated-parameter-option-parser>,
+                            long-options: #("ignore-suite"),
+                            description: "Ignore these named suites.  May be "
+                              "used multiple times.");
+  add-option-parser-by-type(parser,
+                            <repeated-parameter-option-parser>,
+                            long-options: #("ignore-test"),
+                            description: "Ignore these named tests.  May be "
+                              "used multiple times.");
+  add-option-parser-by-type(parser,
+                            <simple-option-parser>,
+                            long-options: #("help"),
+                            short-options: #("h"),
+                            description: "Generate this message.");
+  parse-arguments(parser, args);
+  parser
+end function parse-command-line;
 
-define constant $HELP                     = 1;
-define constant $NO-ARGUMENT-VALUE        = 2;
-define constant $SUITE-NOT-FOUND          = 3;
-define constant $TEST-NOT-FOUND           = 4;
-define constant $INVALID-REPORT-FUNCTION  = 5;
-define constant $INVALID-COMMAND-LINE-ARG = 6;
-define constant $INVALID-DEBUG-OPTION     = 7;
 
 define table $report-functions :: <string-table> = {
     "none"     => null-report-function,
@@ -39,16 +96,15 @@ define method execute-component?
      & ~member?(component, options.perform-ignore)
 end method execute-component?;
 
-define method application-error
-    (return-code :: <integer>, format-string :: <string>, #rest args) => ()
-  apply(format-out, format-string, args);
-  exit-application(return-code);
-end method application-error;
+define class <usage-error> (<format-string-condition>, <error>)
+end;
 
-define method application-warning
-    (return-code :: <integer>, format-string :: <string>, #rest args) => ()
-  apply(format-out, format-string, args);
-end method application-warning;
+define function usage-error
+    (format-string :: <string>, #rest args) => ()
+  error(make(<usage-error>,
+             format-string: format-string,
+             format-arguments: args));
+end;
 
 define method find-component
     (suite-name :: false-or(<string>), test-name :: false-or(<string>))
@@ -56,12 +112,12 @@ define method find-component
   let suite
     = if (suite-name)
         find-suite(suite-name)
-          | application-error($SUITE-NOT-FOUND, "No such suite %s\n", suite-name);
+          | usage-error("Suite not found: %s", suite-name);
       end;
   let test
     = if (test-name)
         find-test(test-name, search-suite: suite | root-suite())
-          | application-error($TEST-NOT-FOUND, "No such test %s\n", test-name);
+          | usage-error("Test not found: %s", test-name);
       end;
   test | suite;
 end method find-component;
@@ -111,182 +167,51 @@ define method display-run-options
              options.perform-ignore))
 end method display-run-options;
 
-
-/// Argument processing
-
-define constant $keyword-prefixes = #['-', '/'];
-
-define method process-argument
-    (argument :: <string>)
- => (text :: <string>, keyword? :: <boolean>)
-  if (keyword-argument?(argument))
-    values(copy-sequence(argument, start: 1), #t)
-  else
-    values(argument, #f)
-  end
-end method process-argument;
-
-define method keyword-argument? 
-    (argument :: <string>) => (keyword? :: <boolean>)
-  member?(argument[0], $keyword-prefixes)
-end method keyword-argument?;
-
-define method argument-value
-    (keyword :: <string>, arguments :: <deque>,
-     #key allow-no-arguments?)
- => (value :: <stretchy-vector>)
-  if (~allow-no-arguments?
-      & (empty?(arguments) | keyword-argument?(arguments[0])))
-    application-error($NO-ARGUMENT-VALUE,
-                      "No argument specified for keyword '%s'.\n"
-                      "Use -help for available options\n", 
-                      keyword)
-  end;
-  let value = make(<stretchy-vector>);
-  while (~empty?(arguments) & ~keyword-argument?(arguments[0]))
-    add!(value, pop(arguments))
-  end;
-  value
-end method argument-value;
-
-define method help-function (appname :: <string>) => ()
-  format-out("Application: %s\n"
-             "\n"
-             "  Arguments: [-debug | -nodebug]\n"
-             "             [-debug [never | failures | crashes]]\n"
-             "             [-quiet]\n"
-             "             [-progress | -noprogress]\n"
-             "             [-report [none | full | failures | summary | log | xml]]\n"
-             "             [-suite <name1> <name2> ... ...]\n"
-             "             [-test <name1> <name2> ... ...]\n"
-             "             [-top]\n"
-             "             [-profiling]\n"
-             "             [-ignore-suite <name1> <name2> ... ...]\n"
-             "             [-ignore-test <name1> <name2> ... ...]\n",
-             appname);
-  force-output(*standard-output*);
-  exit-application($HELP);
-end method help-function;
-
 define method compute-application-options
-    (parent :: <component>, 
-     arguments :: <sequence>)
- => (quiet? :: <boolean>,
-     profiling? :: <boolean>,
-     start-suite :: <component>, 
+    (parent :: <component>, parser :: <argument-list-parser>)
+ => (start-suite :: <component>, 
      options :: <perform-criteria>,
      report-function :: <function>)
-  let arguments        = as(<deque>, arguments);
-  let run-suites       = make(<stretchy-vector>);
-  let run-tests        = make(<stretchy-vector>);
-  let ignore-tests     = make(<stretchy-vector>);
-  let ignore-suites    = make(<stretchy-vector>);
-  let report-function  = failures-report-function;
-  let options          = make(<perform-criteria>);
-  let quiet?           = #f;
-  let profiling?       = #f;  // might want to default to #t and have -no-profiling.
+  let options = make(<perform-criteria>);
 
-  // Parse through the arguments
-  while (~empty?(arguments))
-    let argument = pop(arguments);
-    let (option, keyword?) = process-argument(argument);
-    if (keyword?)
-      select (option by \=)
-        "debug" =>
-          options.perform-debug?
-            := begin
-                 let values = argument-value(option, arguments, allow-no-arguments?: #t);
-                 select (size(values))
-                   0 =>
-                     #t;
-                   1 =>
-                     let debug-option = values[0];
-                     select (debug-option by \=)
-                       "no"       => #f;
-                       "crashes"  => #"crashes";
-                       "failures" => #t;
-                       otherwise =>
-                         application-error($INVALID-DEBUG-OPTION,
-                                           "Debug option '%s' not supported.\n"
-                                           "Use -help for available options\n",
-                                           debug-option);
-                     end;
-                   otherwise =>
-                     application-error($INVALID-DEBUG-OPTION,
-                                       "More than one debug option supplied.\n"
-                                       "Use -help for available options.\n",
-                                       values)
-                 end
-               end;
-        "nodebug" => 
-          options.perform-debug? := #f;
-        "progress" =>
-          options.perform-progress-function := full-progress-function;
-          options.perform-announce-function := announce-component;
-        "noprogress" => 
-          options.perform-progress-function := null-progress-function;
-          options.perform-announce-function := method (component) end;
-        "report" =>
-          let function-name = pop(arguments);
-          report-function := element($report-functions, function-name, default: #f)
-            | application-error($INVALID-REPORT-FUNCTION,
-                                "Report function '%s' not supported.\n"
-                                "Use -help for available options\n",
-                                function-name);
-        "suite" =>
-          run-suites
-            := concatenate(run-suites, argument-value(option, arguments));
-        "test" =>
-          run-tests 
-            := concatenate(run-tests, argument-value(option, arguments));
-        "top" =>
-          run-suites
-            := add!(run-suites, component-name(parent));
-        "profiling" =>
-          profiling? := #t;
-        "ignore-suite" =>
-          ignore-suites 
-            := concatenate(ignore-suites, argument-value(option, arguments));
-        "ignore-test" =>
-          ignore-tests 
-            := concatenate(ignore-tests,  argument-value(option, arguments));
-        "quiet" =>
-          quiet? := #t;
-        otherwise =>
-          application-warning($INVALID-COMMAND-LINE-ARG,
-                              "Unknown command line keyword '%s': leaving for application.\n"
-                              "Use -help for available options\n",
-                              option);
-          // discard any options to the invalid keyword
-          while (~empty?(arguments) & ~keyword-argument?(arguments[0]))
-            pop(arguments)
-          end;
-      end;
-    else
-      application-warning($INVALID-COMMAND-LINE-ARG,
-                          "Ignoring unexpected command line argument '%s'.\n"
-                          "Use -help for available options\n",
-                          option);
-    end
-  end while;
+  let debug = option-value-by-long-name(parser, "debug");
+  options.perform-debug?
+    := select (debug by \=)
+         #f, "no" => #f;
+         "crashes" => #"crashes";
+         #t, "failures" => #t;
+         otherwise =>
+           usage-error("Invalid --debug option: %s", debug);
+       end select;
 
-  // Determine the starting suite or test
-  let start-suite
-    = case
-        run-suites.size = 0 & run-tests.size = 0 =>
-          parent;
-        run-suites.size = 1 & run-tests.size = 0 =>
-          find-component(run-suites[0], #f);
-        run-suites.size = 0 & run-tests.size = 1 =>
-          find-component(#f, run-tests[0]);
-        otherwise =>
-          make(<suite>,
-               name: "Specified Components",
-               description: "arguments to -suite and -test",
-               components: find-component(run-suites, run-tests));
-      end case;
+  if (option-value-by-long-name(parser, "progress"))
+    options.perform-progress-function := full-progress-function;
+    options.perform-announce-function := announce-component;
+  else
+    options.perform-progress-function := null-progress-function;
+    options.perform-announce-function := method (component) end;
+  end;
+
+  let report = option-value-by-long-name(parser, "report") | "failures";
+  let report-function = element($report-functions, report, default: #f)
+    | usage-error("Invalid --report option: %s", report);
+
+  let components = find-component(option-value-by-long-name(parser, "suite"),
+                                  option-value-by-long-name(parser, "test"));
+  let start-suite = select (components.size)
+                      0 => parent;
+                      1 => components[0];
+                      otherwise =>
+                        make(<suite>,
+                             name: "Specified Components",
+                             description: "arguments to -suite and -test",
+                             components: components);
+                    end select;
+
+  let ignore-suites = option-value-by-long-name(parser, "ignore-suite");
+  let ignore-tests = option-value-by-long-name(parser, "ignore-test");
   options.perform-ignore := find-component(ignore-suites, ignore-tests);
-  values(quiet?, profiling?, start-suite, options, report-function)
+  values(start-suite, options, report-function)
 end method compute-application-options;
 
 define method run-test-application
@@ -295,20 +220,25 @@ define method run-test-application
           arguments = application-arguments(),
           report-format-function = *format-function*)
  => (result :: <result>)
-  // Process the command line arguments
-  if (arguments & ~empty?(arguments))
-    let (first-argument, keyword?) = process-argument(arguments[0]);
-    if (keyword?
-        & member?(first-argument, #["help", "?"], test: \=))
-      help-function(command-name)
-    end if;
-  end if;
-  let (quiet?, profiling?, start-suite, options, report-function) 
-    = compute-application-options(parent, arguments);
+  let parser = parse-command-line(arguments);
+  if (option-value-by-long-name(parser, "help"))
+    print-synopsis(parser, *standard-output*,
+                   usage: format-to-string("%s [options]", application-name()));
+    exit-application(0);
+  end;
+
+  let (start-suite, options, report-function)
+    = block ()
+        compute-application-options(parent, parser)
+      exception (ex :: <usage-error>)
+        format-out("%s\n", condition-to-string(ex));
+        exit-application(2);
+      end;
 
   // Run the appropriate test or suite
   block ()
-    unless (quiet? | report-function = xml-report-function)
+    if (option-value-by-long-name(parser, "verbose")
+          & (report-function ~= xml-report-function))
       display-run-options(start-suite, report-function, options)
     end;
     let result = #f;
@@ -323,7 +253,7 @@ define method run-test-application
       display-results(result,
                       report-function: report-function,
                       report-format-function: report-format-function);
-      if (profiling?)
+      if (option-value-by-long-name(parser, "profile"))
         format-out("\nTest run took %d.%s seconds, allocating %d byte%s\n",
                    cpu-time-seconds,
                    integer-to-string(cpu-time-microseconds, size: 6),

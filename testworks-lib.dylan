@@ -7,6 +7,7 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks
+  use command-line-parser;
   use common-dylan;
   use io;
   use system;
@@ -14,7 +15,10 @@ define library testworks
   export testworks;
 end library testworks;
 
+// TODO(cgay): This is in serious need of refactoring into internal
+// (%testworks) and external (testworks) modules.
 define module testworks
+  use command-line-parser;
   use common-dylan;
   use format-out;
   use standard-io;
@@ -131,7 +135,9 @@ define module testworks
          xml-report-function;
 
   // Command line handling
-  export run-test-application;
+  export compute-application-options,
+         parse-command-line,
+         run-test-application;
 
   // Internals for use by testworks-test-suite
   export $test-log-header,

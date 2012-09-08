@@ -236,4 +236,5 @@ end suite testworks-results-suite;
 define suite testworks-test-suite ()
   suite testworks-check-macros-suite;
   suite testworks-results-suite;
+  suite command-line-test-suite;
 end suite testworks-test-suite;
