@@ -6,71 +6,69 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-define function parse-command-line
-    (args :: <sequence>) => (parser :: <argument-list-parser>)
-  let parser = make(<argument-list-parser>);
+define function parse-args
+    (args :: <sequence>) => (parser :: <command-line-parser>)
+  let parser = make(<command-line-parser>);
   // TODO(cgay): <choice-option> = never|crashes|failures|none|#f
   // where #f means --debug was used with no option value.
-  add-option-parser-by-type(parser,
-                            <optional-parameter-option-parser>,
-                            long-options: #("debug"),
-                            default: "no",
-                            description: "Enter the debugger on failure: "
-                              "no|crashes|failures");
-  add-option-parser-by-type(parser,
-                            <simple-option-parser>,
-                            long-options: #("progress"),
-                            negative-long-options: #("noprogress"),
-                            default: #f,
-                            description: "Show progress as tests are run.");
-  add-option-parser-by-type(parser,
-                            <simple-option-parser>,
-                            long-options: #("verbose"),
-                            negative-long-options: #("quiet"),
-                            default: #t,
-                            description: "Adjust output verbosity.");
-  add-option-parser-by-type(parser,
-                            <simple-option-parser>,
-                            long-options: #("profile"),
-                            default: #f,
-                            description: "Turn on code profiling.");
-  add-option-parser-by-type(parser,
-                            <parameter-option-parser>,
-                            long-options: #("report"),
-                            default: "failures",
-                            description: "Type of final report to generate: "
-                              "none|full|failures|summary|log|xml");
+  add-option-by-type(parser,
+                     <optional-parameter-option>,
+                     names: #("debug"),
+                     default: "no",
+                     help: "Enter the debugger on failure: no|crashes|failures");
+  add-option-by-type(parser,
+                     <flag-option>,
+                     names: #("progress"),
+                     negative-names: #("noprogress"),
+                     default: #f,
+                     help: "Show progress as tests are run.");
+  add-option-by-type(parser,
+                     <flag-option>,
+                     names: #("verbose"),
+                     negative-names: #("quiet"),
+                     default: #t,
+                     help: "Adjust output verbosity.");
+  add-option-by-type(parser,
+                     <flag-option>,
+                     names: #("profile"),
+                     default: #f,
+                     help: "Turn on code profiling.");
+  add-option-by-type(parser,
+                     <parameter-option>,
+                     names: #("report"),
+                     default: "failures",
+                     help: "Type of final report to generate: "
+                       "none|full|failures|summary|log|xml");
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
   // to tests/suites specified as regular arguments plus --ignore. 
-  add-option-parser-by-type(parser,
-                            <repeated-parameter-option-parser>,
-                            long-options: #("suite"),
-                            description: "Run only these named suites.  May be "
-                              "used multiple times.");
-  add-option-parser-by-type(parser,
-                            <repeated-parameter-option-parser>,
-                            long-options: #("test"),
-                            description: "Run only these named tests.  May be "
-                              "used multiple times.");
-  add-option-parser-by-type(parser,
-                            <repeated-parameter-option-parser>,
-                            long-options: #("ignore-suite"),
-                            description: "Ignore these named suites.  May be "
-                              "used multiple times.");
-  add-option-parser-by-type(parser,
-                            <repeated-parameter-option-parser>,
-                            long-options: #("ignore-test"),
-                            description: "Ignore these named tests.  May be "
-                              "used multiple times.");
-  add-option-parser-by-type(parser,
-                            <simple-option-parser>,
-                            long-options: #("help"),
-                            short-options: #("h"),
-                            description: "Generate this message.");
-  parse-arguments(parser, args);
+  add-option-by-type(parser,
+                     <repeated-parameter-option>,
+                     names: #("suite"),
+                     help: "Run only these named suites.  May be "
+                       "used multiple times.");
+  add-option-by-type(parser,
+                     <repeated-parameter-option>,
+                     names: #("test"),
+                     help: "Run only these named tests.  May be "
+                       "used multiple times.");
+  add-option-by-type(parser,
+                     <repeated-parameter-option>,
+                     names: #("ignore-suite"),
+                     help: "Ignore these named suites.  May be "
+                       "used multiple times.");
+  add-option-by-type(parser,
+                     <repeated-parameter-option>,
+                     names: #("ignore-test"),
+                     help: "Ignore these named tests.  May be "
+                       "used multiple times.");
+  add-option-by-type(parser,
+                     <flag-option>,
+                     names: #("help", "h"),
+                     help: "Generate this message.");
+  parse-command-line(parser, args);
   parser
-end function parse-command-line;
+end function parse-args;
 
 
 define table $report-functions :: <string-table> = {
@@ -95,16 +93,6 @@ define method execute-component?
   next-method()
      & ~member?(component, options.perform-ignore)
 end method execute-component?;
-
-define class <usage-error> (<format-string-condition>, <error>)
-end;
-
-define function usage-error
-    (format-string :: <string>, #rest args) => ()
-  error(make(<usage-error>,
-             format-string: format-string,
-             format-arguments: args));
-end;
 
 define method find-component
     (suite-name :: false-or(<string>), test-name :: false-or(<string>))
@@ -168,13 +156,13 @@ define method display-run-options
 end method display-run-options;
 
 define method compute-application-options
-    (parent :: <component>, parser :: <argument-list-parser>)
+    (parent :: <component>, parser :: <command-line-parser>)
  => (start-suite :: <component>, 
      options :: <perform-criteria>,
      report-function :: <function>)
   let options = make(<perform-criteria>);
 
-  let debug = option-value-by-long-name(parser, "debug");
+  let debug = get-option-value(parser, "debug");
   options.perform-debug?
     := select (debug by \=)
          #f, "no" => #f;
@@ -184,7 +172,7 @@ define method compute-application-options
            usage-error("Invalid --debug option: %s", debug);
        end select;
 
-  if (option-value-by-long-name(parser, "progress"))
+  if (get-option-value(parser, "progress"))
     options.perform-progress-function := full-progress-function;
     options.perform-announce-function := announce-component;
   else
@@ -192,12 +180,12 @@ define method compute-application-options
     options.perform-announce-function := method (component) end;
   end;
 
-  let report = option-value-by-long-name(parser, "report") | "failures";
+  let report = get-option-value(parser, "report") | "failures";
   let report-function = element($report-functions, report, default: #f)
     | usage-error("Invalid --report option: %s", report);
 
-  let components = find-component(option-value-by-long-name(parser, "suite"),
-                                  option-value-by-long-name(parser, "test"));
+  let components = find-component(get-option-value(parser, "suite"),
+                                  get-option-value(parser, "test"));
   let start-suite = select (components.size)
                       0 => parent;
                       1 => components[0];
@@ -208,8 +196,8 @@ define method compute-application-options
                              components: components);
                     end select;
 
-  let ignore-suites = option-value-by-long-name(parser, "ignore-suite");
-  let ignore-tests = option-value-by-long-name(parser, "ignore-test");
+  let ignore-suites = get-option-value(parser, "ignore-suite");
+  let ignore-tests = get-option-value(parser, "ignore-test");
   options.perform-ignore := find-component(ignore-suites, ignore-tests);
   values(start-suite, options, report-function)
 end method compute-application-options;
@@ -220,8 +208,8 @@ define method run-test-application
           arguments = application-arguments(),
           report-format-function = *format-function*)
  => (result :: <result>)
-  let parser = parse-command-line(arguments);
-  if (option-value-by-long-name(parser, "help"))
+  let parser = parse-args(arguments);
+  if (get-option-value(parser, "help"))
     print-synopsis(parser, *standard-output*,
                    usage: format-to-string("%s [options]", application-name()));
     exit-application(0);
@@ -237,7 +225,7 @@ define method run-test-application
 
   // Run the appropriate test or suite
   block ()
-    if (option-value-by-long-name(parser, "verbose")
+    if (get-option-value(parser, "verbose")
           & (report-function ~= xml-report-function))
       display-run-options(start-suite, report-function, options)
     end;
@@ -253,7 +241,7 @@ define method run-test-application
       display-results(result,
                       report-function: report-function,
                       report-format-function: report-format-function);
-      if (option-value-by-long-name(parser, "profile"))
+      if (get-option-value(parser, "profile"))
         format-out("\nTest run took %d.%s seconds, allocating %d byte%s\n",
                    cpu-time-seconds,
                    integer-to-string(cpu-time-microseconds, size: 6),
