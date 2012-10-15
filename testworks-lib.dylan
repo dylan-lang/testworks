@@ -136,7 +136,8 @@ define module testworks
 
   // Command line handling
   export compute-application-options,
-         run-test-application;
+         run-test-application,
+         parse-args;
 
   // Internals for use by testworks-test-suite
   export $test-log-header,

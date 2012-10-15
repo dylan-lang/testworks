@@ -11,62 +11,62 @@ define function parse-args
   let parser = make(<command-line-parser>);
   // TODO(cgay): <choice-option> = never|crashes|failures|none|#f
   // where #f means --debug was used with no option value.
-  add-option-by-type(parser,
-                     <optional-parameter-option>,
-                     names: #("debug"),
-                     default: "no",
-                     help: "Enter the debugger on failure: no|crashes|failures");
-  add-option-by-type(parser,
-                     <flag-option>,
-                     names: #("progress"),
-                     negative-names: #("noprogress"),
-                     default: #f,
-                     help: "Show progress as tests are run.");
-  add-option-by-type(parser,
-                     <flag-option>,
-                     names: #("verbose"),
-                     negative-names: #("quiet"),
-                     default: #t,
-                     help: "Adjust output verbosity.");
-  add-option-by-type(parser,
-                     <flag-option>,
-                     names: #("profile"),
-                     default: #f,
-                     help: "Turn on code profiling.");
-  add-option-by-type(parser,
-                     <parameter-option>,
-                     names: #("report"),
-                     default: "failures",
-                     help: "Type of final report to generate: "
-                       "none|full|failures|summary|log|xml");
+  add-option(parser,
+             make(<optional-parameter-option>,
+                  names: #("debug"),
+                  default: "no",
+                  help: "Enter the debugger on failure: no|crashes|failures"));
+  add-option(parser,
+             make(<flag-option>,
+                  names: #("progress"),
+                  negative-names: #("noprogress"),
+                  default: #f,
+                  help: "Show progress as tests are run."));
+  add-option(parser,
+             make(<flag-option>,
+                  names: #("verbose"),
+                  negative-names: #("quiet"),
+                  default: #t,
+                  help: "Adjust output verbosity."));
+  add-option(parser,
+             make(<flag-option>,
+                  names: #("profile"),
+                  default: #f,
+                  help: "Turn on code profiling."));
+  add-option(parser,
+             make(<parameter-option>,
+                  names: #("report"),
+                  default: "failures",
+                  help: "Type of final report to generate: "
+                    "none|full|failures|summary|log|xml"));
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
   // to tests/suites specified as regular arguments plus --ignore. 
-  add-option-by-type(parser,
-                     <repeated-parameter-option>,
-                     names: #("suite"),
-                     help: "Run only these named suites.  May be "
-                       "used multiple times.");
-  add-option-by-type(parser,
-                     <repeated-parameter-option>,
-                     names: #("test"),
-                     help: "Run only these named tests.  May be "
-                       "used multiple times.");
-  add-option-by-type(parser,
-                     <repeated-parameter-option>,
-                     names: #("ignore-suite"),
-                     help: "Ignore these named suites.  May be "
-                       "used multiple times.");
-  add-option-by-type(parser,
-                     <repeated-parameter-option>,
-                     names: #("ignore-test"),
-                     help: "Ignore these named tests.  May be "
-                       "used multiple times.");
-  add-option-by-type(parser,
-                     <flag-option>,
-                     names: #("help", "h"),
-                     help: "Generate this message.");
-  parse-command-line(parser, args);
+  add-option(parser,
+             make(<repeated-parameter-option>,
+                  names: #("suite"),
+                  help: "Run only these named suites.  May be "
+                    "used multiple times."));
+  add-option(parser,
+             make(<repeated-parameter-option>,
+                  names: #("test"),
+                  help: "Run only these named tests.  May be "
+                    "used multiple times."));
+  add-option(parser,
+             make(<repeated-parameter-option>,
+                  names: #("ignore-suite"),
+                  help: "Ignore these named suites.  May be "
+                    "used multiple times."));
+  add-option(parser,
+             make(<repeated-parameter-option>,
+                  names: #("ignore-test"),
+                  help: "Ignore these named tests.  May be "
+                    "used multiple times."));
+  block ()
+    parse-command-line(parser, args);
+  exception (ex :: <usage-error>)
+    exit-application(2);
+  end;
   parser
 end function parse-args;
 
@@ -209,12 +209,6 @@ define method run-test-application
           report-format-function = *format-function*)
  => (result :: <result>)
   let parser = parse-args(arguments);
-  if (get-option-value(parser, "help"))
-    print-synopsis(parser, *standard-output*,
-                   usage: format-to-string("%s [options]", application-name()));
-    exit-application(0);
-  end;
-
   let (start-suite, options, report-function)
     = block ()
         compute-application-options(parent, parser)

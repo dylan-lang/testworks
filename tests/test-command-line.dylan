@@ -15,7 +15,7 @@ define test test-perform-options
                              components: #());
   for (item in args)
     let (arg, getter, expected) = apply(values, item);
-    let parser = parse-command-line(list(arg));
+    let parser = parse-args(list(arg));
     let (_, options, _)
       = compute-application-options(dummy-component, parser);
     let actual = getter(options);
