@@ -7,6 +7,7 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks-test-suite
+  use command-line-parser;
   use dylan;
   use testworks;
 
@@ -14,6 +15,7 @@ define library testworks-test-suite
 end library testworks-test-suite;
 
 define module testworks-test-suite
+  use command-line-parser;
   use dylan;
   use testworks;
 
