@@ -63,7 +63,7 @@ define function parse-args
                   help: "Ignore these named tests.  May be "
                     "used multiple times."));
   block ()
-    parse-command-line(parser, args);
+    parse-command-line(parser, args, description: "Run tests suites.");
   exception (ex :: <usage-error>)
     exit-application(2);
   end;
