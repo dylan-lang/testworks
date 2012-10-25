@@ -1,19 +1,112 @@
-* A way to ask for a list of suites/tests/checks, optionally matching a
-  substring.
+* Testworks laundry list, from
+  http://bugzilla.opendylan.org/show_bug.cgi?id=7472
 
-* A way to debug a specific suite/test/check.  e.g., -debug "name of check"
+  + TDD support -- specifically, a way to mark tests as "expected to
+    fail" so that it's feasible to commit tests for code that is not
+    yet written.
 
-* Logging
+  + Better selection/filtering -- for example, a way to mark a test as
+    "commit", "regress", "pound", and a way to run a subset of those
+    tests.  (Perhaps have a general mechanism for adding attributes to
+    tests and then selecting tests based on those attributes.)
 
-* -progress should display the test name BEFORE running it, not after.
-  And the test name should include the test hierarchy in it.
+  + Support for parallel execution of suites and/or tests.  For
+    example, by running subsets of tests in different threads or
+    processes.  (There needs to be a way to mark a test as not being
+    parallelizable.)
 
-* Command line should use --foo style not -foo
+  + Call the teardown method if there's a failure in the setup method.
+    (I don't know whether Testworks does this or not, actually.)
 
-* Ability to have a unique directory per test.  Logging should go to
-  both a central log and to a log in the individual test directories.
-  This can make it a lot easier to track down results for specific
-  tests.
+  + Ability to (optionally) generate a per-test log file.
 
-* Gather timing and memory usage stats for all tests, not just
-  benchmarks?
+  + Better reporting -- e.g., subunit/xunit output formats
+
+  + Don't crap all over the screen during a test run; use a log.
+    stdout should just display progress.  (There could be an option
+    to have the current behavior.)
+
+  + Show -progress by default, and show it BEFORE starting each test.
+    Show timing for each test as well.
+
+  + Ability to parse previous test runs and compare to find
+    regressions.  (Implies a standard place to store results, probably
+    svn.)
+
+  + Ability to re-run only the failures in a previous test run.
+
+  + Benchmark support should be integrated.  e.g., just capture the
+    time it takes for every test and add it to the report rather than
+    defining separate benchmarks.  Tracking test timings could be an
+    important way to find performance regressions.
+
+  + Add new assert-* macros that are similar to the existing check-*
+    macros but the description is optional.  Although the description
+    can be a good thing, often it's unnecessary and redundant.  For
+    example, if there's only one assertion in the test then it's
+    obvious which one failed.  Assertions can also be auto-numbered
+    within a test and that number displayed in the error message.
+    When the assertion is in a loop, a message should be supplied by
+    the author, and we'll rely on their good taste to do that.
+
+  + Add config file support.  It should be possible to use a config
+    file to specify most common options and then override those
+    options on the command-line where needed.
+
+  + Use the command-line-parser library instead of the current hand
+    hackery.
+
+  + These two additional restarts should always be available:
+
+    * Skip the remainder of this test
+    * Skip the remainder of this suite
+
+  + I really want hierarchical test names like suite1.suite2.test1
+    It's very convenient for UI purposes.
+
+  + The testworks-specs macros drive me crazy because it's hard to
+    tell/remember what the names of the tests they generate are.
+
+  + ``my-test-suite --list-tests`` and/or ``--list-suites`` and/or
+    ``--list-all`` (optionally matching a substring or regex).
+
+  + ``assert-every(f, collection)`` (and assert-none) might be useful.
+    There are a lot of tests in apply-dylan-test-suite that do
+    check-true("", every?(...)).  This could improve the failure
+    message significantly.
+
+  + Ability to define tests and suites within another suite::
+
+      define suite top ()
+        suite subsuite-1;
+        suite subsuite-2 ()
+          test ...;
+        end suite subsuite-2;
+        test test-1;
+        test test-2 ()
+          assert-equal(2, 1 + 1);
+        end test test-2;
+      end suite top;
+
+    This would be backward compatible with current define suite.
+
+  + Merge testworks-specs and testworks-reports into testworks.  One
+    thing to be aware of is dependencies this creates for building
+    testworks as part of Open Dylan.
+
+  + check/assert-equal could display a diff for any collection class.
+
+
+* Bruce Mitchener's wish list:
+
+  + For one, I'd like an HTML report with some fancy JS stuff in it to
+    make it easy to figure things out
+
+  + It should take a command line arg to log the output to a file
+    (right now you can't just redirect it)
+
+  + It should be documented how to diff reports
+
+  + We should have some sort of archive of them for released builds on
+    various platforms.
+
