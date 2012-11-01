@@ -1,6 +1,6 @@
 Module:       testworks-report
 Synopsis:     A tool to generate reports from test run logs
-Author:	      Shri Amit, Andy Armstrong
+Author:       Shri Amit, Andy Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
 License:      See License.txt in this distribution for details.
@@ -76,16 +76,16 @@ define method display-run-options
       format-out("Generating report for:\n  %s\n", log1)
     end;
     format-out("\n    Report function: %s\n",
-	       select (report-function by \=)
-		 diff-full-report-function    => "full-diff";
-		 diff-report-function         => "diff";
-		 diff-summary-report-function => "diff-summary";
+               select (report-function by \=)
+                 diff-full-report-function    => "full-diff";
+                 diff-report-function         => "diff";
+                 diff-summary-report-function => "diff-summary";
                  benchmark-diff-report-function => "benchmark-diff";
-		 summary-report-function      => "summary";
-		 failures-report-function     => "failures";
-		 full-report-function         => "full";
-		 otherwise                    => "*** unrecognised ***";
-	       end);
+                 summary-report-function      => "summary";
+                 failures-report-function     => "failures";
+                 full-report-function         => "full";
+                 otherwise                    => "*** unrecognised ***";
+               end);
     print-elements(tests,          prefix: "              Tests: ");
     print-elements(suites,         prefix: "             Suites: ");
     print-elements(ignored-tests,  prefix: "      Ignored Tests: ");
@@ -147,7 +147,7 @@ define method argument-value
   if (~allow-zero-arguments?
       & (empty?(arguments) | keyword-argument?(arguments[0])))
     invalid-argument(#"bad-argument-value",
-		     "No argument specified for keyword '%s'.\n", keyword)
+                     "No argument specified for keyword '%s'.\n", keyword)
   end;
   let value = make(<stretchy-vector>);
   while (~empty?(arguments) & ~keyword-argument?(arguments[0]))
@@ -197,37 +197,37 @@ define method parse-arguments
     let (option, keyword?) = process-argument(argument);
     select (option by \=)
       "report" =>
-	report-function
-	  := begin
-	       let function-name = pop(arguments);
-	       select (function-name by \=)
-		 "full"         => full-report-function;
-		 "summary"      => summary-report-function;
-		 "failures"     => failures-report-function;
-		 "diff"         => diff-report-function;
-		 "full-diff"    => diff-full-report-function;
-		 "diff-summary" => diff-summary-report-function;
+        report-function
+          := begin
+               let function-name = pop(arguments);
+               select (function-name by \=)
+                 "full"         => full-report-function;
+                 "summary"      => summary-report-function;
+                 "failures"     => failures-report-function;
+                 "diff"         => diff-report-function;
+                 "full-diff"    => diff-full-report-function;
+                 "diff-summary" => diff-summary-report-function;
                  "benchmark-diff" => benchmark-diff-report-function;
-		 otherwise =>
+                 otherwise =>
                    invalid-argument(#"invalid-report-function",
-				    "Report function '%s' not supported.\n",
+                                    "Report function '%s' not supported.\n",
                                      function-name);
-	       end
-	     end;
+               end
+             end;
       "suite" =>
-	suites := concatenate(suites, argument-value(option, arguments));
+        suites := concatenate(suites, argument-value(option, arguments));
       "test" =>
-	tests := concatenate(tests, argument-value(option, arguments));
+        tests := concatenate(tests, argument-value(option, arguments));
       "ignore-suite" =>
-	ignored-suites 
-	  := concatenate(ignored-suites, argument-value(option, arguments));
+        ignored-suites 
+          := concatenate(ignored-suites, argument-value(option, arguments));
       "ignore-test" =>
-	ignored-tests 
-	  := concatenate(ignored-tests,  argument-value(option, arguments));
+        ignored-tests 
+          := concatenate(ignored-tests,  argument-value(option, arguments));
       "quiet" =>
-	quiet? := #t;
+        quiet? := #t;
       "verbose" =>
-	quiet? := #f;
+        quiet? := #f;
       "tolerance" =>
         let vals = argument-value(option, arguments);
         block ()
@@ -240,8 +240,8 @@ define method parse-arguments
       otherwise =>
         case
           log1 & log2 =>
-	    invalid-argument(#"invalid-command-line-argument",
-			     "Invalid command line keyword '%s'.\n", option);
+            invalid-argument(#"invalid-command-line-argument",
+                             "Invalid command line keyword '%s'.\n", option);
           log1      => log2 := option;
           otherwise => log1 := option;
         end;
@@ -249,7 +249,7 @@ define method parse-arguments
   end;
   unless (log1)
     invalid-argument(#"missing-log-file",
-		     "Log file missing - one or two log files must be supplied\n")
+                     "Log file missing - one or two log files must be supplied\n")
   end;
   unless (report-function)
     report-function := if (log2)
@@ -341,21 +341,21 @@ define method find-named-result
   select (size(results))
     0 =>
       application-error(#"no-matching-results",
-			"No matches for tests %= or suites %=",
-			tests, suites);
+                        "No matches for tests %= or suites %=",
+                        tests, suites);
     1 =>
       results[0];
     otherwise =>
       let passed?
-	= every?(method (subresult)
-		   let status = subresult.result-status;
-		   status = #"passed" | status = #"not-executed"
-		 end,
-		 results);
+        = every?(method (subresult)
+                   let status = subresult.result-status;
+                   status = #"passed" | status = #"not-executed"
+                 end,
+                 results);
       make(<suite-result>,
-	   name: "[Specified tests/suites]",
-	   status: if (passed?) #"passed" else #"failed" end,
-	   subresults: results);
+           name: "[Specified tests/suites]",
+           status: if (passed?) #"passed" else #"failed" end,
+           subresults: results);
   end
 end method find-named-result;
 
@@ -365,7 +365,7 @@ define method main
   if (arguments & ~empty?(arguments))
     let (first-argument, keyword?) = process-argument(arguments[0]);
     if (keyword?
- 	& member?(first-argument, #["help", "?"], test: \=))
+        & member?(first-argument, #["help", "?"], test: \=))
       display-help(command-name);
       exit-application(application-exit-code(#"help"));
     end if;
@@ -386,14 +386,14 @@ define method main
             let result
               = read-log-file(log, 
                               ignored-tests: ignored-tests, 
-  			      ignored-suites: ignored-suites);
+                              ignored-suites: ignored-suites);
             if (~empty?(tests) | ~empty?(suites))
-  	      find-named-result(result,
+              find-named-result(result,
                                 tests: tests,
                                 suites: suites)
-  	    else
-  	      result
-  	    end
+            else
+              result
+            end
           exception (e :: <file-does-not-exist-error>)
             application-error(#"file-not-found", "Error: %s", e);
           end block

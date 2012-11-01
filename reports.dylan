@@ -55,11 +55,11 @@ define method count-results
   do-results
     (method (result)
        select (result.result-status)
-	 #"passed"          => passes          := passes       + 1;
-	 #"failed"          => failures        := failures     + 1;
-	 #"not-executed"    => not-executed    := not-executed + 1;
-	 #"not-implemented" => not-implemented := not-implemented + 1;
-	 otherwise          => crashes         := crashes      + 1;
+         #"passed"          => passes          := passes       + 1;
+         #"failed"          => failures        := failures     + 1;
+         #"not-executed"    => not-executed    := not-executed + 1;
+         #"not-implemented" => not-implemented := not-implemented + 1;
+         otherwise          => crashes         := crashes      + 1;
        end
      end,
      result,
@@ -148,10 +148,10 @@ define method print-benchmark-results
   let total-allocation = 0;
   let any-displayed? = #f;
   local method do-one-component (result :: <component-result>) => ()
-	  let seconds = 0;
-	  let microseconds = 0;
-	  let allocation = 0;
-	  let crashed = 0;
+          let seconds = 0;
+          let microseconds = 0;
+          let allocation = 0;
+          let crashed = 0;
           let header-displayed? = #f;
           local method maybe-display-header () => ()
                   if (~header-displayed?)
@@ -176,36 +176,36 @@ define method print-benchmark-results
                     total-allocation := total-allocation + allocation;
                   end if;
                 end method;
-	  for (bench in result-subresults(result))
-	    if (instance?(bench, <benchmark-result>))
-	      let sec = result-seconds(bench);
-	      let usec = result-microseconds(bench);
-	      let bytes = result-bytes(bench);
-	      let name = result-name(bench);
+          for (bench in result-subresults(result))
+            if (instance?(bench, <benchmark-result>))
+              let sec = result-seconds(bench);
+              let usec = result-microseconds(bench);
+              let bytes = result-bytes(bench);
+              let name = result-name(bench);
               let time = result-time(bench);
               let sbytes = result-bytes(bench) & integer-to-string(result-bytes(bench));
-	      if (result-status(bench) == #"passed")
+              if (result-status(bench) == #"passed")
                 let (newsec, newusec) = addtimes(seconds, microseconds, sec, usec);
                 seconds := newsec;
                 microseconds := newusec;
                 allocation := allocation + bytes;
               else
-		crashed := crashed + 1;
-		name := concatenate(name, " [*]");
+                crashed := crashed + 1;
+                name := concatenate(name, " [*]");
                 time := "N/A";
                 sbytes := "N/A";
-	      end if;
+              end if;
               maybe-display-header();
               print-one-benchmark-result(name, time, sbytes);
-	    end if;
-	  end for;
+            end if;
+          end for;
           maybe-display-footer();
-	  for (subresult in result-subresults(result))
-	    if (instance?(subresult, <component-result>))
-	      do-one-component(subresult);
-	    end if;
-	  end for;
-	end method;
+          for (subresult in result-subresults(result))
+            if (instance?(subresult, <component-result>))
+              do-one-component(subresult);
+            end if;
+          end for;
+        end method;
   do-one-component(result);
   if (any-displayed?)
     test-output("\n  Totals: %s seconds, %d bytes allocated.\n",
@@ -238,13 +238,13 @@ define method print-result-summary
     = count-results(result, test: test);
   let total-results = passes + failures + not-implemented + crashes;
   test-output("  Ran %d %s%s %d passed (",
-	      total-results,
-	      name,
-	      if (total-results == 1) ": " else "s: " end,
-	      passes);
+              total-results,
+              name,
+              if (total-results == 1) ": " else "s: " end,
+              passes);
   print-percentage(passes, total-results);
   test-output("), %d failed, %d not executed, %d not implemented, %d crashed\n",
-	      failures, not-executed, not-implemented, crashes);
+              failures, not-executed, not-implemented, crashes);
 end method print-result-summary;
 
 define method print-result-class-summary 
@@ -347,37 +347,37 @@ end method remove-newlines;
 
 define method log-report-function (result :: <result>) => ()
   local method generate-report (result :: <result>) => ()
-	  let test-type = result-type-name(result);
-	  test-output("\nObject: %s\n", test-type);
-	  test-output("Name: %s\n", remove-newlines(result-name(result)));
-	  test-output("Status: %s\n", status-name(result-status(result)));
-	  let status = result.result-status;
-	  if (instance?(result, <component-result>))
-	    if (instance?(status, <error>))
-	      test-output("Reason: %s\n", 
-			  remove-newlines(safe-error-to-string(status)))
-	    end;
-	    for (subresult in result-subresults(result))
-	      generate-report(subresult)
-	    end
+          let test-type = result-type-name(result);
+          test-output("\nObject: %s\n", test-type);
+          test-output("Name: %s\n", remove-newlines(result-name(result)));
+          test-output("Status: %s\n", status-name(result-status(result)));
+          let status = result.result-status;
+          if (instance?(result, <component-result>))
+            if (instance?(status, <error>))
+              test-output("Reason: %s\n", 
+                          remove-newlines(safe-error-to-string(status)))
+            end;
+            for (subresult in result-subresults(result))
+              generate-report(subresult)
+            end
           else
-	    let operation = result-operation(result);
-	    let value = result-value(result);
-	    let reason = block ()
+            let operation = result-operation(result);
+            let value = result-value(result);
+            let reason = block ()
                            failure-reason(status, operation, value)
                          exception (ex :: <error>)
                            "***error getting failure reason***"
                          end;
-	    if (reason)
+            if (reason)
               test-output("Reason: %s\n", remove-newlines(reason));
             end;
             if (~reason & instance?(result, <benchmark-result>))
               test-output("Seconds: %s\nAllocation: %d bytes\n",
                           result-time(result), result-bytes(result) | 0);
             end if;
-	  end;
-	  test-output("end\n");
-	end method generate-report;
+          end;
+          test-output("end\n");
+        end method generate-report;
   test-output("\n%s", $test-log-header);
   generate-report(result);
   test-output("\n%s\n", $test-log-footer);

@@ -21,13 +21,13 @@ define method print-status-line
     let result2 = result.comparison-result2;
     format-out("%s%s %s -- %s\n",
                indent, 
-	       result-type-name(result1 | result2),
-	       result-name(result1 | result2),
-	       if (result.comparison-identical?)
-		 "identical" 
-	       else 
-		 "differed" 
-	       end)
+               result-type-name(result1 | result2),
+               result-name(result1 | result2),
+               if (result.comparison-identical?)
+                 "identical" 
+               else 
+                 "differed" 
+               end)
   end if;
 end method print-status-line;
 
@@ -47,8 +47,8 @@ define method print-result-reason
     (name :: <string>, result :: <result>, #key indent = "") => ()
   let reason = result-failure-reason(result);
   format-out("%s  %s %s%s\n",
-	     indent, name, status-name(result.result-status),
-	     if (reason) format-to-string(" [%s]", reason) else "" end);
+             indent, name, status-name(result.result-status),
+             if (reason) format-to-string(" [%s]", reason) else "" end);
 end method print-result-reason;
 
 define method print-result-reason
@@ -180,10 +180,10 @@ define method summarize
      = count-results(result, type);
   let total = differed + identical + unique;
   format-out("   Compared %d %ss: %d differed(",
-	     total, type, differed);
+             total, type, differed);
   print-percentage(differed, total);
   format-out("), %d identical and %d unique\n",
-	     identical, unique);
+             identical, unique);
 end method summarize;
 
 
@@ -282,4 +282,3 @@ define method benchmark-diff-report-function
                *benchmark-tolerance*);
   end if;
 end method benchmark-diff-report-function;
-

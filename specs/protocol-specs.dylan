@@ -1,6 +1,6 @@
 Module:       testworks-specs
 Synopsis:     A library for building specification test suites
-Author:	      Andy Armstrong
+Author:       Andy Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
 License:      See License.txt in this distribution for details.
@@ -27,11 +27,11 @@ define method evaluate-bindings
   for (name in info.names, function in info.protocol-binding-functions)
     let (value, spec)
       = block ()
-	  function();
-	exception (<error>)
+          function();
+        exception (<error>)
           add!(unbound-bindings, as-lowercase(as(<byte-string>, name)));
           #f
-	end;
+        end;
     if (value) 
       table[value] := spec;
     end
@@ -91,7 +91,7 @@ define function protocol-definitions
   unless (class-bindings.%definitions)
     let class-definitions = protocol-bindings(class-bindings);
     do(method (definition-spec)
-	 definitions[spec-name(definition-spec)] := definition-spec
+         definitions[spec-name(definition-spec)] := definition-spec
        end,
        class-definitions)
   end;
@@ -99,7 +99,7 @@ define function protocol-definitions
   unless (function-bindings.%definitions)
     let function-definitions = protocol-bindings(function-bindings);
     do(method (definition-spec)
-	 definitions[spec-name(definition-spec)] := definition-spec
+         definitions[spec-name(definition-spec)] := definition-spec
        end,
        function-definitions)
   end;
@@ -117,7 +117,7 @@ define function do-protocol-definitions
     (function :: <function>, spec :: <protocol-spec>, type :: <type>) => ()
   do(method (binding)
        when (instance?(binding, type))
-	 function(binding)
+         function(binding)
        end
      end,
      protocol-definitions(spec))
@@ -164,16 +164,16 @@ define macro protocol-spec-bindings-definer
       ?more-specs:*
     end }
     => { register-class
-	  (?protocol-constant,
-	   ?#"class-name",
-	   method ()
-	     values(?class-name,
-		    make(<class-spec>,
-			 name: ?#"class-name",
-			 class: ?class-name,
-			 superclasses: vector(?superclasses),
-			 modifiers: vector(?modifiers)))
-	   end);
+          (?protocol-constant,
+           ?#"class-name",
+           method ()
+             values(?class-name,
+                    make(<class-spec>,
+                         name: ?#"class-name",
+                         class: ?class-name,
+                         superclasses: vector(?superclasses),
+                         modifiers: vector(?modifiers)))
+           end);
          define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
@@ -182,17 +182,17 @@ define macro protocol-spec-bindings-definer
       ?more-specs:*
     end }
     => { register-function
-	  (?protocol-constant,
-	   ?#"function-name",
-	   method ()
-	     values(?function-name,
-		    make(<function-spec>,
-			 name: ?#"function-name",
-			 function: ?function-name,
-			 parameters: vector(?parameters),
-			 results:    vector(?results),
-			 modifiers: vector(?modifiers)))
-	   end);
+          (?protocol-constant,
+           ?#"function-name",
+           method ()
+             values(?function-name,
+                    make(<function-spec>,
+                         name: ?#"function-name",
+                         function: ?function-name,
+                         parameters: vector(?parameters),
+                         results:    vector(?results),
+                         modifiers: vector(?modifiers)))
+           end);
          define protocol-spec-bindings ?protocol-constant (?options) 
            ?more-specs
          end; }
@@ -201,17 +201,17 @@ define macro protocol-spec-bindings-definer
       ?more-specs:*
     end }
     => { register-function
-	  (?protocol-constant,
-	   ?#"function-name",
-	   method ()
-	     values(?function-name,
-		    make(<function-spec>,
-			 name: ?#"function-name",
-			 function: ?function-name,
-			 parameters: vector(?parameters),
-			 results:    vector(?results),
-			 modifiers: vector(#"generic", ?modifiers)))
-	   end);
+          (?protocol-constant,
+           ?#"function-name",
+           method ()
+             values(?function-name,
+                    make(<function-spec>,
+                         name: ?#"function-name",
+                         function: ?function-name,
+                         parameters: vector(?parameters),
+                         results:    vector(?results),
+                         modifiers: vector(#"generic", ?modifiers)))
+           end);
          define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
@@ -220,15 +220,15 @@ define macro protocol-spec-bindings-definer
       ?more-specs:*
     end }
     => { register-variable
-	   (?protocol-constant,
-	    ?#"variable-name",
-	    ?type,
-	    method () => (value :: ?type)
-	      ?variable-name
-	    end,
-	    method (value :: ?type) => (value :: ?type)
-	      ?variable-name := value
-	    end);
+           (?protocol-constant,
+            ?#"variable-name",
+            ?type,
+            method () => (value :: ?type)
+              ?variable-name
+            end,
+            method (value :: ?type) => (value :: ?type)
+              ?variable-name := value
+            end);
          define protocol-spec-bindings ?protocol-constant (?options) 
            ?more-specs
          end; }
@@ -237,10 +237,10 @@ define macro protocol-spec-bindings-definer
       ?more-specs:*
     end }
     => { register-constant
-	   (?protocol-constant,
-	    ?#"constant-name",
-	    ?type,
-	    method () ?constant-name end);
+           (?protocol-constant,
+            ?#"constant-name",
+            ?type,
+            method () ?constant-name end);
          define protocol-spec-bindings ?protocol-constant (?options) 
            ?more-specs
          end; }
@@ -282,7 +282,7 @@ define macro protocol-spec-suite-definer
            test ?protocol-name ## "-protocol-classes-test";
            test ?protocol-name ## "-protocol-functions-test";
            test ?protocol-name ## "-protocol-macros-test";
-	 end }
+         end }
 end macro protocol-spec-suite-definer;
 
 
@@ -300,26 +300,26 @@ define method test-protocol-definition
   ignore(protocol-name);
   let definition-spec = protocol-definition-spec(spec, definition-name);
   assert(definition-spec,
-	 "Attempting to test definition %s which is not part of protocol %s",
-	 definition-name, protocol-name);
+         "Attempting to test definition %s which is not part of protocol %s",
+         definition-name, protocol-name);
   let tested?
     = if (instance?(definition-spec, <class-spec>))
-	let class = class-spec-class(definition-spec);
-	let test-function = class-test-function(class);
-	if (test-function)
+        let class = class-spec-class(definition-spec);
+        let test-function = class-test-function(class);
+        if (test-function)
           let instantiable? = protocol-class-instantiable?(spec, class);
           let abstract? = protocol-class-abstract?(spec, class);
-	  test-function(class, 
+          test-function(class, 
                         name: spec-title(definition-spec),
                         abstract?: abstract?,
                         instantiable?: instantiable?);
-	  #t
-	end
+          #t
+        end
       end;
   unless (tested?)
     cerror("Continue past this testing unit",
-	   "No test function provided for definition %s", 
-	  spec-title(definition-spec))
+           "No test function provided for definition %s", 
+          spec-title(definition-spec))
   end
 end method test-protocol-definition;
 
@@ -328,10 +328,10 @@ define macro definition-test-definer
       ?body:body
     end }
     => { define sideways method test-protocol-definition
-	     (protocol :: <protocol-spec>,
+             (protocol :: <protocol-spec>,
               protocol-name == ?#"protocol-name",
-	      definition    == ?#"definition-name")
-	  => ()
-	   ?body
-	 end method test-protocol-definition }
+              definition    == ?#"definition-name")
+          => ()
+           ?body
+         end method test-protocol-definition }
 end macro definition-test-definer;

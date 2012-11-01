@@ -104,29 +104,29 @@ define method do-check
     let check-arguments = maybe-trap-errors(argument-function());
     case
       instance?(name, <error>) =>
-	record-check("[*** Invalid name ***]", name, name, #f);
+        record-check("[*** Invalid name ***]", name, name, #f);
       instance?(check-arguments, <error>) =>
-	record-check(name, check-arguments, check-arguments, #f);
+        record-check(name, check-arguments, check-arguments, #f);
       otherwise =>
-	let function  = check-arguments[0];
-	let arguments = check-arguments[1];
-	let result = maybe-trap-errors(apply(function, arguments));
-	let status :: <result-status>
-	  = if (~result)
-	      #"failed"
-	    elseif (instance?(result, <error>))
-	      result
-	    else
-	      #"passed"
-	    end if;
-	if (status == #"failed" & debug-failures?())
-	  break("Check failed: %s", name)
-	end if;
-	record-check(name, status, function, arguments)
+        let function  = check-arguments[0];
+        let arguments = check-arguments[1];
+        let result = maybe-trap-errors(apply(function, arguments));
+        let status :: <result-status>
+          = if (~result)
+              #"failed"
+            elseif (instance?(result, <error>))
+              result
+            else
+              #"passed"
+            end if;
+        if (status == #"failed" & debug-failures?())
+          break("Check failed: %s", name)
+        end if;
+        record-check(name, status, function, arguments)
     end case;
   exception (r :: <simple-restart>,
-	     init-arguments: vector(format-string:, "Skip this check",
-				    format-arguments:, #[]))
+             init-arguments: vector(format-string:, "Skip this check",
+                                    format-arguments:, #[]))
     #"failed"
   end block;
 end method do-check;
@@ -319,5 +319,3 @@ define method record-check
                                   operation: operation, value: value));
   status
 end method record-check;
-
-

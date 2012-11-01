@@ -102,15 +102,15 @@ define method compare-subresults
     let name2 = subresult2.result-name;
     case
       name1 = name2 =>
-	add!(comp-results, create-comparison-result(subresult1, subresult2));
-	index1 := index1 + 1;
-	index2 := index2 + 1;
+        add!(comp-results, create-comparison-result(subresult1, subresult2));
+        index1 := index1 + 1;
+        index2 := index2 + 1;
       name1 < name2 =>
-	add!(comp-results, create-comparison-result(subresult1, #f));
-	index1 := index1 + 1;
+        add!(comp-results, create-comparison-result(subresult1, #f));
+        index1 := index1 + 1;
       otherwise =>
-	add!(comp-results, create-comparison-result(#f, subresult2));
-	index2 := index2 + 1;
+        add!(comp-results, create-comparison-result(#f, subresult2));
+        index2 := index2 + 1;
     end;
   end;
 
@@ -132,20 +132,20 @@ define method compare-results
   let result2-component? = instance?(result2, <component-result>);
   let subresults
     = case
-	result1-component? & result2-component? =>
-	  compare-subresults(result1.result-subresults, result2.result-subresults);
-	result1-component? =>
-	  compare-subresults(result1.result-subresults, #[]);
-	result2-component? =>
-	  compare-subresults(#[], result2.result-subresults);
-	otherwise =>
-	  #[]
+        result1-component? & result2-component? =>
+          compare-subresults(result1.result-subresults, result2.result-subresults);
+        result1-component? =>
+          compare-subresults(result1.result-subresults, #[]);
+        result2-component? =>
+          compare-subresults(#[], result2.result-subresults);
+        otherwise =>
+          #[]
       end;
   let identical?
     = every?(method (subresult)
-	       subresult.comparison-identical?
-	     end,
-	     subresults)
+               subresult.comparison-identical?
+             end,
+             subresults)
         & equivalent(result1, result2);
   values(identical?, subresults)
 end method compare-results;

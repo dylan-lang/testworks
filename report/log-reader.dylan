@@ -68,21 +68,21 @@ define method read-log-file
     // Read next non-blank line.  Error if EOF reached, since that means
     // the log file wasn't written correctly anyway.
     local method read-next-line (#key error?) => (line :: <string>)
-	    let next-line = last-line;
-	    if (next-line)
-	      last-line := #f;
-	      next-line
-	    else
-	      let line = read-line(test-stream);
-	      while (line = "")
-		line := read-line(test-stream);
-	      end while;
-	      line
-	    end if
-	  end method read-next-line;
+            let next-line = last-line;
+            if (next-line)
+              last-line := #f;
+              next-line
+            else
+              let line = read-line(test-stream);
+              while (line = "")
+                line := read-line(test-stream);
+              end while;
+              line
+            end if
+          end method read-next-line;
     local method unread-line (line :: <string>) => ()
-	    last-line := line
-	  end method unread-line;
+            last-line := line
+          end method unread-line;
     local method line-starts-with (line :: <string>, s :: <string>) => (b :: <boolean>)
             block (return)
               let len = size(line);
@@ -95,8 +95,8 @@ define method read-log-file
             end block
           end method line-starts-with;
     local method maybe-read-keyword-line
-	      (keyword :: <string>) => (value :: false-or(<string>))
-	    let line = read-next-line();
+              (keyword :: <string>) => (value :: false-or(<string>))
+            let line = read-next-line();
             if (line-starts-with(line, keyword))
               as(<string>, copy-sequence(line, start: keyword.size))
             else
@@ -105,11 +105,11 @@ define method read-log-file
             end
           end method maybe-read-keyword-line;
     local method read-keyword-line (keyword :: <string>) => (value :: <string>)
-	    maybe-read-keyword-line(keyword)
+            maybe-read-keyword-line(keyword)
               | application-error(#"token-not-found",
                                   "Error parsing report: The keyword \"%s\" was not found.\n%s\n",
                                   keyword, $testworks-message);
-	  end method read-keyword-line;
+          end method read-keyword-line;
     local method read-end-token () => ()
             unless (line-starts-with(read-next-line(), "end"))
               application-error(#"end-token-not-found",
@@ -118,18 +118,18 @@ define method read-log-file
             end;
           end method read-end-token;
     local method read-log-file-section () => (result :: false-or(<result>))
-	    let type          = read-keyword-line("Object: ");
-	    let name          = read-keyword-line("Name: ");
-	    when (type = "Suite")
-	      debug-message("Reading %s...", name)
-	    end;
-	    let status-string = read-keyword-line("Status: ");
-	    let reason        = maybe-read-keyword-line("Reason: ");
+            let type          = read-keyword-line("Object: ");
+            let name          = read-keyword-line("Name: ");
+            when (type = "Suite")
+              debug-message("Reading %s...", name)
+            end;
+            let status-string = read-keyword-line("Status: ");
+            let reason        = maybe-read-keyword-line("Reason: ");
             let seconds       = #f;
             let microseconds  = #f;
             let allocation    = #f;
-	    let subresults
-	      = if (type = "Check")
+            let subresults
+              = if (type = "Check")
                   read-end-token();
                 elseif (type = "Benchmark")
                   // If there is no "Reason:" line for a benchmark then there
@@ -143,22 +143,22 @@ define method read-log-file
                     allocation := string-to-integer(alloc);
                   end if;
                   read-end-token();
-		else  // type is "Test" or "Suite" or "Test unit"
-		  let subresults = make(<stretchy-vector>);
-		  let line = read-next-line();
-		  until (line-starts-with(line, "end"))
-		    unread-line(line);
-		    let subresult = read-log-file-section();
-		    subresult & add!(subresults, subresult);
-		    line := read-next-line();
-		  end;
-		  subresults
-		end;
+                else  // type is "Test" or "Suite" or "Test unit"
+                  let subresults = make(<stretchy-vector>);
+                  let line = read-next-line();
+                  until (line-starts-with(line, "end"))
+                    unread-line(line);
+                    let subresult = read-log-file-section();
+                    subresult & add!(subresults, subresult);
+                    line := read-next-line();
+                  end;
+                  subresults
+                end;
             let status = parse-status(status-string, reason);
             make-result(type, name, status, reason, subresults,
                         ignored-tests, ignored-suites,
                         seconds, microseconds, allocation)
-	  end;
+          end;
     block ()
       read-log-file-section();
     exception (e :: <end-of-stream-error>)
@@ -183,21 +183,21 @@ define method read-log-file
         while (#t)
           let line = read-line(stream, on-end-of-stream: #f);
           select (line by \=)
-    	#f =>
-    	  application-error(#"start-token-not-found",
-    			    "The log file '%s' doesn't contain any log information.\n%s\n",
+        #f =>
+          application-error(#"start-token-not-found",
+                            "The log file '%s' doesn't contain any log information.\n%s\n",
                                 path, $testworks-message);
-    	$test-log-header =>
-    	  return(#"plain");
-    	otherwise =>
-    	  #f;
+        $test-log-header =>
+          return(#"plain");
+        otherwise =>
+          #f;
           end
         end
       end;
       read-log-file(stream, ignored-tests: ignored-tests, ignored-suites: ignored-suites)
         | application-error(#"no-matching-results",
-    			"There are no matching results in log file %s\n%s\n",
-    			path, $testworks-message)
+                        "There are no matching results in log file %s\n%s\n",
+                        path, $testworks-message)
     end with-open-file
   end if
 end method read-log-file;

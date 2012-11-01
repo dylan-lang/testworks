@@ -11,23 +11,23 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define macro with-debugging
   { with-debugging () ?body:body end }
     => { let old-debug? = *debug?*;
-	 block ()
-	   *debug?* := #t;
-	   ?body
-	 cleanup
-	   *debug?* := old-debug?;
-	 end }
+         block ()
+           *debug?* := #t;
+           ?body
+         cleanup
+           *debug?* := old-debug?;
+         end }
 end macro with-debugging;
 
 define macro without-recording
   { without-recording () ?body:body end }
     => { let old-check-recording-function = *check-recording-function*;
-	 block ()
-	   *check-recording-function* := always(#t);
-	   ?body
-	 cleanup
-	   *check-recording-function* := old-check-recording-function
-	 end }
+         block ()
+           *check-recording-function* := always(#t);
+           ?body
+         cleanup
+           *check-recording-function* := old-check-recording-function
+         end }
 end macro without-recording;
 
 define class <test-warning> (<warning>)
@@ -57,135 +57,135 @@ end test testworks-check-test;
 
 define test testworks-check-true-test ()
   check-equal("check-true(#t) passes",
-	      without-recording ()
-		check-true($internal-check-name, #t)
-	      end,
+              without-recording ()
+                check-true($internal-check-name, #t)
+              end,
               #"passed");
   check-equal("check-true(#f) fails",
-	      without-recording ()
-		check-true($internal-check-name, #f)
-	      end,
+              without-recording ()
+                check-true($internal-check-name, #f)
+              end,
               #"failed");
   check-true("check-true of error crashes",
-	     instance?(without-recording ()
-			 check-true($internal-check-name, 
-				    test-error())
-		       end,
-	               <test-error>))
+             instance?(without-recording ()
+                         check-true($internal-check-name, 
+                                    test-error())
+                       end,
+                       <test-error>))
 end test testworks-check-true-test;
 
 define test testworks-check-false-test ()
   check-equal("check-false(#t) fails",
-	      without-recording ()
-		check-false($internal-check-name, #t)
-	      end,
+              without-recording ()
+                check-false($internal-check-name, #t)
+              end,
               #"failed");
   check-equal("check-false(#f) passes",
-	      without-recording ()
-		check-false($internal-check-name, #f)
-	      end,
+              without-recording ()
+                check-false($internal-check-name, #f)
+              end,
               #"passed");
   check-true("check-false of error crashes",
-	     instance?(without-recording ()
-			 check-false($internal-check-name, 
-				     test-error())
-		       end,
-	               <test-error>))
+             instance?(without-recording ()
+                         check-false($internal-check-name, 
+                                     test-error())
+                       end,
+                       <test-error>))
 end test testworks-check-false-test;
 
 define test testworks-check-equal-test ()
   check-equal("check-equal(1, 1) passes",
-	      without-recording ()
-		check-equal($internal-check-name, 1, 1)
-	      end,
+              without-recording ()
+                check-equal($internal-check-name, 1, 1)
+              end,
               #"passed");
   check-equal("check-equal(\"1\", \"1\") passes",
-	      without-recording ()
-		check-equal($internal-check-name, "1", "1")
-	      end,
+              without-recording ()
+                check-equal($internal-check-name, "1", "1")
+              end,
               #"passed");
   check-equal("check-equal(1, 2) fails",
-	      without-recording ()
-		check-equal($internal-check-name, 1, 2)
-	      end,
+              without-recording ()
+                check-equal($internal-check-name, 1, 2)
+              end,
               #"failed");
   check-true("check-equal of error crashes",
-	     instance?(without-recording ()
-			 check-equal($internal-check-name, 
-				     1,
-				     test-error())
-		       end,
-	               <test-error>))
+             instance?(without-recording ()
+                         check-equal($internal-check-name, 
+                                     1,
+                                     test-error())
+                       end,
+                       <test-error>))
 end test testworks-check-equal-test;
 
 define test testworks-check-instance?-test ()
   check-equal("check-instance?(1, <integer>) passes",
-	      without-recording ()
-		check-instance?($internal-check-name, <integer>, 1)
-	      end,
+              without-recording ()
+                check-instance?($internal-check-name, <integer>, 1)
+              end,
               #"passed");
   check-equal("check-instance?(1, <string>) fails",
-	      without-recording ()
-		check-instance?($internal-check-name, <string>, 1)
-	      end,
+              without-recording ()
+                check-instance?($internal-check-name, <string>, 1)
+              end,
               #"failed");
   check-true("check-instance? of error crashes",
-	     instance?(without-recording ()
-			 check-instance?($internal-check-name, 
-					 <integer>,
-					 test-error())
-		       end,
-	               <test-error>))
+             instance?(without-recording ()
+                         check-instance?($internal-check-name, 
+                                         <integer>,
+                                         test-error())
+                       end,
+                       <test-error>))
 end test testworks-check-instance?-test;
 
 define test testworks-check-condition-test ()
   let success? = #f;
   check-equal("check-condition catches <error>",
-	      without-recording ()
-		check-condition($internal-check-name,
-				<test-error>,
-				begin
+              without-recording ()
+                check-condition($internal-check-name,
+                                <test-error>,
+                                begin
                                   // default-handler for <warning> returns #f
-				  test-warning();
-				  success? := #t;
-				  test-error()
-				end)
-	      end,
+                                  test-warning();
+                                  success? := #t;
+                                  test-error()
+                                end)
+              end,
               #"passed");
   check-true("check-condition for <error> doesn't catch <warning>", success?);
   check-equal("check-condition fails if no condition",
-	      without-recording ()
-		check-condition($internal-check-name,
-				<test-error>,
-				#f)
-	      end,
+              without-recording ()
+                check-condition($internal-check-name,
+                                <test-error>,
+                                #f)
+              end,
               #"failed");
   check-condition("check-condition doesn't catch wrong condition",
-		  <warning>,
-		  without-recording ()
-		    check-condition($internal-check-name,
-				    <test-error>,
-				    test-warning())
-		  end);
+                  <warning>,
+                  without-recording ()
+                    check-condition($internal-check-name,
+                                    <test-error>,
+                                    test-warning())
+                  end);
 end test testworks-check-condition-test;
 
 define test testworks-check-no-errors-test ()
   check-equal("check-no-errors of #t passes",
-	      without-recording ()
-		check-no-errors($internal-check-name, #t)
-	      end,
+              without-recording ()
+                check-no-errors($internal-check-name, #t)
+              end,
               #"passed");
   check-equal("check-no-errors of #f passes",
-	      without-recording ()
-		check-no-errors($internal-check-name, #f)
-	      end,
+              without-recording ()
+                check-no-errors($internal-check-name, #f)
+              end,
               #"passed");
   check-true("check-no-errors of error crashes",
-	     instance?(without-recording ()
-			 check-no-errors($internal-check-name, 
-					 test-error())
-		       end,
-	               <test-error>))
+             instance?(without-recording ()
+                         check-no-errors($internal-check-name, 
+                                         test-error())
+                       end,
+                       <test-error>))
 end test testworks-check-no-errors-test;
 
 define suite testworks-check-macros-suite ()
@@ -210,7 +210,7 @@ define test testworks-perform-test-results-test ()
   check-equal("perform-test returns #\"passed\" when passing", 
               test-results.result-status, #"passed");
   check-true("perform-test sub-results are in a vector", 
-	     instance?(test-results.result-subresults, <vector>))
+             instance?(test-results.result-subresults, <vector>))
 end test testworks-perform-test-results-test;
 
 define test testworks-perform-suite-results-test ()
@@ -222,7 +222,7 @@ define test testworks-perform-suite-results-test ()
   check-equal("perform-suite returns #\"passed\" when passing", 
               suite-results.result-status, #"passed");
   check-true("perform-suite sub-results are in a vector", 
-	     instance?(suite-results.result-subresults, <vector>))
+             instance?(suite-results.result-subresults, <vector>))
 end test testworks-perform-suite-results-test;
 
 define suite testworks-results-suite ()

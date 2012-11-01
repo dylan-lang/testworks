@@ -1,6 +1,6 @@
 Module:       testworks-specs
 Synopsis:     A library for building specification test suites
-Author:	      Andy Armstrong
+Author:       Andy Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
 License:      See License.txt in this distribution for details.
@@ -48,11 +48,11 @@ define method register-variable
      variable-getter :: <function>, variable-setter :: <function>)
  => ()
   register-definition(spec, name,
-		      make(<variable-spec>,
-			   name: name,
-			   type: type,
-			   getter: variable-getter,
-			   setter: variable-setter))
+                      make(<variable-spec>,
+                           name: name,
+                           type: type,
+                           getter: variable-getter,
+                           setter: variable-setter))
 end method register-variable;
 
 define method register-constant
@@ -60,10 +60,10 @@ define method register-constant
      constant-getter :: <function>)
  => ()
   register-definition(spec, name,
-		      make(<constant-spec>,
-			   name: name,
-			   type: type,
-			   getter: constant-getter))
+                      make(<constant-spec>,
+                           name: name,
+                           type: type,
+                           getter: constant-getter))
 end method register-constant;
 
 
@@ -74,12 +74,12 @@ define function check-protocol-variable
   let title = spec-title(variable-spec);
   with-test-unit (format-to-string("%s specification", title))
     check-instance?(format-to-string("Variable %s has the correct type", title),
-		    variable-spec-type(variable-spec),
-		    variable-spec-getter(variable-spec)());
+                    variable-spec-type(variable-spec),
+                    variable-spec-getter(variable-spec)());
     check-true(format-to-string("Variable %s can be set to itself", title),
-	       begin
-		 let value = variable-spec-getter(variable-spec)();
-		 variable-spec-setter(variable-spec)(value) = value
+               begin
+                 let value = variable-spec-getter(variable-spec)();
+                 variable-spec-setter(variable-spec)(value) = value
                end);
   end;
   with-test-unit (format-to-string("variable-test %s", title))
@@ -100,8 +100,8 @@ define function check-protocol-constant
   let title = spec-title(constant);
   with-test-unit (format-to-string("%s specification", title))
     check-instance?(format-to-string("Constant %s has the correct type", title),
-		    variable-spec-type(constant),
-		    variable-spec-getter(constant)());
+                    variable-spec-type(constant),
+                    variable-spec-getter(constant)());
   end;
   with-test-unit (format-to-string("constant-test %s", title))
     test-protocol-definition

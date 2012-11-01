@@ -70,8 +70,8 @@ define method perform-component
         maybe-execute-component(component, options)
       end;
   display-results(result,
-		  report-function: report-function,
-		  report-format-function: report-format-function);
+                  report-function: report-function,
+                  report-format-function: report-format-function);
   result;
 end method perform-component;
 
@@ -101,10 +101,9 @@ define method maybe-execute-component
   end;
   let (subresults, perform-status)
     = if (execute-component?(component, options))
-	execute-component(component, options)
+        execute-component(component, options)
       else
-	values(#(), #"not-executed")
+        values(#(), #"not-executed")
       end;
   make-result(component, subresults, perform-status)
 end method maybe-execute-component;
-

@@ -1,6 +1,6 @@
 Module:       testworks-specs
 Synopsis:     A library for building specification test suites
-Author:	      Andy Armstrong
+Author:       Andy Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
 License:      See License.txt in this distribution for details.
@@ -25,7 +25,7 @@ define method initialize (this :: <class-spec>, #key)
       | (member?(#"primary", modifiers) & member?(#"free", modifiers))
       | (member?(#"abstract", modifiers) & member?(#"concrete", modifiers)))
     error("Conflicting modifiers specified for class %s",
-	  this.class-spec-class);
+          this.class-spec-class);
   end if;
   // Classes are concrete by default.
   if (~member?(#"abstract", modifiers) & ~member?("concrete", modifiers))
@@ -116,7 +116,7 @@ define method do-protocol-classes
     (method (class-spec :: <class-spec>) => ()
        let class = class-spec-class(class-spec);
        if (subtype?(class, superclass))
-	 function(class)
+         function(class)
        end
      end,
      spec, <class-spec>)
@@ -131,9 +131,9 @@ define method check-protocol-class
   let class = class-spec-class(class-spec);
   with-test-unit (format-to-string("class %s specification", title))
     check-instance?(format-to-string("Variable %s is a class", title),
-		    <class>, class);
+                    <class>, class);
     check-true(format-to-string("Variable %s has the correct superclasses", title),
-	       protocol-class-has-correct-superclasses?(protocol-spec, class));
+               protocol-class-has-correct-superclasses?(protocol-spec, class));
   end;
   with-test-unit (format-to-string("class-test %s", title))
     check-protocol-class-instantiation(protocol-spec, class-spec);
@@ -181,8 +181,8 @@ define method check-protocol-class-instantiation
   if (protocol-class-instantiable?(spec, class))
     let instance = #f;
     check-instance?(format-to-string("make %s with required arguments", title),
-		    class,
-		    instance := make-test-instance(class));
+                    class,
+                    instance := make-test-instance(class));
     if (instance)
       destroy-test-instance(class, instance)
     else
@@ -194,8 +194,8 @@ define method check-protocol-class-instantiation
       (format-to-string("make(%s) errors because not instantiable", title),
        <error>,
        begin
-	 let instance = make-test-instance(class);
-	 destroy-test-instance(class, instance)
+         let instance = make-test-instance(class);
+         destroy-test-instance(class, instance)
        end)
   end
 end method check-protocol-class-instantiation;

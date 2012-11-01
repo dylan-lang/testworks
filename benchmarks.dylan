@@ -37,16 +37,16 @@ define method do-benchmark
     let bench-arguments = maybe-trap-errors(argument-function());
     case
       instance?(name, <error>) =>
-	record-benchmark("[*** Invalid name ***]", name, name, #f, #f, #f, #f);
+        record-benchmark("[*** Invalid name ***]", name, name, #f, #f, #f, #f);
       instance?(bench-arguments, <error>) =>
-	record-benchmark(name, bench-arguments, bench-arguments, #f, #f, #f, #f);
+        record-benchmark(name, bench-arguments, bench-arguments, #f, #f, #f, #f);
       otherwise =>
-	let function  = bench-arguments[0];
-	let arguments = bench-arguments[1];
+        let function  = bench-arguments[0];
+        let arguments = bench-arguments[1];
         let result = #f;
         let status = #f;
         profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
-  	  result := maybe-trap-errors(apply(function, arguments));
+          result := maybe-trap-errors(apply(function, arguments));
         results
           status := if (~result)
                       #"failed"
@@ -64,8 +64,8 @@ define method do-benchmark
         status
     end case;
   exception (r :: <simple-restart>,
-	     init-arguments: vector(format-string:, "Skip this benchmark",
-				    format-arguments:, #[]))
+             init-arguments: vector(format-string:, "Skip this benchmark",
+                                    format-arguments:, #[]))
     #"failed"
   end block;
 end method do-benchmark;

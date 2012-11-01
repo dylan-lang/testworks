@@ -21,14 +21,14 @@ define module gui-testworks
   use duim;
 
   export <progress-window>,
-	 *progress-window*,
-	 gui-progress-display-message,
-	 gui-progress-clear-all-messages,
-	 gui-progress-pause,
-	 gui-progress-pause-with-check-name,
-	 gui-announce-function,
-	 start-progress-window,
-	 exit-progress-window,
-	 gui-perform-suite,
-	 gui-perform-test;
+         *progress-window*,
+         gui-progress-display-message,
+         gui-progress-clear-all-messages,
+         gui-progress-pause,
+         gui-progress-pause-with-check-name,
+         gui-announce-function,
+         start-progress-window,
+         exit-progress-window,
+         gui-perform-suite,
+         gui-perform-test;
 end module gui-testworks;

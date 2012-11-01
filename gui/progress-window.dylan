@@ -35,10 +35,10 @@ define frame <progress-window> (<simple-frame>)
         columns: 2, spacing: 2,
         x-alignment: #[#"left", #"left"], y-alignment: #"top",
         contents:
-	  vector(
-	    vector(make(<label>, label: "Suite:"), frame.progress-suite-name),
-	    vector(make(<label>, label: "Test:"),  frame.progress-test-name),
-	    vector(make(<label>, label: "Check:"), frame.progress-check-name)
+          vector(
+            vector(make(<label>, label: "Suite:"), frame.progress-suite-name),
+            vector(make(<label>, label: "Test:"),  frame.progress-test-name),
+            vector(make(<label>, label: "Check:"), frame.progress-check-name)
                  ));
       labelling ("Information:") frame.progress-information end;
       horizontally (spacing: 2)
@@ -59,19 +59,19 @@ define frame <progress-window> (<simple-frame>)
   constant slot progress-information :: <text-editor> = make-text-editor();
   constant slot progress-continue-button :: <push-button>
     = make(<push-button>, label: "&Continue", enabled?: #f, default?: #t,
-	   documentation: "Continue with test run after a pause",
-	   activate-callback: gui-progress-continue-callback);
+           documentation: "Continue with test run after a pause",
+           activate-callback: gui-progress-continue-callback);
 /*
   constant slot progress-step-out-button :: <push-button>
     = make(<push-button>, label: "&Step Out", enabled?: #f,
-	   documentation:
+           documentation:
              "Step out of the current test or suite by signalling an error",
-	   activate-callback: gui-progress-step-out-callback);
+           activate-callback: gui-progress-step-out-callback);
 */
   constant slot progress-close-button :: <push-button>
     = make(<push-button>, label: "C&lose",
-	   documentation: "Close progress window (test run will continue)",
-	   activate-callback: gui-progress-close-callback);
+           documentation: "Close progress window (test run will continue)",
+           activate-callback: gui-progress-close-callback);
   constant slot progress-paused-lock :: <semaphore> = make(<semaphore>);
 //  slot progress-exit-component? :: <boolean> = #f;
   keyword title: = $progress-window-name;
@@ -113,11 +113,11 @@ define function gui-progress-display-message (kind, message :: <string>)
   let frame = *progress-window*;
   let name-gadget
     = select (kind)
-	<suite>        => progress-suite-name;
-	<test>         => progress-test-name;
-	#"check"       => progress-check-name;
+        <suite>        => progress-suite-name;
+        <test>         => progress-test-name;
+        #"check"       => progress-check-name;
         #"information" => progress-information;
-	otherwise      => #f;
+        otherwise      => #f;
       end;
   when (frame & name-gadget)
     gadget-text(frame.name-gadget) := message;
@@ -211,7 +211,7 @@ define method gui-perform-suite
     (suite :: <suite>,
      #rest args,
      #key announce-function = gui-announce-function,
-	  announce-checks?  = #t,
+          announce-checks?  = #t,
      #all-keys)
  => (result :: <component-result>)
   block ()
@@ -219,11 +219,11 @@ define method gui-perform-suite
     dynamic-bind
         (*announce-check-function* = gui-progress-pause-with-check-name)
       apply
-	(perform-suite,
-	 suite,
-	 announce-function: announce-function,
-	 announce-checks?:  announce-checks?,
-	 args)
+        (perform-suite,
+         suite,
+         announce-function: announce-function,
+         announce-checks?:  announce-checks?,
+         args)
     end
   cleanup
     exit-progress-window();
@@ -234,7 +234,7 @@ define method gui-perform-test
     (test :: <test>,
      #rest args,
      #key announce-function = gui-announce-function,
-	  announce-checks?  = #t,
+          announce-checks?  = #t,
      #all-keys)
  => (result :: <component-result>)
   block ()
@@ -242,11 +242,11 @@ define method gui-perform-test
     dynamic-bind
         (*announce-check-function* = gui-progress-pause-with-check-name)
       apply
-	(perform-test,
-	 test,
-	 announce-function: announce-function,
-	 announce-checks?:  announce-checks?,
-	 args)
+        (perform-test,
+         test,
+         announce-function: announce-function,
+         announce-checks?:  announce-checks?,
+         args)
     end
   cleanup
     exit-progress-window();
