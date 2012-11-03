@@ -248,7 +248,7 @@ define method print-result-summary
               if (total-results == 1) ": " else "s: " end,
               passes);
   print-percentage(passes, total-results);
-  test-output("), %d failed, %d not executed, %d not implemented, %d crashed\n",
+  test-output("), %d failed, %d skipped, %d not implemented, %d crashed\n",
               failures, not-executed, not-implemented, crashes);
 end method print-result-summary;
 

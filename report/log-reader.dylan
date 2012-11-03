@@ -17,10 +17,10 @@ define constant $testworks-message
 define method parse-status
     (status-string :: <string>, reason)
   select (status-string by \=)
-    "passed"          => $passed;
-    "failed"          => $failed;
-    "not executed"    => $skipped;
-    "crashed"         => recreate-error(reason);
+    "passed" => $passed;
+    "failed" => $failed;
+    "skipped" => $skipped;
+    "crashed" => recreate-error(reason);
     "not implemented" => $not-implemented;
     otherwise =>
       error("Unexpected status '%s' in report", status-string);
