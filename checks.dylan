@@ -113,13 +113,13 @@ define method do-check
         let result = maybe-trap-errors(apply(function, arguments));
         let status :: <result-status>
           = if (~result)
-              #"failed"
+              $failed
             elseif (instance?(result, <error>))
               result
             else
-              #"passed"
+              $passed
             end if;
-        if (status == #"failed" & debug-failures?())
+        if (status == $failed & debug-failures?())
           break("Check failed: %s", name)
         end if;
         record-check(name, status, function, arguments)
@@ -127,7 +127,7 @@ define method do-check
   exception (r :: <simple-restart>,
              init-arguments: vector(format-string:, "Skip this check",
                                     format-arguments:, #[]))
-    #"failed"
+    $failed
   end block;
 end method do-check;
 
@@ -172,16 +172,16 @@ define method do-check-condition
             let handler condition-class
                = method (condition :: <condition>, next-handler :: <function>)
                    ignore(condition, next-handler);
-                   return(#"passed")
+                   return($passed)
                  end;
             body-of-check();
-            #"failed"
+            $failed
           exception (r :: <simple-restart>,
                      init-arguments: vector(format-string:, "Skip this check",
                                             format-arguments:, #[]))
-            #"failed"
+            $failed
           end block;
-      if (result == #"failed" & debug-failures?())
+      if (result == $failed & debug-failures?())
         break("Check condition failed: %s (%s)",
               name,
               format-to-string("Expected %s to be signaled but got %s.",
@@ -212,7 +212,7 @@ define method failure-reason
 end method failure-reason;
 
 define method failure-reason
-    (status == #"failed",
+    (status == $failed,
      operation :: <function>,
      value :: <check-value-type>)
  => (reason :: false-or(<string>))
@@ -229,7 +229,7 @@ define method failure-reason
 end method failure-reason;
 
 define method failure-reason
-    (status == #"failed",
+    (status == $failed,
      operation :: subclass(<condition>),
      value :: <check-value-type>)
  => (reason :: false-or(<string>))
@@ -296,7 +296,7 @@ define method print-check-progress
   let status = result.result-status;
   let name = result.result-name;
   select (status)
-    #"not-executed" =>
+    $skipped =>
       test-output("Ignored check: %s", name);
     otherwise =>
       test-output("Ran check: %s %s", name, status-name(status));

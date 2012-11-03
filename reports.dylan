@@ -55,11 +55,16 @@ define method count-results
   do-results
     (method (result)
        select (result.result-status)
-         #"passed"          => passes          := passes       + 1;
-         #"failed"          => failures        := failures     + 1;
-         #"not-executed"    => not-executed    := not-executed + 1;
-         #"not-implemented" => not-implemented := not-implemented + 1;
-         otherwise          => crashes         := crashes      + 1;
+         $passed =>
+           passes := passes + 1;
+         $failed =>
+           failures := failures + 1;
+         $skipped =>
+           not-executed := not-executed + 1;
+         $not-implemented =>
+           not-implemented := not-implemented + 1;
+         otherwise =>
+           crashes := crashes + 1;
        end
      end,
      result,
@@ -184,7 +189,7 @@ define method print-benchmark-results
               let name = result-name(bench);
               let time = result-time(bench);
               let sbytes = result-bytes(bench) & integer-to-string(result-bytes(bench));
-              if (result-status(bench) == #"passed")
+              if (result-status(bench) == $passed)
                 let (newsec, newusec) = addtimes(seconds, microseconds, sec, usec);
                 seconds := newsec;
                 microseconds := newusec;
@@ -263,7 +268,7 @@ define method print-result-info
   if (show-result?)
     test-output("\n%s%s %s",
                 indent, result.result-name, status-name(result-status));
-    if (result-status == #"passed"
+    if (result-status == $passed
         & instance?(result, <benchmark-result>))
       test-output(" in %s seconds with %d bytes allocated.",
                   result-time(result), result-bytes(result) | 0);
@@ -306,14 +311,14 @@ end method summary-report-function;
 define method failures-report-function (result :: <result>) => ()
   test-output("\n");
   select (result.result-status)
-    #"passed" =>
+    $passed =>
       test-output("%s passed\n", result.result-name);
     otherwise =>
       print-result-info
         (result, 
          test: method (result)
                  let status = result.result-status;
-                 status ~== #"passed" & status ~== #"not-executed"
+                 status ~== $passed & status ~== $skipped
                end);
       test-output("\n");
   end;
