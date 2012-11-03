@@ -19,21 +19,27 @@ define constant <check-value-type>
 
 /// Result handling
 
-define constant <result-status>
-  = type-union(one-of(#"passed",
-                      #"failed",
-                      #"not-executed",
-                      #"not-implemented"),
-               <condition>);
+define constant $passed = #"passed";
+define constant $failed = #"failed";
+define constant $crashed = #"crashed";
+define constant $skipped = #"skipped";
+define constant $not-implemented  = #"nyi";
 
+// TODO(cgay): Get rid of type-union, just store the condition
+// and use $crashed in the one-of.
+define constant <result-status>
+  = type-union(one-of($passed, $failed, $skipped, $not-implemented), <condition>);
+
+// It looks like this and testworks-reports:parse-status are meant to
+// be inverses.
 define method status-name
     (status :: <result-status>) => (name :: <string>)
   select (status)
-    #"passed"       => "passed";
-    #"failed"       => "failed";
-    #"not-executed" => "not executed";
-    #"not-implemented" => "not implemented";
-    otherwise       => "crashed";
+    $passed => "passed";
+    $failed => "failed";
+    $skipped => "skipped";
+    $not-implemented => "not implemented";
+    otherwise => "crashed";
   end
 end method status-name;
 

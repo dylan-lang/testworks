@@ -96,6 +96,7 @@ define module testworks
          result-name,
          result-type-name,
          result-status,
+              $passed, $failed, $skipped, $not-implemented, $crashed,
          result-seconds,
          result-microseconds,
          result-time,

@@ -177,15 +177,15 @@ define method execute-component
         end;
         case
           empty?(subresults) =>
-            #"not-implemented";
+            $not-implemented;
           every?(method (subresult)
                    let status = subresult.result-status;
-                   status = #"passed" | status = #"not-executed"
+                   status = $passed | status = $skipped
                  end,
                  subresults) =>
-            #"passed";
+            $passed;
           otherwise =>
-            #"failed"
+            $failed
         end
       cleanup
         suite.suite-cleanup-function();

@@ -49,13 +49,13 @@ define method do-benchmark
           result := maybe-trap-errors(apply(function, arguments));
         results
           status := if (~result)
-                      #"failed"
+                      $failed
                     elseif (instance?(result, <error>))
                       result
                     else
-                      #"passed"
+                      $passed
                     end if;
-          if (status == #"failed" & debug-failures?())
+          if (status == $failed & debug-failures?())
             break("Benchmark failed: %s", name)
           end if;
           record-benchmark(name, status, function, arguments,
@@ -66,7 +66,7 @@ define method do-benchmark
   exception (r :: <simple-restart>,
              init-arguments: vector(format-string:, "Skip this benchmark",
                                     format-arguments:, #[]))
-    #"failed"
+    $failed
   end block;
 end method do-benchmark;
 

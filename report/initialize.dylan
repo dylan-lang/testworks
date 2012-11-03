@@ -349,12 +349,12 @@ define method find-named-result
       let passed?
         = every?(method (subresult)
                    let status = subresult.result-status;
-                   status = #"passed" | status = #"not-executed"
+                   status = $passed | status = $skipped
                  end,
                  results);
       make(<suite-result>,
            name: "[Specified tests/suites]",
-           status: if (passed?) #"passed" else #"failed" end,
+           status: if (passed?) $passed else $failed end,
            subresults: results);
   end
 end method find-named-result;
