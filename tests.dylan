@@ -186,14 +186,14 @@ define method execute-component
           instance?(cond, <serious-condition>) =>
             cond;
           empty?(subresults) & ~test.test-allow-empty? =>
-            #"not-implemented";
+            $not-implemented;
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
-                   result.result-status == #"passed"
+                   result.result-status == $passed
                  end, 
                  subresults) =>
-            #"passed";
+            $passed;
           otherwise =>
-            #"failed"
+            $failed
         end
       end;
   values(subresults, status)

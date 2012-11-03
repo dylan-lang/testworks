@@ -103,7 +103,7 @@ define method maybe-execute-component
     = if (execute-component?(component, options))
         execute-component(component, options)
       else
-        values(#(), #"not-executed")
+        values(#(), $skipped)
       end;
   make-result(component, subresults, perform-status)
 end method maybe-execute-component;

@@ -53,7 +53,7 @@ end method print-result-reason;
 
 define method print-result-reason
     (name :: <string>, result :: <benchmark-result>, #key indent = "") => ()
-  if (result.result-status ~== #"passed")
+  if (result.result-status ~== $passed)
     next-method();
   else
     format-out("%s  %s %s in %s seconds, %d bytes allocated\n",
