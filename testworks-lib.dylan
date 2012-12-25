@@ -133,7 +133,8 @@ define module testworks
          failures-report-function,
          full-report-function,
          log-report-function,
-         xml-report-function;
+         xml-report-function,
+         surefire-report-function;
 
   // Command line handling
   export compute-application-options,

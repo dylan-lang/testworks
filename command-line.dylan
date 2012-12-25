@@ -38,7 +38,7 @@ define function parse-args
                   names: #("report"),
                   default: "failures",
                   help: "Type of final report to generate: "
-                    "none|full|failures|summary|log|xml"));
+                    "none|full|failures|summary|log|xml|surefire"));
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
   // to tests/suites specified as regular arguments plus --ignore.
@@ -77,7 +77,8 @@ define table $report-functions :: <string-table> = {
     "summary"  => summary-report-function,
     "failures" => failures-report-function,
     "log"      => log-report-function,
-    "xml"      => xml-report-function
+    "xml"      => xml-report-function,
+    "surefire" => surefire-report-function
     };
 
 // Encapsulates the components to be ignored
@@ -220,7 +221,8 @@ define method run-test-application
   // Run the appropriate test or suite
   block ()
     if (get-option-value(parser, "verbose")
-          & (report-function ~= xml-report-function))
+          & (report-function ~= xml-report-function)
+          & (report-function ~= surefire-report-function))
       display-run-options(start-suite, report-function, options)
     end;
     let result = #f;
