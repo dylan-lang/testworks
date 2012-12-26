@@ -68,7 +68,7 @@ define test testworks-check-true-test ()
               $failed);
   check-true("check-true of error crashes",
              instance?(without-recording ()
-                         check-true($internal-check-name, 
+                         check-true($internal-check-name,
                                     test-error())
                        end,
                        <test-error>))
@@ -87,7 +87,7 @@ define test testworks-check-false-test ()
               $passed);
   check-true("check-false of error crashes",
              instance?(without-recording ()
-                         check-false($internal-check-name, 
+                         check-false($internal-check-name,
                                      test-error())
                        end,
                        <test-error>))
@@ -111,7 +111,7 @@ define test testworks-check-equal-test ()
               $failed);
   check-true("check-equal of error crashes",
              instance?(without-recording ()
-                         check-equal($internal-check-name, 
+                         check-equal($internal-check-name,
                                      1,
                                      test-error())
                        end,
@@ -131,7 +131,7 @@ define test testworks-check-instance?-test ()
               $failed);
   check-true("check-instance? of error crashes",
              instance?(without-recording ()
-                         check-instance?($internal-check-name, 
+                         check-instance?($internal-check-name,
                                          <integer>,
                                          test-error())
                        end,
@@ -182,7 +182,7 @@ define test testworks-check-no-errors-test ()
               $passed);
   check-true("check-no-errors of error crashes",
              instance?(without-recording ()
-                         check-no-errors($internal-check-name, 
+                         check-no-errors($internal-check-name,
                                          test-error())
                        end,
                        <test-error>))
@@ -206,11 +206,11 @@ define test testworks-perform-test-results-test ()
   let test-to-check = testworks-check-test;
   let test-results
     = perform-test(test-to-check, progress-function: #f, report-function: #f);
-  check-true("perform-test returns <test-result>", 
+  check-true("perform-test returns <test-result>",
              instance?(test-results, <test-result>));
-  check-equal("perform-test returns $passed when passing", 
+  check-equal("perform-test returns $passed when passing",
               test-results.result-status, $passed);
-  check-true("perform-test sub-results are in a vector", 
+  check-true("perform-test sub-results are in a vector",
              instance?(test-results.result-subresults, <vector>))
 end test testworks-perform-test-results-test;
 
@@ -218,11 +218,11 @@ define test testworks-perform-suite-results-test ()
   let suite-to-check = testworks-check-macros-suite;
   let suite-results
     = perform-suite(suite-to-check, progress-function: #f, report-function: #f);
-  check-true("perform-suite returns <suite-result>", 
+  check-true("perform-suite returns <suite-result>",
              instance?(suite-results, <suite-result>));
-  check-equal("perform-suite returns $passed when passing", 
+  check-equal("perform-suite returns $passed when passing",
               suite-results.result-status, $passed);
-  check-true("perform-suite sub-results are in a vector", 
+  check-true("perform-suite sub-results are in a vector",
              instance?(suite-results.result-subresults, <vector>))
 end test testworks-perform-suite-results-test;
 

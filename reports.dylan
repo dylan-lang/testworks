@@ -24,7 +24,7 @@ end method display-results;
 /// Results component
 
 define method do-results
-    (function :: <function>, result :: <result>, 
+    (function :: <function>, result :: <result>,
      #key test = always(#t))
  => ()
   if (test(result))
@@ -44,7 +44,7 @@ end method do-results;
 
 define method count-results
     (result :: <result>, #key test = always(#t))
- => (passes :: <integer>, failures :: <integer>, 
+ => (passes :: <integer>, failures :: <integer>,
      not-executed :: <integer>, not-implemented :: <integer>,
      crashes :: <integer>)
   let passes          = 0;
@@ -221,7 +221,7 @@ end method print-benchmark-results;
 
 /// Summary generation
 
-define method print-percentage 
+define method print-percentage
     (count :: <integer>, size :: <integer>,
      #key decimal-places = 1) => ()
   case
@@ -252,7 +252,7 @@ define method print-result-summary
               failures, not-executed, not-implemented, crashes);
 end method print-result-summary;
 
-define method print-result-class-summary 
+define method print-result-class-summary
     (result :: <result>, name :: <string>, class :: <class>) => ()
   print-result-summary(result, name,
                        test: method (subresult)
@@ -315,7 +315,7 @@ define method failures-report-function (result :: <result>) => ()
       test-output("%s passed\n", result.result-name);
     otherwise =>
       print-result-info
-        (result, 
+        (result,
          test: method (result)
                  let status = result.result-status;
                  status ~== $passed & status ~== $skipped
@@ -359,7 +359,7 @@ define method log-report-function (result :: <result>) => ()
           let status = result.result-status;
           if (instance?(result, <component-result>))
             if (instance?(status, <error>))
-              test-output("Reason: %s\n", 
+              test-output("Reason: %s\n",
                           remove-newlines(safe-error-to-string(status)))
             end;
             for (subresult in result-subresults(result))
@@ -403,15 +403,15 @@ define function xml-output-pcdata (text :: <string>) => ()
         '&' =>
           test-output("%s&amp;", copy-sequence(text, start: start, end: i));
           loop(i + 1, i + 1);
-          
+
         '<' =>
           test-output("%s&lt;", copy-sequence(text, start: start, end: i));
           loop(i + 1, i + 1);
-          
+
         '>' =>
           test-output("%s&gt;", copy-sequence(text, start: start, end: i));
           loop(i + 1, i + 1);
-          
+
         otherwise =>
           loop(start, i + 1);
       end select;

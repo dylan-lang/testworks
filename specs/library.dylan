@@ -65,10 +65,10 @@ define module testworks-specs
          \protocol-spec-bindings-definer,
          \protocol-spec-suite-definer,
          \module-spec-protocol-definer,
-         \module-spec-suite-definer,         
+         \module-spec-suite-definer,
          register-constant,
          register-variable,
-         register-class,   
+         register-class,
          register-function,
          register-macro;
 end module testworks-specs;

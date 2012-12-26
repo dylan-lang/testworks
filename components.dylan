@@ -13,11 +13,11 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 /// no <check> or <benchmark> classes so they aren't considered "components".
 
 define class <component> (<object>)
-  constant slot component-name :: <string>, 
+  constant slot component-name :: <string>,
     required-init-keyword: name:;
-  constant slot component-description :: <string> = "", 
+  constant slot component-description :: <string> = "",
     init-keyword: description:;
-  constant slot component-tags :: <sequence> = #[], 
+  constant slot component-tags :: <sequence> = #[],
     init-keyword: tags:;
 end class <component>;
 
@@ -33,7 +33,7 @@ end;
 /// Result handling
 
 define class <component-result> (<result>)
-  constant slot result-subresults :: <sequence> = make(<stretchy-vector>), 
+  constant slot result-subresults :: <sequence> = make(<stretchy-vector>),
     init-keyword: subresults:;
 end class <component-result>;
 
@@ -85,14 +85,14 @@ end method perform-component;
 define open generic execute-component?
     (component :: <component>, options :: <perform-options>);
 
-define method execute-component? 
+define method execute-component?
     (component :: <component>, options :: <perform-options>)
  => (answer :: <boolean>)
   tags-match?(options.perform-tags, component.component-tags);
 end method execute-component?;
 
 define method maybe-execute-component
-    (component :: <component>, options :: <perform-options>) 
+    (component :: <component>, options :: <perform-options>)
  => (result :: <component-result>)
   let announce-function
     = options.perform-announce-function;

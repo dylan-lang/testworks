@@ -80,7 +80,7 @@ define module testworks
          perform-test,
          find-test,
          find-test-object;
-     
+
   // Suites
   export <suite>,
          make-suite,   //--- Needed for macro hygiene problems
@@ -89,7 +89,7 @@ define module testworks
          suite-components,
          perform-suite,
          root-suite,
-         find-suite;  
+         find-suite;
 
   // Result objects
   export <result>,

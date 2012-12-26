@@ -78,7 +78,7 @@ define method protocol-function-parameters
           identify-required(index + 1)
         else
           let required = copy-sequence(spec-parameters, end: index);
-          if(item == #"rest")
+          if (item == #"rest")
             identify-key(required, #t, index + 1)
           else
             identify-key(required, #f, index)
@@ -158,7 +158,7 @@ define method protocol-function-results
         end if
       else
         values(spec-results, #f)
-      end if  
+      end if
     end method;
   identify-required(0)
 end method protocol-function-results;

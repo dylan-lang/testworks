@@ -20,13 +20,13 @@ define method print-status-line
     let result1 = result.comparison-result1;
     let result2 = result.comparison-result2;
     format-out("%s%s %s -- %s\n",
-               indent, 
+               indent,
                result-type-name(result1 | result2),
                result-name(result1 | result2),
                if (result.comparison-identical?)
-                 "identical" 
-               else 
-                 "differed" 
+                 "identical"
+               else
+                 "differed"
                end)
   end if;
 end method print-status-line;
@@ -129,7 +129,7 @@ define method print-comparison-info
   end
 end method print-comparison-info;
 
-define method print-percentage 
+define method print-percentage
     (count :: <integer>, size :: <integer>, #key decimal-places = 1)
  => ()
   case
@@ -149,7 +149,7 @@ define method count-results
   let differed  = 0;
   let identical = 0;
   let unique    = 0;
-  
+
   let result1 = result.comparison-result1;
   let result2 = result.comparison-result2;
   let comparison-type = result-type-name(result1 | result2);
@@ -172,7 +172,7 @@ define method count-results
   end;
   values(differed, identical, unique)
 end method count-results;
-  
+
 define method summarize
     (result :: <comparison-result>, type :: <string>)
  => ()
@@ -189,7 +189,7 @@ end method summarize;
 
 /// Report functions
 
-define method diff-full-report-function 
+define method diff-full-report-function
     (result :: <comparison-result>) => ()
   print-comparison-info(result, test: always(#t));
   format-out("\n");
