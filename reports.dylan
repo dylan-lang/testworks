@@ -24,7 +24,7 @@ end method display-results;
 /// Results component
 
 define method do-results
-    (function :: <function>, result :: <result>, 
+    (function :: <function>, result :: <result>,
      #key test = always(#t))
  => ()
   if (test(result))
@@ -44,7 +44,7 @@ end method do-results;
 
 define method count-results
     (result :: <result>, #key test = always(#t))
- => (passes :: <integer>, failures :: <integer>, 
+ => (passes :: <integer>, failures :: <integer>,
      not-executed :: <integer>, not-implemented :: <integer>,
      crashes :: <integer>)
   let passes          = 0;
@@ -221,7 +221,7 @@ end method print-benchmark-results;
 
 /// Summary generation
 
-define method print-percentage 
+define method print-percentage
     (count :: <integer>, size :: <integer>,
      #key decimal-places = 1) => ()
   case
@@ -252,7 +252,7 @@ define method print-result-summary
               failures, not-executed, not-implemented, crashes);
 end method print-result-summary;
 
-define method print-result-class-summary 
+define method print-result-class-summary
     (result :: <result>, name :: <string>, class :: <class>) => ()
   print-result-summary(result, name,
                        test: method (subresult)
@@ -315,7 +315,7 @@ define method failures-report-function (result :: <result>) => ()
       test-output("%s passed\n", result.result-name);
     otherwise =>
       print-result-info
-        (result, 
+        (result,
          test: method (result)
                  let status = result.result-status;
                  status ~== $passed & status ~== $skipped
@@ -359,7 +359,7 @@ define method log-report-function (result :: <result>) => ()
           let status = result.result-status;
           if (instance?(result, <component-result>))
             if (instance?(status, <error>))
-              test-output("Reason: %s\n", 
+              test-output("Reason: %s\n",
                           remove-newlines(safe-error-to-string(status)))
             end;
             for (subresult in result-subresults(result))
@@ -403,15 +403,15 @@ define function xml-output-pcdata (text :: <string>) => ()
         '&' =>
           test-output("%s&amp;", copy-sequence(text, start: start, end: i));
           loop(i + 1, i + 1);
-          
+
         '<' =>
           test-output("%s&lt;", copy-sequence(text, start: start, end: i));
           loop(i + 1, i + 1);
-          
+
         '>' =>
           test-output("%s&gt;", copy-sequence(text, start: start, end: i));
           loop(i + 1, i + 1);
-          
+
         otherwise =>
           loop(start, i + 1);
       end select;
@@ -493,4 +493,81 @@ define method xml-report-function (result :: <result>) => ()
                    test-output("\n");
                    do-xml-result(result);
                  end);
+end method;
+
+define function emit-surefire-suite (suite :: <suite-result>)
+  let is-test-result? = rcurry(instance?, <test-result>);
+  let test-results = choose(is-test-result?, result-subresults(suite));
+  if (~empty?(test-results))
+    let (passes, failures, not-executed, not-implemented, crashes)
+      = count-results(suite, test: is-test-result?);
+    test-output("<testsuite name=\"%s\" failures=\"%d\" errors=\"%d\" tests=\"%d\">\n",
+                suite.result-name, failures + not-implemented, crashes,
+                test-results.size);
+    do(curry(emit-surefire-test, suite), test-results);
+    test-output("</testsuite>\n");
+  end if;
+end function;
+
+define function emit-surefire-test (suite :: <suite-result>,
+                                    test :: <test-result>)
+  let checks = choose(rcurry(instance?, <check-result>),
+                      result-subresults(test));
+  test-output("<testcase name=\"%s\" classname=\"%s\">",
+              test.result-name, suite.result-name);
+  select (test.result-status)
+    $passed => #f;
+    $skipped =>
+      test-output("<skipped />");
+    $not-implemented =>
+      test-output("<failure message=\"Not implemented\" />");
+    otherwise =>
+      do(emit-surefire-check, checks);
+  end select;
+  test-output("</testcase>\n");
+end function;
+
+define function extract-check-failure (result :: <check-result>)
+ => (reason :: <string>)
+  let operation = result-operation(result);
+  let value = result-value(result);
+  block ()
+    failure-reason(result.result-status, operation, value)
+  exception (ex :: <error>)
+    format-to-string("***error %s getting failure reason***", ex);
+  end;
+end function;
+
+define function emit-surefire-check (result :: <check-result>)
+  let status = result.result-status;
+  if (status ~= $passed)
+    let reason = if (status == $failed)
+                   extract-check-failure(result)
+                 elseif (instance?(status, <error>))
+                   safe-error-to-string(status);
+                 else
+                   format-to-string("Unknown failure: %=", status)
+                 end if;
+    test-output("\n<failure>");
+    xml-output-pcdata(reason);
+    test-output("</failure>\n");
+  end if;
+end function;
+
+define function collect-suite-results (result :: <result>) => (results :: <sequence>)
+  let all-suites = make(<stretchy-vector>);
+  iterate collect (r :: <result> = result)
+    if (instance?(r, <suite-result>))
+      all-suites := add!(all-suites, r);
+      do(collect, result-subresults(r))
+    end if;
+  end iterate;
+  all-suites
+end function;
+
+define method surefire-report-function (result :: <result>) => ()
+  test-output("%s\n", $xml-version-header);
+  test-output("<testsuites>\n");
+  do(emit-surefire-suite, collect-suite-results(result));
+  test-output("</testsuites>\n");
 end method;

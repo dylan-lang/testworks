@@ -9,7 +9,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 /// Tests
 
 define class <test> (<component>)
-  constant slot test-function :: <function>, 
+  constant slot test-function :: <function>,
     required-init-keyword: function:;
   constant slot test-allow-empty? :: <boolean>,
     init-value: #f, init-keyword: allow-empty:;
@@ -85,7 +85,7 @@ end method result-time;
 //---*** We could use 'define function' but it doesn't debug as well right now
 define macro test-definer
   { define test ?test-name:name (?keyword-args:*) ?test-body:body end }
-    => { define method ?test-name () 
+    => { define method ?test-name ()
            ?test-body
          end method ?test-name;
          $test-objects-table[?test-name]
@@ -113,7 +113,7 @@ define macro with-test-unit
          end; }
 end macro with-test-unit;
 
-// perform-test takes a <test> object and returns a component-result object. 
+// perform-test takes a <test> object and returns a component-result object.
 
 define method perform-test
     (test :: <test>,
@@ -127,7 +127,7 @@ define method perform-test
           debug?                   = *debug?*)
  => (result :: <component-result>)
   perform-component
-    (test, 
+    (test,
      make(<perform-options>,
           tags:                     tags,
           announce-function:        announce-function,
@@ -152,7 +152,7 @@ define method perform-test
  => (result :: <component-result>)
   let test = find-test-object(function);
   if (test)
-    perform-test(test, 
+    perform-test(test,
                  tags: tags,
                  announce-function:        announce-function,
                  announce-checks?:         announce-checks?,
@@ -172,7 +172,7 @@ define method execute-component
      seconds, useconds, bytes)
   let subresults = make(<stretchy-vector>);
   let status :: <result-status>
-    = dynamic-bind 
+    = dynamic-bind
         (*debug?* = options.perform-debug?,
          *check-recording-function* =
            method (result :: <result>)
@@ -189,7 +189,7 @@ define method execute-component
             $not-implemented;
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
                    result.result-status == $passed
-                 end, 
+                 end,
                  subresults) =>
             $passed;
           otherwise =>
@@ -243,8 +243,8 @@ define method print-result-info
   next-method();
   let show-result? = if (test) test(result) else #t end;
   if (show-result?)
-    print-failure-reason(result.result-status, 
-                         result.result-operation, 
+    print-failure-reason(result.result-status,
+                         result.result-operation,
                          result.result-value)
   end
 end method print-result-info;

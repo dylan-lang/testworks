@@ -94,7 +94,7 @@ define method compare-subresults
   let size2        = subresults2.size;
   let index1 :: <integer> = 0;
   let index2 :: <integer> = 0;
-  
+
   while (index1 < size1 & index2 < size2)
     let subresult1 :: <result> = subresults1[index1];
     let subresult2 :: <result> = subresults2[index2];
@@ -182,7 +182,7 @@ define method perform-test-diff
   dynamic-bind(*benchmark-tolerance* = tolerance)
     let (identical?, subresults) = compare-results(result1, result2);
     let result = make(<log-comparison-result>,
-                      result1: result1, 
+                      result1: result1,
                       result2: result2,
                       identical?: identical?,
                       subresults: subresults);

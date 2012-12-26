@@ -10,7 +10,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define constant $all = #[#"all"];
 
-define constant <check-operation-type> 
+define constant <check-operation-type>
   = false-or(type-union(<function>, <error>, <string>, subclass(<condition>)));
 
 define constant <check-value-type>
@@ -46,7 +46,7 @@ end method status-name;
 define class <result> (<object>)
   constant slot result-name :: <string>,
     required-init-keyword: name:;
-  constant slot result-status :: <result-status>, 
+  constant slot result-status :: <result-status>,
     required-init-keyword: status:;
 end class <result>;
 
@@ -98,7 +98,7 @@ define method debug-failures?
   *debug?* == #t
 end method debug-failures?;
 
-define method debug? 
+define method debug?
     () => (debug? :: <boolean>)
   *debug?* ~= #f
 end method debug?;
@@ -114,7 +114,7 @@ define method plural (n :: <integer>) => (ending :: <string>)
   if (n == 1) "" else "s" end if
 end;
 
-define macro maybe-trap-errors 
+define macro maybe-trap-errors
   { maybe-trap-errors (?body:body) }
     => { local method maybe-trap-errors-body () ?body end;
          if (*debug?*)
@@ -126,8 +126,8 @@ define macro maybe-trap-errors
              cond
            end;
          end; }
-end macro maybe-trap-errors; 
- 
+end macro maybe-trap-errors;
+
 define method tags-match? (run-tags :: <sequence>, object-tags :: <sequence>)
  => (bool :: <boolean>)
   run-tags = $all | ~empty?(intersection(run-tags, object-tags))
@@ -140,7 +140,7 @@ end method tags-match?;
 // to control test suite performing.
 
 define open class <perform-options> (<object>)
-  slot perform-tags :: <sequence> = $all, 
+  slot perform-tags :: <sequence> = $all,
     init-keyword: tags:;
   slot perform-announce-function :: false-or(<function>) = *announce-function*,
     init-keyword: announce-function:;

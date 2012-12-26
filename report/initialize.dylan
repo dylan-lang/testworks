@@ -107,7 +107,7 @@ end method application-exit-code;
 /// Command line arguments
 
 // Removed '/' from this list because it is patently broken for Linux.
-// --cgay 2006.11.23 
+// --cgay 2006.11.23
 define constant $keyword-prefixes = #['-'];
 
 define method process-argument
@@ -120,7 +120,7 @@ define method process-argument
   end
 end method process-argument;
 
-define method keyword-argument? 
+define method keyword-argument?
     (argument :: <string>) => (keyword? :: <boolean>)
   member?(argument[0], $keyword-prefixes)
   & block ()   // don't treat a negative integer as a keyword arg.
@@ -219,10 +219,10 @@ define method parse-arguments
       "test" =>
         tests := concatenate(tests, argument-value(option, arguments));
       "ignore-suite" =>
-        ignored-suites 
+        ignored-suites
           := concatenate(ignored-suites, argument-value(option, arguments));
       "ignore-test" =>
-        ignored-tests 
+        ignored-tests
           := concatenate(ignored-tests,  argument-value(option, arguments));
       "quiet" =>
         quiet? := #t;
@@ -278,7 +278,7 @@ define method parse-arguments
        quiet?: quiet?, report-function: report-function,
        tolerance: tolerance,
        tests: tests, suites: suites,
-       ignored-tests:  map(as-lowercase, ignored-tests), 
+       ignored-tests:  map(as-lowercase, ignored-tests),
        ignored-suites: map(as-lowercase, ignored-suites))
 end method parse-arguments;
 
@@ -384,8 +384,8 @@ define method main
             (log :: <string>) => (result :: <result>)
           block ()
             let result
-              = read-log-file(log, 
-                              ignored-tests: ignored-tests, 
+              = read-log-file(log,
+                              ignored-tests: ignored-tests,
                               ignored-suites: ignored-suites);
             if (~empty?(tests) | ~empty?(suites))
               find-named-result(result,

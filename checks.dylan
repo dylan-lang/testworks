@@ -13,17 +13,17 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 // within the scope of whatever condition handling is required.
 
 define macro check
-  { check (?check-name:expression, 
+  { check (?check-name:expression,
            ?check-function:expression, ?check-args:*) }
     => { do-check(method () ?check-name end,
                   method () vector(?check-function, vector(?check-args)) end) }
 end macro check;
 
 define macro check-equal
-  { check-equal (?check-name:expression, 
+  { check-equal (?check-name:expression,
                  ?expected-value:expression, ?actual-value:expression) }
     => { do-check(method () ?check-name end,
-                  method () 
+                  method ()
                     vector(\=, vector(?expected-value, ?actual-value))
                   end) }
 end macro check-equal;
@@ -32,7 +32,7 @@ define macro check-instance?
   { check-instance? (?check-name:expression,
                      ?value-type:expression, ?value:expression) }
     => { do-check(method () ?check-name end,
-                  method () 
+                  method ()
                     vector(instance?, vector(?value, ?value-type))
                   end) }
 end macro check-instance?;
@@ -54,11 +54,11 @@ define macro check-false
 end macro check-false;
 
 define macro check-condition
-  { check-condition 
-     (?check-name:expression, 
+  { check-condition
+     (?check-name:expression,
       ?check-condition:expression, ?check-body:expression) }
     => { do-check-condition(method () ?check-name end,
-                            method () 
+                            method ()
                               vector(?check-condition,
                                      method () ?check-body end)
                             end) }
@@ -97,7 +97,7 @@ define method evaluate-name-function
 end method evaluate-name-function;
 
 define method do-check
-    (name-function :: <function>, argument-function :: <function>) 
+    (name-function :: <function>, argument-function :: <function>)
  => (status :: <result-status>)
   block ()
     let name = evaluate-name-function(name-function);
@@ -132,7 +132,7 @@ define method do-check
 end method do-check;
 
 define method do-check-condition
-    (name-function :: <function>, argument-function :: <function>) 
+    (name-function :: <function>, argument-function :: <function>)
  => (status :: <result-status>)
   // argument-function returns, e.g., vector(<arithmetic-error>, test-fn)
   let name = evaluate-name-function(name-function);
@@ -315,7 +315,7 @@ define method record-check
      operation :: <check-operation-type>, value :: <check-value-type>)
  => (status :: <result-status>)
   *check-recording-function*(make(<check-result>,
-                                  name: name, status: status, 
+                                  name: name, status: status,
                                   operation: operation, value: value));
   status
 end method record-check;

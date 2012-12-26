@@ -32,7 +32,7 @@ define method make-result
      seconds, microseconds, allocation)
   select (as(<symbol>, type))
     #"check" =>
-      make(<check-result>, 
+      make(<check-result>,
            name: name, status: status, operation: reason, value: #f);
     #"test-unit" =>
       unless (member?(as-lowercase(name), ignored-tests, test: \=))
@@ -46,7 +46,7 @@ define method make-result
            bytes: allocation);
     #"test" =>
       unless (member?(as-lowercase(name), ignored-tests, test: \=))
-        make(<test-result>, 
+        make(<test-result>,
              name: name, status: status, subresults: subresults)
       end;
     #"suite" =>
