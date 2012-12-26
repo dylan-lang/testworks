@@ -38,10 +38,10 @@ define function parse-args
                   names: #("report"),
                   default: "failures",
                   help: "Type of final report to generate: "
-                    "none|full|failures|summary|log|xml"));
+                    "none|full|failures|summary|log|xml|surefire"));
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
-  // to tests/suites specified as regular arguments plus --ignore. 
+  // to tests/suites specified as regular arguments plus --ignore.
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("suite"),
@@ -77,18 +77,19 @@ define table $report-functions :: <string-table> = {
     "summary"  => summary-report-function,
     "failures" => failures-report-function,
     "log"      => log-report-function,
-    "xml"      => xml-report-function
+    "xml"      => xml-report-function,
+    "surefire" => surefire-report-function
     };
 
 // Encapsulates the components to be ignored
 
 define class <perform-criteria> (<perform-options>)
-  slot perform-ignore :: <stretchy-vector>, 
+  slot perform-ignore :: <stretchy-vector>,
     init-keyword: ignore:;
 end class <perform-criteria>;
 
-define method execute-component? 
-    (component :: <component>, options :: <perform-criteria>) 
+define method execute-component?
+    (component :: <component>, options :: <perform-criteria>)
  => (answer :: <boolean>)
   next-method()
      & ~member?(component, options.perform-ignore)
@@ -114,11 +115,11 @@ define method find-component
     (suite-names :: false-or(<sequence>), test-names :: false-or(<sequence>))
  => (tests :: <sequence>)
   let tests = make(<stretchy-vector>);
-  suite-names 
+  suite-names
     & for (name in suite-names)
         add!(tests, find-component(name, #f));
       end for;
-  test-names 
+  test-names
     & for (name in test-names)
         add!(tests, find-component(#f, name));
       end for;
@@ -127,7 +128,7 @@ end method find-component;
 
 define method display-run-options
     (start-suite :: <component>,
-     report-function :: <function>, 
+     report-function :: <function>,
      options :: <perform-criteria>)
  => ()
   format-out
@@ -157,7 +158,7 @@ end method display-run-options;
 
 define method compute-application-options
     (parent :: <component>, parser :: <command-line-parser>)
- => (start-suite :: <component>, 
+ => (start-suite :: <component>,
      options :: <perform-criteria>,
      report-function :: <function>)
   let options = make(<perform-criteria>);
@@ -203,7 +204,7 @@ define method compute-application-options
 end method compute-application-options;
 
 define method run-test-application
-    (parent :: <component>, 
+    (parent :: <component>,
      #key command-name = application-name(),
           arguments = application-arguments(),
           report-format-function = *format-function*)
@@ -220,7 +221,8 @@ define method run-test-application
   // Run the appropriate test or suite
   block ()
     if (get-option-value(parser, "verbose")
-          & (report-function ~= xml-report-function))
+          & (report-function ~= xml-report-function)
+          & (report-function ~= surefire-report-function))
       display-run-options(start-suite, report-function, options)
     end;
     let result = #f;

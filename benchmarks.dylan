@@ -30,7 +30,7 @@ end macro benchmark;
 // ---*** carlg 99-02-05 This shares a lot of code with do-check.  Might
 //        want to try to combine them with a macro or something.
 define method do-benchmark
-    (name-function :: <function>, argument-function :: <function>) 
+    (name-function :: <function>, argument-function :: <function>)
  => (status :: <result-status>)
   block ()
     let name = evaluate-name-function(name-function);

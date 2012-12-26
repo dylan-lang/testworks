@@ -11,9 +11,9 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define class <suite> (<component>)
   constant slot %components :: false-or(type-union(<sequence>, <function>)) = #f,
     init-keyword: components:;
-  constant slot suite-setup-function :: <function> = method () end, 
+  constant slot suite-setup-function :: <function> = method () end,
     init-keyword: setup-function:;
-  constant slot suite-cleanup-function :: <function> = method () end, 
+  constant slot suite-cleanup-function :: <function> = method () end,
     init-keyword: cleanup-function:;
 end class <suite>;
 
@@ -23,7 +23,7 @@ define method component-type-name
 end;
 
 define variable *all-suites*
-  = make(<suite>, 
+  = make(<suite>,
          name: "All Defined Suites",
          components: make(<stretchy-vector>));
 
@@ -32,7 +32,7 @@ define method root-suite () => (suite :: <suite>)
 end method root-suite;
 
 define method ensure-suite-components
-    (components :: <sequence>, suite :: <suite>) 
+    (components :: <sequence>, suite :: <suite>)
  => (components :: <sequence>)
   map(method (component)
         select (component by instance?)
@@ -40,7 +40,7 @@ define method ensure-suite-components
             component;
           <function>  =>
             find-test-object(component)
-              | error("Non-test function %= in suite %s", 
+              | error("Non-test function %= in suite %s",
                       component, component-name(suite));
           otherwise   =>
             error("Invalid object %= in suite %s", component, component-name(suite))
@@ -83,7 +83,7 @@ end method make-suite;
 define macro suite-definer
   { define suite ?suite-name:name (?keyword-args:*) ?components end } =>
     {define variable ?suite-name
-       = make-suite(?"suite-name", 
+       = make-suite(?"suite-name",
                     method ()
                       list(?components)
                     end,
@@ -98,7 +98,7 @@ define macro suite-definer
 end macro suite-definer;
 
 define method find-suite
-    (name :: <string>, #key search-suite = root-suite()) 
+    (name :: <string>, #key search-suite = root-suite())
  => (suite :: false-or(<suite>))
   let lowercase-name = as-lowercase(name);
   local method do-find-suite (suite :: <suite>)
@@ -119,7 +119,7 @@ define method find-suite
 end method find-suite;
 
 define method find-test
-    (name :: <string>, #key search-suite = root-suite()) 
+    (name :: <string>, #key search-suite = root-suite())
  => (test :: false-or(<test>))
   let lowercase-name = as-lowercase(name);
   local method do-find-test (suite :: <suite>)
@@ -140,8 +140,8 @@ define method find-test
   do-find-test(search-suite);
 end method find-test;
 
-define method perform-suite  
-    (suite :: <suite>, 
+define method perform-suite
+    (suite :: <suite>,
      #key tags                     = $all,
           announce-function        = #f,
           announce-checks?         = *announce-checks?*,

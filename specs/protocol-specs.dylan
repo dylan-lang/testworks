@@ -32,7 +32,7 @@ define method evaluate-bindings
           add!(unbound-bindings, as-lowercase(as(<byte-string>, name)));
           #f
         end;
-    if (value) 
+    if (value)
       table[value] := spec;
     end
   end;
@@ -65,7 +65,7 @@ define method protocol-unbound-bindings
 end method protocol-unbound-bindings;
 
 define method register-binding
-    (info :: <protocol-bindings-info>, name :: <symbol>, 
+    (info :: <protocol-bindings-info>, name :: <symbol>,
      binding-function :: <function>)
  => ()
   add!(info.names, name);
@@ -124,7 +124,7 @@ define function do-protocol-definitions
 end function do-protocol-definitions;
 
 define method register-definition
-    (spec :: <protocol-spec>, name :: <symbol>, 
+    (spec :: <protocol-spec>, name :: <symbol>,
      definition :: <definition-spec>)
  => ()
   let table = spec.%definitions;
@@ -150,7 +150,7 @@ end macro protocol-spec-definer;
 define macro protocol-spec-constant-definer
   { define protocol-spec-constant ?protocol-name:name (?options:*) end}
     => { define constant "$" ## ?protocol-name ## "-protocol-spec"
-           = make(<protocol-spec>, 
+           = make(<protocol-spec>,
                   name: ?#"protocol-name",
                   ?options) }
 end macro protocol-spec-constant-definer;
@@ -193,7 +193,7 @@ define macro protocol-spec-bindings-definer
                          results:    vector(?results),
                          modifiers: vector(?modifiers)))
            end);
-         define protocol-spec-bindings ?protocol-constant (?options) 
+         define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
   { define protocol-spec-bindings ?protocol-constant:name (?options:*)
@@ -229,7 +229,7 @@ define macro protocol-spec-bindings-definer
             method (value :: ?type) => (value :: ?type)
               ?variable-name := value
             end);
-         define protocol-spec-bindings ?protocol-constant (?options) 
+         define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
   { define protocol-spec-bindings ?protocol-constant:name (?options:*)
@@ -241,7 +241,7 @@ define macro protocol-spec-bindings-definer
             ?#"constant-name",
             ?type,
             method () ?constant-name end);
-         define protocol-spec-bindings ?protocol-constant (?options) 
+         define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
   { define protocol-spec-bindings ?protocol-constant:name (?options:*)
@@ -289,12 +289,12 @@ end macro protocol-spec-suite-definer;
 /// A useful macro to define a definition's test function
 
 define open generic test-protocol-definition
-    (protocol :: <protocol-spec>, protocol-name :: <symbol>, 
+    (protocol :: <protocol-spec>, protocol-name :: <symbol>,
      definition-name :: <symbol>)
  => ();
 
 define method test-protocol-definition
-    (spec :: <protocol-spec>, protocol-name :: <symbol>, 
+    (spec :: <protocol-spec>, protocol-name :: <symbol>,
      definition-name :: <symbol>)
  => ()
   ignore(protocol-name);
@@ -309,7 +309,7 @@ define method test-protocol-definition
         if (test-function)
           let instantiable? = protocol-class-instantiable?(spec, class);
           let abstract? = protocol-class-abstract?(spec, class);
-          test-function(class, 
+          test-function(class,
                         name: spec-title(definition-spec),
                         abstract?: abstract?,
                         instantiable?: instantiable?);
@@ -318,7 +318,7 @@ define method test-protocol-definition
       end;
   unless (tested?)
     cerror("Continue past this testing unit",
-           "No test function provided for definition %s", 
+           "No test function provided for definition %s",
           spec-title(definition-spec))
   end
 end method test-protocol-definition;

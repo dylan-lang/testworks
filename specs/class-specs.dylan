@@ -109,7 +109,7 @@ define method protocol-class-abstract?
 end method protocol-class-abstract?;
 
 define method do-protocol-classes
-    (function :: <function>, spec :: <protocol-spec>, 
+    (function :: <function>, spec :: <protocol-spec>,
      #key superclass :: <class> = <object>)
  => ()
   do-protocol-definitions
@@ -141,11 +141,11 @@ define method check-protocol-class
       (protocol-spec, spec-name(protocol-spec), spec-name(class-spec))
   end
 end method check-protocol-class;
-    
+
 define function check-protocol-classes
     (protocol-spec :: <protocol-spec>) => ()
   do-protocol-definitions
-    (curry(check-protocol-class, protocol-spec), 
+    (curry(check-protocol-class, protocol-spec),
      protocol-spec, <class-spec>);
   do(method (class-name :: <string>) => ()
        check-true(format-to-string("The variable %s is a class", class-name), #f)

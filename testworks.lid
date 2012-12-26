@@ -1,14 +1,14 @@
 Library:      testworks
 Synopsis:     TestWorks - a test harness library for dylan
-Author:	      Andy Armstrong, James Kirsch, Shri Amit
-Target-Type:	dll
-Files:	testworks-lib
-	testworks
-	components
+Author:       Andy Armstrong, James Kirsch, Shri Amit
+Target-Type:  dll
+Files:  library
+        testworks
+        components
         checks
-	benchmarks
+        benchmarks
         tests
-	suites
+        suites
         reports
         command-line
 Major-Version: 2

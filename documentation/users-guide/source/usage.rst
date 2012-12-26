@@ -224,11 +224,11 @@ Dylan library. The test-suite library may look something like:
 
 .. code-block:: dylan
 
-	define library my-test-suite
-  	  use dylan;
-  	  use testworks;
-  	  use xxx;       // <- the library you are testing
-	end library;
+    define library my-test-suite
+      use dylan;
+      use testworks;
+      use xxx;       // <- the library you are testing
+    end library;
 
 It is recommended that tests contain no more than 10-15 checks. It
 is much easier to track failures and errors in smaller tests . Putting
