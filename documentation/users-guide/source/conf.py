@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Testworks User's Guide documentation build configuration file, created by
+# Testworks User Guide documentation build configuration file, created by
 # sphinx-quickstart on Fri Oct 26 11:31:31 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Testworks User\'s Guide'
+project = u'Testworks User Guide'
 copyright = u'2012, Dylan Hackers'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -94,7 +94,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'haiku'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -106,7 +106,7 @@ html_theme = 'default'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = "Testworks User Guide"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -167,7 +167,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'TestworksUsersGuidedoc'
+htmlhelp_basename = 'TestworksUserGuide'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -186,7 +186,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'TestworksUsersGuide.tex', u'Testworks User\'s Guide Documentation',
+  ('index', 'TestworksUserGuide.tex', u'Testworks User Guide',
    u'Dylan Hackers', 'manual'),
 ]
 
@@ -216,7 +216,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'testworksusersguide', u'Testworks User\'s Guide Documentation',
+    ('index', 'testworksusersguide', u'Testworks User Guide',
      [u'Dylan Hackers'], 1)
 ]
 
@@ -230,8 +230,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'TestworksUsersGuide', u'Testworks User\'s Guide Documentation',
-   u'Dylan Hackers', 'TestworksUsersGuide', 'One line description of project.',
+  ('index', 'TestworksUserGuide', u'Testworks User Guide',
+   u'Dylan Hackers', 'TestworksUserGuide', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -248,7 +248,7 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'Testworks User\'s Guide'
+epub_title = u'Testworks User Guide'
 epub_author = u'Dylan Hackers'
 epub_publisher = u'Dylan Hackers'
 epub_copyright = u'2012, Dylan Hackers'
