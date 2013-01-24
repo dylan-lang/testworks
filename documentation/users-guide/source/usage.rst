@@ -119,11 +119,11 @@ Tests are of the format:
 
 .. code-block:: dylan
 
-    define test _name_ (#key all of the above mentioned arguments)
+    define test _name_ (#key description)
       body
     end test _name_;
 
-An example of a simple test could be:
+An example of a simple test is:
 
 .. code-block:: dylan
 
@@ -171,18 +171,17 @@ defined with the following arguments:
 
  * ``name``: A required keyword - an instance of ``<string>``.
  * ``description``: An instance of ``<string>``.
+ * ``setup-function``: An instance of ``<function>``.
+ * ``cleanup-function``: An instance of ``<function>``.
 
-Thus, the format of a suite would be:
+The format of a suite is:
 
 .. code-block:: dylan
 
-    define suite _name_ (#key any of the arguments described above)
+    define suite _name_ (#key description, setup-function, cleanup-function)
         test _name_;
         suite _name_;
     end suite;
-
-Note: Suites must be defined after any included tests (and suites) are
-defined.
 
 Some examples are:
 
@@ -218,84 +217,88 @@ Organzing Your Test Suites
 ==========================
 
 Tests and suites should be viewed as "super" objects to organize and
-observe control over checks. Normally a test-suite will be in its own
-Dylan library. The test-suite library may look something like:
+observe control over checks.  The test suite library may look something like:
 
 .. code-block:: dylan
 
-    define library my-test-suite
+    define library xxx-test-suite
       use dylan;
       use testworks;
       use xxx;       // <- the library you are testing
     end library;
 
-It is recommended that tests contain no more than 10-15 checks. It
-is much easier to track failures and errors in smaller tests . Putting
-names on checks and descriptions on tests and suites is something that is
-often ignored by many user's. It might seem like too much work at first
-but introducing names and descriptions allow better error tracking and
-save significant amounts of time by providing information at a glance,
-saving a lot of time later. Tests can be used to combine similar checks
-into a unit and suites can further organize similar or related tests into
-units. Once all tests and suites have been created and organized into the
-desired hierarchy, it is probably best to define a wrapper suite and
-define all your tests and suites in that mother suite.
+The number of checks per test should be kept to a minimum since it is
+much easier to track failures and errors in smaller tests. Putting
+names on checks and descriptions on tests and suites is something that
+is often ignored. It might seem like too much work at first but
+introducing names and descriptions allows better error tracking and
+saves significant time by providing information at a glance.
+
+(In the future, there should be support for check failures to include
+the source file line number for the check, but even then the check
+name can be useful, for example if it is being run inside a loop.)
+
+Tests can be used to combine similar checks into a unit and suites can
+further organize similar or related tests into units.
+
+It is common for the test suite for library xxx to export a single
+test suite named xxx-test-suite, which is further subdivided into
+sub-suites and tests as appropriate for that library.  The test suite
+is exported so that it can be included in combined test suites that
+cover multiple related libraries.
 
 
 Running Your Tests As A Stand-alone Application
 ===============================================
 
-Testworks has been designed and implemented with the  intention of
-providing users the ability to create test applications that run as
-executables. The function :func:`run-test-application` can be thought
-of as a startup function for a defined test library. But as everything
-in dylan must be defined in a module and library, this startup function
-needs to be defined in a library of its own which by convention is the
-``test-suite-`` name followed by ``-app``. For example, say we have defined
-a test-suite called ``test-foo`` which  contains the definitions of all
-its constituent suites and tests. Then the corresponding application
-library would contain a minimum of three files which could be as
-follows:
+Just exporting your main test suite from your test library doesn't do
+you much good unless something actually runs that suite.  The standard
+way to run the test suite as an application is to define an
+application library named "xxx-test-suite-app" which calls
+:func:`run-test-application` on the "xxx-test-suite".
 
-1. The file ``library.dylan`` which must use at least the library
-being tested and ``testworks``:
+Here's an example of such an application library:
+
+1. The file ``library.dylan`` which must use at least the library that
+exports the test suite, and ``testworks``:
 
 .. code-block:: dylan
 
     Module:    dylan-user
-    Synopsis:  An application library for test-foo
+    Synopsis:  An application library for xxx-test-suite
 
-    define library test-foo-app
-      use test-foo;
-      use testworks-plus;
+    define library xxx-test-suite-app
+      use xxx-test-suite;
+      use testworks;
     end;
 
-    define module test-foo-app
-      use test-foo;
-      use testworks-plus;
+    define module xxx-test-suite-app
+      use xxx-test-suite;
+      use testworks;
     end;
 
-2. The file ``test-foo.dylan`` which simply contains a call to the method
-:func:`run-test-application` with the suite-name as an argument:
+2. The file ``xxx-test-suite-app.dylan`` which simply contains a call
+to the method :func:`run-test-application` with the suite-name as an
+argument:
 
 .. code-block:: dylan
 
-    Module:    test-foo-app
-    Synopsis:  An application library for test-suite test-foo
+    Module: xxx-test-suite-app
 
-    run-test-application(test-foo-suite);
+    run-test-application(xxx-test-suite);
 
-3. The file ``test-foo.lid`` which specifies the names of the source files:
+3. The file ``xxx-test-suite-app.lid`` which specifies the names of
+the source files:
 
 .. code-block:: dylan
 
-    Library:   test-foo-app
-    Synopsis:  An application library for test-suite test-foo
+    Library: xxx-test-suite-app
+    Target-type: executable
     Files: library
-           test-foo-app
+           xxx-test-suite-app
 
 Once a library has been defined in this fashion it can be compiled
-into an executable using a compiler like Open Dylan's ``dylan-compiler``
+into an executable using a compiler like Open Dylan's ``dylan-compiler``.
 
 
 Setup and Cleanup Functions
