@@ -12,7 +12,7 @@ Checks
 
 Checks are the fundamental elements of writing a test-suite. A check
 accepts an expression to evaluate and report back on, saying if the
-expression passed, failed, or crashed. Checks are of the format:
+expression passed, failed, or crashed. Checks are of the form:
 
 .. code-block:: dylan
 
@@ -47,10 +47,10 @@ The format for :func:`check-equal` is:
 
 .. code-block:: dylan
 
-    check-equal (name :: <string>, expression-1, expression-2);
+    check-equal(name :: <string>, expression-1, expression-2);
 
-The objective of this check is to see if ``expression-1`` and ``expression-2``.
-evaluate to the same object. Some examples of this are::
+The objective of this check is to see if ``expression-1`` and ``expression-2``
+evaluate to the same object.  Examples::
 
     TESTWORKS 7 ? check-equal("Test the addition operator", 4, 1 + 3);
     Ran check: Test the addition operator passed
@@ -79,29 +79,28 @@ The format for :func:`check-instance?` is the following:
 
 .. code-block:: dylan
 
-    check-instance(name :: <string>, type, expression);
+    check-instance?(name :: <string>, type, expression);
 
 The objective of this check is to see if ``expression`` results in an
 instance of ``type``.
 
 :func:`check-condition` is the final variety of checks. Its basic format
-is of the form:
+is:
 
 .. code-block:: dylan
 
-    check-condition(name :: <string>, the-condition :: <condition>, expression);
+    check-condition(name :: <string>, the-condition :: subclass(<condition>), expression);
 
-The objective of this check is to determine if the evaluation of expression
-results in the same condition as ``the-condition``. Some simple examples of
-the same would be::
+This check determines if the evaluation of expression results in
+an instance of ``the-condition`` being signaled.  Examples::
 
     TESTWORKS 10 ? check-condition("Raise simple-error", <simple-error>,
-                            error("My simple error"));
+                                   error("My simple error"));
     Ran check: Raise simple-error passed
 
     TESTWORKS 11? check-condition("Look for wrong error",
-                            <end-of-stream-error>,
-                                      signal(make(<error>)));
+                                  <end-of-stream-error>,
+                                  signal(make(<error>)));
     Ran check: Look for wrong error crashed [The variable
              DYLAN+DYLAN/TESTWORKS::<END-OF-STREAM-ERROR> is
              unbound.]
