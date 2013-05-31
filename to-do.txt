@@ -53,9 +53,6 @@
     file to specify most common options and then override those
     options on the command-line where needed.
 
-  + Use the command-line-parser library instead of the current hand
-    hackery.
-
   + These two additional restarts should always be available:
 
     * Skip the remainder of this test
@@ -89,10 +86,6 @@
       end suite top;
 
     This would be backward compatible with current define suite.
-
-  + Merge testworks-specs and testworks-reports into testworks.  One
-    thing to be aware of is dependencies this creates for building
-    testworks as part of Open Dylan.
 
   + check/assert-equal could display a diff for any collection class.
 
