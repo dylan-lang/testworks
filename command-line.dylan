@@ -149,11 +149,7 @@ define method display-run-options
         #t         => "failures";
         otherwise  => "no";
       end,
-      reduce(method (s :: <string>, c :: <component>)
-               concatenate(s, component-name(c), " ")
-             end method,
-             " ",
-             options.perform-ignore))
+      join(options.perform-ignore, ", ", key: component-name))
 end method display-run-options;
 
 define method compute-application-options
