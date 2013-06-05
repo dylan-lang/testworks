@@ -511,18 +511,24 @@ end function;
 
 define function emit-surefire-test (suite :: <suite-result>,
                                     test :: <test-result>)
-  let checks = choose(rcurry(instance?, <check-result>),
-                      result-subresults(test));
   test-output("    <testcase name=\"%s\" classname=\"%s\">",
               test.result-name, suite.result-name);
-  select (test.result-status)
+  let status = test.result-status;
+  select (status)
     $passed => #f;
     $skipped =>
       test-output("<skipped />");
     $not-implemented =>
       test-output("<failure message=\"Not implemented\" />");
     otherwise =>
-      do(emit-surefire-check, checks);
+      if (instance?(status, <error>))
+        test-output("<failure>%s</failure>",
+                    safe-error-to-string(status));
+      else
+        let checks = choose(rcurry(instance?, <check-result>),
+                            result-subresults(test));
+        do(emit-surefire-check, checks);
+      end if;
   end select;
   test-output("</testcase>\n");
 end function;
