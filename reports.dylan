@@ -501,11 +501,11 @@ define function emit-surefire-suite (suite :: <suite-result>)
   if (~empty?(test-results))
     let (passes, failures, not-executed, not-implemented, crashes)
       = count-results(suite, test: is-test-result?);
-    test-output("<testsuite name=\"%s\" failures=\"%d\" errors=\"%d\" tests=\"%d\">\n",
+    test-output("  <testsuite name=\"%s\" failures=\"%d\" errors=\"%d\" tests=\"%d\">\n",
                 suite.result-name, failures + not-implemented, crashes,
                 test-results.size);
     do(curry(emit-surefire-test, suite), test-results);
-    test-output("</testsuite>\n");
+    test-output("  </testsuite>\n");
   end if;
 end function;
 
@@ -513,7 +513,7 @@ define function emit-surefire-test (suite :: <suite-result>,
                                     test :: <test-result>)
   let checks = choose(rcurry(instance?, <check-result>),
                       result-subresults(test));
-  test-output("<testcase name=\"%s\" classname=\"%s\">",
+  test-output("    <testcase name=\"%s\" classname=\"%s\">",
               test.result-name, suite.result-name);
   select (test.result-status)
     $passed => #f;
