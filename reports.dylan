@@ -528,7 +528,7 @@ define function emit-surefire-test (suite :: <suite-result>,
 end function;
 
 define function extract-check-failure (result :: <check-result>)
- => (reason :: <string>)
+ => (reason :: false-or(<string>))
   let operation = result-operation(result);
   let value = result-value(result);
   block ()
@@ -548,9 +548,11 @@ define function emit-surefire-check (result :: <check-result>)
                  else
                    format-to-string("Unknown failure: %=", status)
                  end if;
-    test-output("\n<failure>");
-    xml-output-pcdata(reason);
-    test-output("</failure>\n");
+    if (reason)
+      test-output("\n<failure>");
+      xml-output-pcdata(reason);
+      test-output("</failure>\n");
+    end if;
   end if;
 end function;
 
