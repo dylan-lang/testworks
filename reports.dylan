@@ -501,34 +501,40 @@ define function emit-surefire-suite (suite :: <suite-result>)
   if (~empty?(test-results))
     let (passes, failures, not-executed, not-implemented, crashes)
       = count-results(suite, test: is-test-result?);
-    test-output("<testsuite name=\"%s\" failures=\"%d\" errors=\"%d\" tests=\"%d\">\n",
+    test-output("  <testsuite name=\"%s\" failures=\"%d\" errors=\"%d\" tests=\"%d\">\n",
                 suite.result-name, failures + not-implemented, crashes,
                 test-results.size);
     do(curry(emit-surefire-test, suite), test-results);
-    test-output("</testsuite>\n");
+    test-output("  </testsuite>\n");
   end if;
 end function;
 
 define function emit-surefire-test (suite :: <suite-result>,
                                     test :: <test-result>)
-  let checks = choose(rcurry(instance?, <check-result>),
-                      result-subresults(test));
-  test-output("<testcase name=\"%s\" classname=\"%s\">",
+  test-output("    <testcase name=\"%s\" classname=\"%s\">",
               test.result-name, suite.result-name);
-  select (test.result-status)
+  let status = test.result-status;
+  select (status)
     $passed => #f;
     $skipped =>
       test-output("<skipped />");
     $not-implemented =>
       test-output("<failure message=\"Not implemented\" />");
     otherwise =>
-      do(emit-surefire-check, checks);
+      if (instance?(status, <error>))
+        test-output("<failure>%s</failure>",
+                    safe-error-to-string(status));
+      else
+        let checks = choose(rcurry(instance?, <check-result>),
+                            result-subresults(test));
+        do(emit-surefire-check, checks);
+      end if;
   end select;
   test-output("</testcase>\n");
 end function;
 
 define function extract-check-failure (result :: <check-result>)
- => (reason :: <string>)
+ => (reason :: false-or(<string>))
   let operation = result-operation(result);
   let value = result-value(result);
   block ()
@@ -548,9 +554,11 @@ define function emit-surefire-check (result :: <check-result>)
                  else
                    format-to-string("Unknown failure: %=", status)
                  end if;
-    test-output("\n<failure>");
-    xml-output-pcdata(reason);
-    test-output("</failure>\n");
+    if (reason)
+      test-output("\n<failure>");
+      xml-output-pcdata(reason);
+      test-output("</failure>\n");
+    end if;
   end if;
 end function;
 
