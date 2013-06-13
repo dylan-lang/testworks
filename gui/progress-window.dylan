@@ -1,5 +1,5 @@
-Module:       gui-testworks
-Summary:      GUI progress window for Tesworks
+Module:       testworks-gui
+Summary:      GUI progress window for TestWorks
 Author:       Hugh Greene
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
@@ -25,7 +25,7 @@ define function make-text-editor
 end function make-text-editor;
 
 define constant $progress-window-name :: <string>
-  = "GUI-TestWorks Progress Window";
+  = "TestWorks GUI Progress Window";
 
 define frame <progress-window> (<simple-frame>)
   pane main-layout (frame)
@@ -168,7 +168,7 @@ end function gui-announce-function;
 
 /// Startup/shutdown functions
 
-// Note: There can currently be only one instance of a GUI-TestWorks
+// Note: There can currently be only one instance of a TestWorks GUI
 // progress window open at a time, because the variable is the same
 // in all threads, for synchronisation purposes.  (The progress window
 // itself always runs in a separate thread.)
