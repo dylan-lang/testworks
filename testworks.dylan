@@ -6,17 +6,9 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-///*** Constants ***///
-
+// TODO(cgay): Rename to $all-tags
 define constant $all = #[#"all"];
 
-define constant <check-operation-type>
-  = false-or(type-union(<function>, <error>, <string>, subclass(<condition>)));
-
-define constant <check-value-type>
-  = false-or(type-union(<sequence>, <serious-condition>));
-
-
 /// Result handling
 
 define constant $passed = #"passed";
@@ -25,10 +17,8 @@ define constant $crashed = #"crashed";
 define constant $skipped = #"skipped";
 define constant $not-implemented  = #"nyi";
 
-// TODO(cgay): Get rid of type-union, just store the condition
-// and use $crashed in the one-of.
 define constant <result-status>
-  = type-union(one-of($passed, $failed, $skipped, $not-implemented), <condition>);
+  = one-of($passed, $failed, $crashed, $skipped, $not-implemented);
 
 // It looks like this and testworks-reports:parse-status are meant to
 // be inverses.
@@ -37,9 +27,12 @@ define method status-name
   select (status)
     $passed => "passed";
     $failed => "failed";
+    $crashed => "crashed";
     $skipped => "skipped";
     $not-implemented => "not implemented";
-    otherwise => "crashed";
+    otherwise =>
+      error("Unrecognized test result status: %=.  This is a testworks bug.",
+            status);
   end
 end method status-name;
 
@@ -49,6 +42,14 @@ define class <result> (<object>)
   constant slot result-status :: <result-status>,
     required-init-keyword: status:;
 end class <result>;
+
+define generic result-reason
+    (result :: <result>) => (reason :: false-or(<string>));
+
+define method result-reason
+    (result :: <result>) => (reason :: false-or(<string>))
+  #f
+end;
 
 define open generic result-type-name
     (result :: <result>) => (name :: <string>);

@@ -66,12 +66,11 @@ define test testworks-check-true-test ()
                 check-true($internal-check-name, #f)
               end,
               $failed);
-  check-true("check-true of error crashes",
-             instance?(without-recording ()
-                         check-true($internal-check-name,
-                                    test-error())
-                       end,
-                       <test-error>))
+  check-equal("check-true of error crashes",
+              without-recording ()
+                check-true($internal-check-name, test-error())
+              end,
+              $crashed);
 end test testworks-check-true-test;
 
 define test testworks-check-false-test ()
@@ -85,12 +84,11 @@ define test testworks-check-false-test ()
                 check-false($internal-check-name, #f)
               end,
               $passed);
-  check-true("check-false of error crashes",
-             instance?(without-recording ()
-                         check-false($internal-check-name,
-                                     test-error())
-                       end,
-                       <test-error>))
+  check-equal("check-false of error crashes",
+              without-recording ()
+                check-false($internal-check-name, test-error())
+              end,
+              $crashed);
 end test testworks-check-false-test;
 
 define test testworks-check-equal-test ()
@@ -109,13 +107,11 @@ define test testworks-check-equal-test ()
                 check-equal($internal-check-name, 1, 2)
               end,
               $failed);
-  check-true("check-equal of error crashes",
-             instance?(without-recording ()
-                         check-equal($internal-check-name,
-                                     1,
-                                     test-error())
-                       end,
-                       <test-error>))
+  check-equal("check-equal of error crashes",
+              without-recording ()
+                check-equal($internal-check-name, 1, test-error())
+              end,
+              $crashed);
 end test testworks-check-equal-test;
 
 define test testworks-check-instance?-test ()
@@ -129,30 +125,33 @@ define test testworks-check-instance?-test ()
                 check-instance?($internal-check-name, <string>, 1)
               end,
               $failed);
-  check-true("check-instance? of error crashes",
-             instance?(without-recording ()
-                         check-instance?($internal-check-name,
-                                         <integer>,
-                                         test-error())
-                       end,
-                       <test-error>))
+  check-equal("check-instance? of error crashes",
+              without-recording ()
+                check-instance?($internal-check-name,
+                                <integer>,
+                                test-error())
+              end,
+              $crashed);
 end test testworks-check-instance?-test;
 
 define test testworks-check-condition-test ()
-  let success? = #f;
-  check-equal("check-condition catches <error>",
-              without-recording ()
-                check-condition($internal-check-name,
-                                <test-error>,
-                                begin
-                                  // default-handler for <warning> returns #f
-                                  test-warning();
-                                  success? := #t;
-                                  test-error()
-                                end)
-              end,
-              $passed);
-  check-true("check-condition for <error> doesn't catch <warning>", success?);
+  begin
+    let success? = #f;
+    check-equal("check-condition catches <test-error>",
+                $passed,
+                without-recording ()
+                  check-condition($internal-check-name,
+                                  <test-error>,
+                                  begin
+                                    // default-handler for <warning> returns #f
+                                    test-warning();
+                                    success? := #t;
+                                    test-error()
+                                  end)
+                end);
+    check-true("check-condition for <test-error> doesn't catch <warning>",
+               success?);
+  end;
   check-equal("check-condition fails if no condition",
               without-recording ()
                 check-condition($internal-check-name,
@@ -160,13 +159,13 @@ define test testworks-check-condition-test ()
                                 #f)
               end,
               $failed);
-  check-condition("check-condition doesn't catch wrong condition",
-                  <warning>,
-                  without-recording ()
-                    check-condition($internal-check-name,
-                                    <test-error>,
-                                    test-warning())
-                  end);
+  check-equal("check-condition doesn't catch wrong condition",
+              $failed,
+              without-recording ()
+                check-condition($internal-check-name,
+                                <test-error>,
+                                test-warning());
+              end);
 end test testworks-check-condition-test;
 
 define test testworks-check-no-errors-test ()
@@ -180,12 +179,11 @@ define test testworks-check-no-errors-test ()
                 check-no-errors($internal-check-name, #f)
               end,
               $passed);
-  check-true("check-no-errors of error crashes",
-             instance?(without-recording ()
-                         check-no-errors($internal-check-name,
-                                         test-error())
-                       end,
-                       <test-error>))
+  check-equal("check-no-errors of error crashes",
+              $crashed,
+              without-recording ()
+                check-no-errors($internal-check-name, test-error())
+              end);
 end test testworks-check-no-errors-test;
 
 define suite testworks-check-macros-suite ()

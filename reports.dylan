@@ -270,8 +270,8 @@ define method print-result-info
                 indent, result.result-name, status-name(result-status));
     if (result-status == $passed
         & instance?(result, <benchmark-result>))
-      test-output(" in %s seconds with %d bytes allocated.",
-                  result-time(result), result-bytes(result) | 0);
+      test-output(" in %s seconds with %s bytes allocated.",
+                  result-time(result), result-bytes(result) | "?");
     end if
   end;
 end method print-result-info;
@@ -281,9 +281,9 @@ define method print-result-info
  => ()
   next-method();
   let show-result? = if (test) test(result) else #t end;
-  let status = result.result-status;
-  if (show-result? & instance?(status, <serious-condition>))
-    print-error(status);
+  let reason = result.result-reason;
+  if (show-result? & reason)
+    test-output(" [%s]", reason);
   end;
   let subindent = concatenate(indent, "  ");
   for (subresult in result-subresults(result))
@@ -366,13 +366,7 @@ define method log-report-function (result :: <result>) => ()
               generate-report(subresult)
             end
           else
-            let operation = result-operation(result);
-            let value = result-value(result);
-            let reason = block ()
-                           failure-reason(status, operation, value)
-                         exception (ex :: <error>)
-                           "***error getting failure reason***"
-                         end;
+            let reason = result.result-reason;
             if (reason)
               test-output("Reason: %s\n", remove-newlines(reason));
             end;
@@ -441,14 +435,7 @@ end method;
 
 define method do-xml-result-body (result :: <check-result>) => ();
   next-method();
-  let operation = result-operation(result);
-  let value = result-value(result);
-  let reason
-    = block ()
-        failure-reason(result.result-status, operation, value)
-      exception (ex :: <error>)
-        format-to-string("***error %s getting failure reason***", ex);
-      end;
+  let reason = result.result-reason;
   if (reason)
     do-xml-element("reason", curry(xml-output-pcdata, reason));
   end if;
@@ -533,24 +520,13 @@ define function emit-surefire-test (suite :: <suite-result>,
   test-output("</testcase>\n");
 end function;
 
-define function extract-check-failure (result :: <check-result>)
- => (reason :: false-or(<string>))
-  let operation = result-operation(result);
-  let value = result-value(result);
-  block ()
-    failure-reason(result.result-status, operation, value)
-  exception (ex :: <error>)
-    format-to-string("***error %s getting failure reason***", ex);
-  end;
-end function;
-
 define function emit-surefire-check (result :: <check-result>)
   let status = result.result-status;
   if (status ~= $passed)
     let reason = if (status == $failed)
-                   extract-check-failure(result)
+                   result.result-reason
                  elseif (instance?(status, <error>))
-                   safe-error-to-string(status);
+                   safe-error-to-string(status)
                  else
                    format-to-string("Unknown failure: %=", status)
                  end if;

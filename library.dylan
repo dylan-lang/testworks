@@ -63,6 +63,7 @@ define module testworks
          check-condition,
          check-no-condition,
          check-equal,
+           check-equal-failure-detail,
          check-false,
          check-no-errors,
          check-instance?,
@@ -108,8 +109,7 @@ define module testworks
          <test-result>,
          <suite-result>,
          <unit-result>,
-         result-operation,
-         result-value,
+         result-reason,
          do-results,
 
          <check-result>,
@@ -146,14 +146,9 @@ define module testworks
          $test-log-footer,
          $xml-version-header,
          *check-recording-function*,
-         failure-reason,
          safe-error-to-string;
 
   // Internals -- mostly due to macro hygiene failures
   export $test-objects-table,
-         *test-unit-options*,
-         do-check,
-         do-check-condition,
-         do-benchmark,
-         print-failure-reason;
+         *test-unit-options*;
 end module testworks;

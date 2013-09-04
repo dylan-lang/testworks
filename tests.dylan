@@ -36,10 +36,9 @@ define method find-test-object
 end method find-test-object;
 
 define class <unit-result> (<result>)
-  constant slot result-operation :: <check-operation-type>,
-    required-init-keyword: operation:;
-  constant slot result-value :: <check-value-type>,
-    required-init-keyword: value:;
+  // This is #f if the test passed; otherwise a string.
+  constant slot result-reason :: false-or(<string>),
+    required-init-keyword: reason:;
 end class <unit-result>;
 
 define class <check-result> (<unit-result>)
@@ -224,9 +223,7 @@ define method make-result
   make(<test-unit-result>,
        name:         test.component-name,
        status:       status,
-       subresults:   subresults,
-       operation:    test.test-function,
-       value:        #f)
+       subresults:   subresults)
 end method make-result;
 
 /// Some progress functions
@@ -252,10 +249,9 @@ define method print-result-info
   ignore(indent);
   next-method();
   let show-result? = if (test) test(result) else #t end;
-  if (show-result?)
-    print-failure-reason(result.result-status,
-                         result.result-operation,
-                         result.result-value)
-  end
+  let reason = result.result-reason;
+  if (show-result? & reason)
+    test-output(" [%s]", reason);
+  end;
 end method print-result-info;
 

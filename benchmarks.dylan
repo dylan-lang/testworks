@@ -10,79 +10,59 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// Note that <benchmark-result> is defined in tests.dylan
 
+// TODO(cgay): rather than having a special benchmark mechanism, just
+// record/report timing info for all tests (optionally).
+
 define macro benchmark
-  { benchmark (?benchmark-name:expression, ?benchmark:expression)
-  }
- =>
-  { do-benchmark(method ()
-                   ?benchmark-name
-                 end,
-                 method ()
-                   vector(method ()
-                            ?benchmark;
-                            #t  // Benchmarks succeed unless they crash.  Reasonable???
-                          end,
-                          vector())
-                 end)
+  { benchmark (?benchmark-name:expression, ?expr:expression)
+  } => {
+    %benchmark(method () ?benchmark-name end,
+               method () ?expr end)
   }
 end macro benchmark;
 
-// ---*** carlg 99-02-05 This shares a lot of code with do-check.  Might
-//        want to try to combine them with a macro or something.
-define method do-benchmark
-    (name-function :: <function>, argument-function :: <function>)
- => (status :: <result-status>)
-  block ()
-    let name = evaluate-name-function(name-function);
-    let bench-arguments = maybe-trap-errors(argument-function());
-    case
-      instance?(name, <error>) =>
-        record-benchmark("[*** Invalid name ***]", name, name, #f, #f, #f, #f);
-      instance?(bench-arguments, <error>) =>
-        record-benchmark(name, bench-arguments, bench-arguments, #f, #f, #f, #f);
-      otherwise =>
-        let function  = bench-arguments[0];
-        let arguments = bench-arguments[1];
-        let result = #f;
-        let status = #f;
-        profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
-          result := maybe-trap-errors(apply(function, arguments));
-        results
-          status := if (~result)
-                      $failed
-                    elseif (instance?(result, <error>))
-                      result
-                    else
-                      $passed
-                    end if;
-          if (status == $failed & debug-failures?())
-            break("Benchmark failed: %s", name)
-          end if;
-          record-benchmark(name, status, function, arguments,
-                           cpu-time-seconds, cpu-time-microseconds, allocation);
-        end;
-        status
-    end case;
-  exception (r :: <simple-restart>,
-             init-arguments: vector(format-string:, "Skip this benchmark",
-                                    format-arguments:, #[]))
-    $failed
+define function %benchmark
+    (get-name :: <function>, run-benchmark :: <function>)
+ => ()
+  let phase = "evaluating benchmark name";
+  let name = #f;
+  block (return)
+    let handler <serious-condition>
+        = method (condition, next-handler)
+            if (*debug?*)
+              next-handler()  // decline to handle it
+            else
+              record-benchmark(name | format-to-string("*** Invalid benchmark name ***"),
+                               $crashed,
+                               format-to-string("Error %s: %s", phase, condition),
+                               #f, #f, #f);
+              return();
+            end;
+          end method;
+    name := get-name();
+    phase := "running benchmark";
+    profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
+      run-benchmark();
+    results
+      // Benchmarks pass if they don't crash.
+      record-benchmark(name, $passed, #f,
+                       cpu-time-seconds, cpu-time-microseconds, allocation);
+    end profiling;
   end block;
-end method do-benchmark;
+end function %benchmark;
 
 /// Benchmark recording
 
 define method record-benchmark
     (name :: <string>,
      status :: <result-status>,
-     operation :: <check-operation-type>,
-     value :: <check-value-type>,
+     reason :: false-or(<string>),
      seconds :: false-or(<integer>),
      microseconds :: false-or(<integer>),
      bytes-allocated :: false-or(<integer>))
  => (status :: <result-status>)
   let result = make(<benchmark-result>,
-                    name: name, status: status, operation: operation, value: value,
+                    name: name, status: status, reason: reason,
                     seconds: seconds, microseconds: microseconds,
                     bytes: bytes-allocated);
   *check-recording-function*(result);
