@@ -6,8 +6,7 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-// TODO(cgay): Rename to $all-tags
-define constant $all = #[#"all"];
+define constant $all-tags = #[#"all"];
 
 /// Result handling
 
@@ -131,7 +130,7 @@ end macro maybe-trap-errors;
 
 define method tags-match? (run-tags :: <sequence>, object-tags :: <sequence>)
  => (bool :: <boolean>)
-  run-tags = $all | ~empty?(intersection(run-tags, object-tags))
+  run-tags = $all-tags | ~empty?(intersection(run-tags, object-tags))
 end method tags-match?;
 
 
@@ -141,7 +140,7 @@ end method tags-match?;
 // to control test suite performing.
 
 define open class <perform-options> (<object>)
-  slot perform-tags :: <sequence> = $all,
+  slot perform-tags :: <sequence> = $all-tags,
     init-keyword: tags:;
   slot perform-announce-function :: false-or(<function>) = *announce-function*,
     init-keyword: announce-function:;

@@ -38,7 +38,7 @@ Core Classes and Functions
    - :func:`perform-suite`
 
 
-.. constant:: $all
+.. constant:: $all-tags
 
    :type: <sequence>
 

@@ -327,7 +327,7 @@ An additional slot on :class:`<test>` and :class:`<suite>` objects is
 
 The ``tags`` argument to :func:`perform-test` and :func:`perform-suite`
 controls whether a test defined with certain tags is performed or not.
-Tags are either a list of symbols or the constant :const:`$all`.
+Tags are either a list of symbols or the constant :const:`$all-tags`.
 For example:
 
 .. code-block:: dylan
@@ -364,7 +364,7 @@ For example:
       Ran 0 tests: 0 passed (100%), 0 failed, 1 not executed, 0 crashed
       Ran 0 checks: 0 passed (100%), 0 failed, 0 not executed, 0 crashed
 
-    TESTWORKS 24 ? perform-test(my-test-2, tags: $all);
+    TESTWORKS 24 ? perform-test(my-test-2, tags: $all-tags);
     MY-TEST-2 passed
 
     MY-TEST-2 summary:
@@ -381,8 +381,8 @@ For example:
       Ran 1 test:  1 passed (100.0%), 0 failed, 0 not executed, 0 crashed
       Ran 1 check:  1 passed (100.0%), 0 failed, 0 not executed, 0 crashed
 
-If tags is set to ``$all``, then the test will be performed regardless of
-its tags. By default ``tags = $all``.
+If tags is set to ``$all-tags``, then the test will be performed
+regardless of its tags. By default ``tags = $all-tags``.
 
 
 Report Functions

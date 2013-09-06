@@ -142,7 +142,7 @@ end method find-test;
 
 define method perform-suite
     (suite :: <suite>,
-     #key tags                     = $all,
+     #key tags                     = $all-tags,
           announce-function        = #f,
           announce-checks?         = *announce-checks?*,
           report-format-function   = *format-function*,
