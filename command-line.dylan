@@ -45,13 +45,13 @@ define function parse-args
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("suite"),
-                  help: "Run only these named suites.  May be "
-                    "used multiple times."));
+                  help: "Run (or list) only these named suites.  "
+                    "May be used multiple times."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("test"),
-                  help: "Run only these named tests.  May be "
-                    "used multiple times."));
+                  help: "Run (or list) only these named tests.  "
+                    "May be used multiple times."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("ignore-suite"),
@@ -62,6 +62,14 @@ define function parse-args
                   names: #("ignore-test"),
                   help: "Ignore these named tests.  May be "
                     "used multiple times."));
+  add-option(parser,
+             make(<flag-option>,
+                  names: #("list-suites"),
+                  help: "List the suites without running them."));
+  add-option(parser,
+             make(<flag-option>,
+                  names: #("list-tests"),
+                  help: "List the tests without running them."));
   block ()
     parse-command-line(parser, args, description: "Run tests suites.");
   exception (ex :: <usage-error>)
@@ -86,6 +94,8 @@ define table $report-functions :: <string-table> = {
 define class <perform-criteria> (<perform-options>)
   slot perform-ignore :: <stretchy-vector>,
     init-keyword: ignore:;
+  slot list-suites? :: <boolean> = #f;
+  slot list-tests? :: <boolean> = #f;
 end class <perform-criteria>;
 
 define method execute-component?
@@ -196,6 +206,8 @@ define method compute-application-options
   let ignore-suites = get-option-value(parser, "ignore-suite");
   let ignore-tests = get-option-value(parser, "ignore-test");
   options.perform-ignore := find-component(ignore-suites, ignore-tests);
+  options.list-suites? := get-option-value(parser, "list-suites");
+  options.list-tests? := get-option-value(parser, "list-tests");
   values(start-suite, options, report-function)
 end method compute-application-options;
 
@@ -204,7 +216,7 @@ define method run-test-application
      #key command-name = application-name(),
           arguments = application-arguments(),
           report-format-function = *format-function*)
- => (result :: <result>)
+ => (result :: false-or(<result>))
   let parser = parse-args(arguments);
   let (start-suite, options, report-function)
     = block ()
@@ -214,38 +226,51 @@ define method run-test-application
         exit-application(2);
       end;
 
-  // Run the appropriate test or suite
-  block ()
-    if (get-option-value(parser, "verbose")
-          & (report-function ~= xml-report-function)
-          & (report-function ~= surefire-report-function))
-      display-run-options(start-suite, report-function, options)
-    end;
-    let result = #f;
-    let handler <warning>
-      = method (warning :: <warning>, next-handler :: <function>) => ()
-          report-format-function("Warning: %s\n", warning);
-          next-handler()
-        end;
-    profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
-      result := perform-component(start-suite, options, report-function: #f);
-    results
-      display-results(result,
-                      report-function: report-function,
-                      report-format-function: report-format-function);
-      if (get-option-value(parser, "profile"))
-        format-out("\nTest run took %d.%s seconds, allocating %d byte%s\n",
-                   cpu-time-seconds,
-                   integer-to-string(cpu-time-microseconds, size: 6),
-                   allocation, plural(allocation));
-      end if;
-      format-out("\n");
-      force-output(*standard-output*);
-    end profiling;
-    result
-  afterwards
-    end-test();
-  end block;
+  if (options.list-suites? | options.list-tests?)
+    let results = list-component(start-suite, options);
+    let final-results
+      = choose(method (c :: <component>)
+                 (options.list-suites? & instance?(c, <suite>))
+                 | (options.list-tests? & instance?(c, <test>))
+               end,
+               results);
+    for (component :: <component> in final-results)
+      format-out("%s %s\n", component.component-type-name, component.component-name)
+    end for
+  else
+    // Run the appropriate test or suite
+    block ()
+      if (get-option-value(parser, "verbose")
+            & (report-function ~= xml-report-function)
+            & (report-function ~= surefire-report-function))
+        display-run-options(start-suite, report-function, options)
+      end;
+      let result = #f;
+      let handler <warning>
+        = method (warning :: <warning>, next-handler :: <function>) => ()
+            report-format-function("Warning: %s\n", warning);
+            next-handler()
+          end;
+      profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
+        result := perform-component(start-suite, options, report-function: #f);
+      results
+        display-results(result,
+                        report-function: report-function,
+                        report-format-function: report-format-function);
+        if (get-option-value(parser, "profile"))
+          format-out("\nTest run took %d.%s seconds, allocating %d byte%s\n",
+                     cpu-time-seconds,
+                     integer-to-string(cpu-time-microseconds, size: 6),
+                     allocation, plural(allocation));
+        end if;
+        format-out("\n");
+        force-output(*standard-output*);
+      end profiling;
+      result
+    afterwards
+      end-test();
+    end block;
+  end if;
 end method run-test-application;
 
 define not-inline function end-test ()

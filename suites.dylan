@@ -164,6 +164,19 @@ define method perform-suite
      report-format-function: report-format-function)
 end method perform-suite;
 
+define method list-component
+    (suite :: <suite>, options :: <perform-options>)
+ => (list :: <sequence>)
+  let sublist :: <stretchy-vector> = make(<stretchy-vector>);
+  if (execute-component?(suite, options))
+    add!(sublist, suite);
+    for (component in suite.suite-components)
+      sublist := concatenate!(sublist, list-component(component, options));
+    end for;
+  end if;
+  sublist
+end method list-component;
+    
 define method execute-component
     (suite :: <suite>, options :: <perform-options>)
  => (subresults :: <sequence>, status :: <result-status>)
