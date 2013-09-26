@@ -166,6 +166,16 @@ define method perform-test
   end
 end method perform-test;
 
+define method list-component
+    (test :: <test>, options :: <perform-options>)
+ => (list :: <sequence>)
+  if (execute-component?(test, options))
+    vector(test);
+  else
+    #[];
+  end if
+end method list-component;
+
 define method execute-component
     (test :: <test>, options :: <perform-options>)
  => (subresults :: <sequence>, status :: <result-status>,

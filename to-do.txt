@@ -64,9 +64,6 @@
   + The testworks-specs macros drive me crazy because it's hard to
     tell/remember what the names of the tests they generate are.
 
-  + ``my-test-suite --list-tests`` and/or ``--list-suites`` and/or
-    ``--list-all`` (optionally matching a substring or regex).
-
   + ``assert-every(f, collection)`` (and assert-none) might be useful.
     There are a lot of tests in apply-dylan-test-suite that do
     check-true("", every?(...)).  This could improve the failure
