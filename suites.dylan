@@ -179,15 +179,32 @@ end method list-component;
     
 define method execute-component
     (suite :: <suite>, options :: <perform-options>)
- => (subresults :: <sequence>, status :: <result-status>)
+ => (subresults :: <sequence>, status :: <result-status>,
+     seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults :: <stretchy-vector> = make(<stretchy-vector>);
+  let seconds :: <integer> = 0;
+  let microseconds :: <integer> = 0;
+  let bytes :: <integer> = 0;
   let status
     = block ()
         suite.suite-setup-function();
         for (component in suite.suite-components)
           let subresult = maybe-execute-component(component, options);
-          add!(subresults, subresult)
-        end;
+          add!(subresults, subresult);
+          if (instance?(subresult, <component-result>)
+              & subresult.result-seconds
+              & subresult.result-microseconds)
+            let (sec, usec) = add-times(seconds, microseconds,
+                                        subresult.result-seconds,
+                                        subresult.result-microseconds);
+            seconds := sec;
+            microseconds := usec;
+            bytes := bytes + subresult.result-bytes;
+          else
+            test-output("subresult has no profiling info: %s\n",
+                        subresult.result-name);
+          end;
+        end for;
         case
           empty?(subresults) =>
             $not-implemented;
@@ -199,18 +216,20 @@ define method execute-component
             $passed;
           otherwise =>
             $failed
-        end
+        end case
       cleanup
         suite.suite-cleanup-function();
-      end;
-  values(subresults, status)
+      end block;
+  values(subresults, status, seconds, microseconds, bytes)
 end method execute-component;
 
-define method make-result
-    (suite :: <suite>, subresults :: <sequence>, status :: <result-status>)
- => (result :: <component-result>)
-  make(<suite-result>,
-       name:         suite.component-name,
-       status:       status,
-       subresults:   subresults)
-end method make-result;
+define function add-times
+    (sec1, usec1, sec2, usec2) => (sec, usec)
+  let sec = sec1 + sec2;
+  let usec = usec1 + usec2;
+  if (usec >= 1000000)
+    usec := usec - 1000000;
+    sec1 := sec1 + 1;
+  end if;
+  values(sec, usec)
+end function add-times;

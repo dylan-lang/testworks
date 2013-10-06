@@ -156,11 +156,6 @@ define method argument-value
   value
 end method argument-value;
 
-// ---*** carlg 99-02-12 I think it would be a good idea to change the arguments
-//        as follows:
-//          -report [all | failures | summary]
-//        and the rest can be figured out based on whether one or two log files
-//        were specified.  No time now though...
 define constant $help-format-string =
   "Application: %s\n"
   "\n"

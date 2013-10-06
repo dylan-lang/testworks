@@ -57,27 +57,25 @@ define method result-type-name
   "Test-unit"
 end;
 
-define class <benchmark-result> (<unit-result>)
-  constant slot result-seconds :: false-or(<integer>),
-    required-init-keyword: seconds:;
-  constant slot result-microseconds :: false-or(<integer>),
-    required-init-keyword: microseconds:;
-  // Hopefully no benchmarks will allocated more than 536MB...
-  constant slot result-bytes :: false-or(<integer>),
-    required-init-keyword: bytes:;
-end;
-
-define method result-type-name
-    (result :: <benchmark-result>) => (name :: <string>)
-  "Benchmark"
-end;
-
 define method result-time
-    (result :: <benchmark-result>, #key pad-seconds-to :: false-or(<integer>))
+    (result :: <component-result>, #key pad-seconds-to :: false-or(<integer>))
  => (seconds :: <string>)
-  time-to-string(result-seconds(result), result-microseconds(result),
+  time-to-string(result.result-seconds, result.result-microseconds,
                  pad-seconds-to: pad-seconds-to)
 end method result-time;
+
+define function time-to-string
+    (seconds :: false-or(<integer>), microseconds :: false-or(<integer>),
+     #key pad-seconds-to :: false-or(<integer>))
+ => (seconds :: <string>)
+  if (seconds & microseconds)
+    concatenate(integer-to-string(seconds, size: pad-seconds-to | 1, fill: ' '),
+                ".",
+                integer-to-string(microseconds, size: 6))
+  else
+    "N/A"
+  end
+end function time-to-string;
 
 // the test macro
 
@@ -178,22 +176,30 @@ end method list-component;
 define method execute-component
     (test :: <test>, options :: <perform-options>)
  => (subresults :: <sequence>, status :: <result-status>,
-     seconds, useconds, bytes)
+     seconds :: <integer>, usec :: <integer>, bytes :: <integer>)
   let subresults = make(<stretchy-vector>);
+  let (seconds, microseconds, bytes) = values(0, 0, 0);
   let status :: <result-status>
-    = dynamic-bind
-        (*debug?* = options.perform-debug?,
-         *check-recording-function* =
-           method (result :: <result>)
-             add!(subresults, result);
-             options.perform-progress-function(result);
-             result
-           end,
-         *test-unit-options* = options)
-        let cond = maybe-trap-errors(test.test-function());
+    = dynamic-bind (*debug?* = options.perform-debug?,
+                    *check-recording-function* =
+                      method (result :: <result>)
+                        add!(subresults, result);
+                        options.perform-progress-function(result);
+                        result
+                      end,
+                    *test-unit-options* = options)
+        let cond = #f;
+        profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
+          cond := maybe-trap-errors(test.test-function());
+        results
+          seconds := cpu-time-seconds;
+          microseconds := cpu-time-microseconds;
+          bytes := allocation;
+        end profiling;
         case
           instance?(cond, <serious-condition>) =>
-            cond;
+            // TODO(cgay): Capture the failure reason here.
+            $crashed;
           empty?(subresults) & ~test.test-allow-empty? =>
             $not-implemented;
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
@@ -205,26 +211,8 @@ define method execute-component
             $failed
         end
       end;
-  values(subresults, status)
+  values(subresults, status, seconds, microseconds, bytes)
 end method execute-component;
-
-define method make-result
-    (test :: <test>, subresults :: <sequence>, status :: <result-status>)
- => (result :: <component-result>)
-  make(<test-result>,
-       name:         test.component-name,
-       status:       status,
-       subresults:   subresults)
-end method make-result;
-
-define method make-result
-    (test :: <test-unit>, subresults :: <sequence>, status :: <result-status>)
- => (result :: <component-result>)
-  make(<test-unit-result>,
-       name:         test.component-name,
-       status:       status,
-       subresults:   subresults)
-end method make-result;
 
 /// Some progress functions
 

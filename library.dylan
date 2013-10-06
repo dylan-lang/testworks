@@ -8,9 +8,8 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks
   use command-line-parser;
-  use common-dylan;
-  use io;
-  use system;
+  use common-dylan, import: { common-dylan, threads };
+  use io, import: { format-out, standard-io, streams };
 
   export testworks;
 end library testworks;
@@ -69,9 +68,6 @@ define module testworks
          check-instance?,
          check-true;
 
-  // Benchmarks
-  export benchmark;
-
   // Tests
   export <test>,
          test-definer,
@@ -113,12 +109,7 @@ define module testworks
          do-results,
 
          <check-result>,
-         <test-unit-result>,
-         <benchmark-result>,
-         $benchmark-result-divider,
-         print-one-benchmark-result,
-         print-benchmark-result-header,
-         print-benchmark-result-footer;
+         <test-unit-result>;
 
   // Progress functions
   export *default-progress-function*,

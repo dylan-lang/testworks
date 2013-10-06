@@ -56,23 +56,10 @@ define open generic result-type-name
 define method \=
     (result1 :: <result>, result2 :: <result>)
  => (equal? :: <boolean>)
-  // We want to know if two error messages are the same, so that "crashed"
-  // tests aren't always presented as differences.  However, \= isn't
-  // specialized on <error>, so we create our own test:
-  local method same-error-message?
-            (s1 :: <object>, s2 :: <object>)
-         => (same? :: <boolean>)
-          instance?(s1, <simple-error>)
-          & instance?(s2, <simple-error>)
-          & format-to-string(condition-format-string(s1),
-                             condition-format-arguments(s1))
-            = format-to-string(condition-format-string(s2),
-                               condition-format-arguments(s2));
-        end method same-error-message?;
   result1.result-name = result2.result-name
   & (result1.result-status = result2.result-status
-     | same-error-message?(result1.result-status, result2.result-status))
-end method \=;
+     | result1.result-reason = result2.result-reason)
+end;
 
 
 ///*** State Variables ***///
@@ -153,4 +140,3 @@ define open class <perform-options> (<object>)
   slot perform-debug? = *debug?*,
     init-keyword: debug?:;
 end class <perform-options>;
-

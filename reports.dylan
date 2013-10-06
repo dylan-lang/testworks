@@ -63,8 +63,10 @@ define method count-results
            not-executed := not-executed + 1;
          $not-implemented =>
            not-implemented := not-implemented + 1;
-         otherwise =>
+         $crashed =>
            crashes := crashes + 1;
+         otherwise =>
+           error("Invalid result status: %=", result.result-status);
        end
      end,
      result,
@@ -72,193 +74,30 @@ define method count-results
   values(passes, failures, not-executed, not-implemented, crashes)
 end method count-results;
 
-/*
-define function sum-benchmark-results
-    (result :: <result>)
- => (seconds, microseconds, bytes-allocated)
-  let seconds = 0;
-  let microseconds = 0;
-  let allocation = 0;
-  local method sum-benches (result :: <benchmark-result>)
-          let sec = result-seconds(result);
-          let usec = result-microseconds(result);
-          let bytes = result-bytes(result);
-          if (sec & usec & bytes)
-            microseconds := microseconds + usec;
-            if (microseconds >= 1000000)
-              microseconds := microseconds - 1000000;
-              seconds := seconds + 1;
-            end if;
-            seconds := seconds + sec;
-            allocation := allocation + bytes;
-          end if;
-        end method;
-  do-results(sum-benches, result,
-             test: method (result :: <result>) => (b :: <boolean>)
-                     instance?(result, <benchmark-result>)
-                   end);
-  values((seconds > 0) & seconds,
-         (microseconds > 0) & microseconds,
-         (allocation > 0) & allocation)
-end function sum-benchmark-results;
-*/
-define constant $benchmark-result-divider
-  = "    -------------------------------------------------------------------------------";
-
-define method print-benchmark-result-header () => ()
-  print-one-benchmark-result("Benchmark", "Time (sec)", "Bytes allocated");
-  test-output("%s\n", $benchmark-result-divider);
-end method print-benchmark-result-header;
-
-define method print-one-benchmark-result
-    (name :: <string>, time :: <string>, allocation :: <string>) => ()
-  local method pad-to (name, columns, align-left?)
-          let len = size(name);
-          if (len > columns)
-            name
-          else
-            let filler = make(<string>, size: columns - len, fill: ' ');
-            if (align-left?)
-              concatenate(name, filler)
-            else
-              concatenate(filler, name)
-            end if
-          end if
-        end method;
-  test-output("    %s %s   %s\n",
-              pad-to(name, 50, #t),
-              pad-to(time, 10, #f),
-              pad-to(allocation, 12, #f));
-end method print-one-benchmark-result;
-
-define method print-benchmark-result-footer
-    (title :: <string>, time :: <string>,
-     allocation :: <string>, crashes :: <integer>, #key divider? = #t)
- => ()
-  divider? & test-output("%s\n", $benchmark-result-divider);
-  print-one-benchmark-result(title, time, allocation);
-  if (crashes > 0)
-    test-output("\n    [*] %d benchmark%s crashed.\n", crashes, plural(crashes));
-  end if;
-end method print-benchmark-result-footer;
-
-// ---*** carlg 99-02-17 Currently this displays each test's output in a separate
-//        table.  It may be preferable to display all benchmarks in a single flat
-//        table?  It sort of depends on how we expect the benchmarks to be organized...
-define method print-benchmark-results
-    (result :: <result>)
- => ()
-  let total-seconds = 0;
-  let total-microseconds = 0;
-  let total-allocation = 0;
-  let any-displayed? = #f;
-  local method do-one-component (result :: <component-result>) => ()
-          let seconds = 0;
-          let microseconds = 0;
-          let allocation = 0;
-          let crashed = 0;
-          let header-displayed? = #f;
-          local method maybe-display-header () => ()
-                  if (~header-displayed?)
-                    header-displayed? := #t;
-                    any-displayed? := #t;
-                    test-output("\n  %s %s\n",
-                              result-type-name(result), result-name(result));
-                    print-benchmark-result-header();
-                  end if;
-                end method;
-          local method maybe-display-footer () => ()
-                  if (header-displayed?)
-                    print-benchmark-result-footer
-                      ("Subtotals:",
-                       time-to-string(seconds, microseconds),
-                       integer-to-string(allocation),
-                       crashed);
-                    let (newsec, newusec) = addtimes(total-seconds, total-microseconds,
-                                                     seconds, microseconds);
-                    total-seconds := newsec;
-                    total-microseconds := newusec;
-                    total-allocation := total-allocation + allocation;
-                  end if;
-                end method;
-          for (bench in result-subresults(result))
-            if (instance?(bench, <benchmark-result>))
-              let sec = result-seconds(bench);
-              let usec = result-microseconds(bench);
-              let bytes = result-bytes(bench);
-              let name = result-name(bench);
-              let time = result-time(bench);
-              let sbytes = result-bytes(bench) & integer-to-string(result-bytes(bench));
-              if (result-status(bench) == $passed)
-                let (newsec, newusec) = addtimes(seconds, microseconds, sec, usec);
-                seconds := newsec;
-                microseconds := newusec;
-                allocation := allocation + bytes;
-              else
-                crashed := crashed + 1;
-                name := concatenate(name, " [*]");
-                time := "N/A";
-                sbytes := "N/A";
-              end if;
-              maybe-display-header();
-              print-one-benchmark-result(name, time, sbytes);
-            end if;
-          end for;
-          maybe-display-footer();
-          for (subresult in result-subresults(result))
-            if (instance?(subresult, <component-result>))
-              do-one-component(subresult);
-            end if;
-          end for;
-        end method;
-  do-one-component(result);
-  if (any-displayed?)
-    test-output("\n  Totals: %s seconds, %d bytes allocated.\n",
-                time-to-string(total-seconds, total-microseconds), total-allocation);
-  end if;
-end method print-benchmark-results;
 
 
 /// Summary generation
 
-define method print-percentage
-    (count :: <integer>, size :: <integer>,
-     #key decimal-places = 1) => ()
-  case
-    size > 0 =>
-      let shift = 10; // 10 ^ decimal-places;
-      let percentage = ceiling/(count * 100 * shift, size);
-      let (integer, remainder) = floor/(percentage, shift);
-      test-output("%d.%d%%", integer, floor(remainder));
-    otherwise =>
-      test-output("100%%");
-  end
-end method print-percentage;
-
 define method print-result-summary
-    (result :: <result>, name :: <string>,
-     #key test = always(#t))
+    (result :: <result>, name :: <string>, #key test = always(#t))
  => ()
   let (passes, failures, not-executed, not-implemented, crashes)
     = count-results(result, test: test);
-  let total-results = passes + failures + not-implemented + crashes;
-  test-output("  Ran %d %s%s %d passed (",
-              total-results,
+  let total = passes + failures + not-implemented + crashes;
+  let percent = 100.0 * if (total = 0)
+                          1
+                        else
+                          as(<float>, passes) / total
+                        end;
+  test-output("  Ran %d %s%s: %d passed (%s%%), %d failed, %d skipped, "
+                "%d not implemented, %d crashed\n",
+              total,
               name,
-              if (total-results == 1) ": " else "s: " end,
-              passes);
-  print-percentage(passes, total-results);
-  test-output("), %d failed, %d skipped, %d not implemented, %d crashed\n",
+              if (total == 1) "" else "s" end,
+              passes,
+              percent,
               failures, not-executed, not-implemented, crashes);
 end method print-result-summary;
-
-define method print-result-class-summary
-    (result :: <result>, name :: <string>, class :: <class>) => ()
-  print-result-summary(result, name,
-                       test: method (subresult)
-                               instance?(subresult, class)
-                             end)
-end method print-result-class-summary;
 
 define method print-result-info
     (result :: <result>, #key indent = "", test)
@@ -269,7 +108,7 @@ define method print-result-info
     test-output("\n%s%s %s",
                 indent, result.result-name, status-name(result-status));
     if (result-status == $passed
-        & instance?(result, <benchmark-result>))
+        & instance?(result, <component-result>))
       test-output(" in %s seconds with %s bytes allocated.",
                   result-time(result), result-bytes(result) | "?");
     end if
@@ -299,13 +138,18 @@ define method null-report-function (result :: <result>) => ()
   #f
 end method null-report-function;
 
-define method summary-report-function (result :: <result>) => ()
-  print-benchmark-results(result);
+define method summary-report-function
+    (result :: <result>) => ()
   test-output("\n\n%s summary:\n", result-name(result));
-  print-result-class-summary(result, "suite", <suite-result>);
-  print-result-class-summary(result, "test",  <test-result>);
-  print-result-class-summary(result, "check", <check-result>);
-  print-result-class-summary(result, "benchmark", <benchmark-result>);
+  local method print-class-summary (result, name, class) => ()
+          print-result-summary(result, name,
+                               test: method (subresult)
+                                       instance?(subresult, class)
+                                     end)
+        end;
+  print-class-summary(result, "suite", <suite-result>);
+  print-class-summary(result, "test",  <test-result>);
+  print-class-summary(result, "check", <check-result>);
 end method summary-report-function;
 
 define method failures-report-function (result :: <result>) => ()
@@ -370,7 +214,7 @@ define method log-report-function (result :: <result>) => ()
             if (reason)
               test-output("Reason: %s\n", remove-newlines(reason));
             end;
-            if (~reason & instance?(result, <benchmark-result>))
+            if (~reason & instance?(result, <test-result>))
               test-output("Seconds: %s\nAllocation: %d bytes\n",
                           result-time(result), result-bytes(result) | 0);
             end if;
@@ -420,10 +264,10 @@ define function xml-output-pcdata (text :: <string>) => ()
   end iterate;
 end function;
 
-define function do-xml-element (gi :: <string>, body :: <function>) => ()
-  test-output("<%s>", gi);
+define function do-xml-element (element-name :: <string>, body :: <function>) => ()
+  test-output("<%s>", element-name);
   body();
-  test-output("</%s>\n", gi);
+  test-output("</%s>\n", element-name);
 end function;
 
 define method do-xml-result-body (result :: <result>) => ();
@@ -441,7 +285,7 @@ define method do-xml-result-body (result :: <check-result>) => ();
   end if;
 end method;
 
-define method do-xml-result-body (result :: <benchmark-result>) => ();
+define method do-xml-result-body (result :: <component-result>) => ();
   next-method();
   do-xml-element("seconds",
                  method ()
@@ -455,15 +299,10 @@ define method do-xml-result-body (result :: <benchmark-result>) => ();
                  method ()
                    test-output("%d", result.result-bytes)
                  end);
-end method;
-
-define method do-xml-result-body (result :: <component-result>) => ();
-  next-method();
-  let status = result.result-status;
-  if (instance?(status, <error>))
+  if (result.result-reason)
     do-xml-element("reason",
                    method ()
-                     xml-output-pcdata(safe-error-to-string(status));
+                     xml-output-pcdata(result.result-reason);
                    end);
   end if;
   do(do-xml-result, result-subresults(result));

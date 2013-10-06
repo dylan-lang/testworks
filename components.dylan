@@ -21,6 +21,7 @@ define class <component> (<object>)
     init-keyword: tags:;
 end class <component>;
 
+
 define generic component-type-name
     (component :: <component>) => (type-name :: <string>);
 
@@ -29,12 +30,49 @@ define method component-type-name
   "component"
 end;
 
+
+// Get the result type for a component.  This isn't needed for checks;
+// only for components with subresults.
+define generic component-result-type
+    (component :: <component>) => (result-type :: subclass(<result>));
+
+define method component-result-type
+    (component :: <component>) => (result-type :: subclass(<result>))
+  <component-result>
+end;
+
+define method component-result-type
+    (component :: <test>) => (result-type :: subclass(<result>))
+  <test-result>
+end;
+
+define method component-result-type
+    (component :: <suite>) => (result-type :: subclass(<result>))
+  <suite-result>
+end;
+
+define method component-result-type
+    (component :: <test-unit>) => (result-type :: subclass(<result>))
+  <unit-result>
+end;
+
+
 
 /// Result handling
 
 define class <component-result> (<result>)
   constant slot result-subresults :: <sequence> = make(<stretchy-vector>),
     init-keyword: subresults:;
+
+  // Profiling data...
+
+  constant slot result-seconds :: false-or(<integer>),
+    required-init-keyword: seconds:;
+  constant slot result-microseconds :: false-or(<integer>),
+    required-init-keyword: microseconds:;
+  // Hopefully no benchmarks will allocate more than 536MB haha...
+  constant slot result-bytes :: false-or(<integer>),
+    required-init-keyword: bytes:;
 end class <component-result>;
 
 define class <test-result> (<component-result>)
@@ -99,11 +137,17 @@ define method maybe-execute-component
   if (announce-function)
     announce-function(component)
   end;
-  let (subresults, perform-status)
+  let (subresults, status, seconds, microseconds, bytes)
     = if (execute-component?(component, options))
         execute-component(component, options)
       else
-        values(#(), $skipped)
+        values(#(), $skipped, 0, 0, 0)
       end;
-  make-result(component, subresults, perform-status)
+  make(component-result-type(component),
+       name: component.component-name,
+       status: status,
+       subresults: subresults,
+       seconds: seconds,
+       microseconds: microseconds,
+       bytes: bytes)
 end method maybe-execute-component;
