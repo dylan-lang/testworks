@@ -214,7 +214,7 @@ define method log-report-function (result :: <result>) => ()
             if (reason)
               test-output("Reason: %s\n", remove-newlines(reason));
             end;
-            if (~reason & instance?(result, <test-result>))
+            if (~reason & instance?(result, <component-result>))
               test-output("Seconds: %s\nAllocation: %d bytes\n",
                           result-time(result), result-bytes(result) | 0);
             end if;
