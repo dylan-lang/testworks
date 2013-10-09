@@ -176,7 +176,7 @@ end method list-component;
 define method execute-component
     (test :: <test>, options :: <perform-options>)
  => (subresults :: <sequence>, status :: <result-status>,
-     seconds :: <integer>, usec :: <integer>, bytes :: <integer>)
+     seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults = make(<stretchy-vector>);
   let (seconds, microseconds, bytes) = values(0, 0, 0);
   let status :: <result-status>
