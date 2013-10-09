@@ -6,7 +6,10 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-/// Check macros
+/// Check/assert macros
+
+// The check-* macros require the caller to provide a name.
+// The assert-* macros auto-generate a name.
 
 // Note that these macros wrap up the real macro arguments inside
 // methods to delay their evaluation until they are within the scope
@@ -30,8 +33,23 @@ define macro check-equal
   }
 end macro check-equal;
 
+define macro assert-equal
+  { assert-equal (?expr1:expression, ?expr2:expression)
+  } => {
+    assert-equal(?expr1, ?expr2, ?"expr1" " = " ?"expr2")
+  }
+  { assert-equal (?expr1:expression, ?expr2:expression, ?name:expression)
+  } => {
+    %check-equal(method () ?name end,
+                 method ()
+                   values(?expr1, ?expr2, ?"expr1", ?"expr2")
+                 end)
+  }
+end macro assert-equal;
+
 define function %check-equal
-    (get-name :: <function>, get-arguments :: <function>) => ()
+    (get-name :: <function>, get-arguments :: <function>)
+ => (status :: <result-status>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -43,7 +61,7 @@ define function %check-equal
               record-check(name | format-to-string("*** Invalid check name ***"),
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
-              return();
+              return($crashed);
             end;
           end method;
     name := get-name();
@@ -65,7 +83,8 @@ define function %check-equal
                                   detail | ""))
         end;
     record-check(name, status, reason);
-  end block;
+    status
+  end block
 end function %check-equal;
 
 // Users can potentially override this for their own classes.
@@ -99,7 +118,7 @@ end macro check-instance?;
 
 define function %check-instance?
     (get-name :: <function>, get-arguments :: <function>)
- => ()
+ => (status :: <result-status>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -111,7 +130,7 @@ define function %check-instance?
               record-check(name | format-to-string("*** Invalid check name ***"),
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
-              return();
+              return($crashed);
             end;
           end method;
     name := get-name();
@@ -128,7 +147,8 @@ define function %check-instance?
                                   value, value-expr, type))
         end;
     record-check(name, status, reason);
-  end block;
+    status
+  end block
 end function %check-instance?;
 
 define macro check-true
@@ -141,9 +161,17 @@ define macro check-true
   }
 end macro check-true;
 
+define macro assert-true
+  { assert-true (?expr:expression)
+  } => {
+    %check-true(method () ?"expr" " is false" end,
+                method () values(?expr, ?"expr") end)
+  }
+end macro assert-true;
+
 define function %check-true
     (get-name :: <function>, get-arguments :: <function>)
- => ()
+ => (status :: <result-status>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -155,7 +183,7 @@ define function %check-true
               record-check(name | format-to-string("*** Invalid check name ***"),
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
-              return();
+              return($crashed);
             end;
           end method;
     name := get-name();
@@ -172,7 +200,8 @@ define function %check-true
                                   value-expr))
         end;
     record-check(name, status, reason);
-  end block;
+    status
+  end block
 end function %check-true;
 
 define macro check-false
@@ -185,9 +214,19 @@ define macro check-false
    }
 end macro check-false;
 
+define macro assert-false
+  { assert-false (?expr:expression)
+  } => {
+    %check-false(method () ?"expr" " = #f" end,
+                 method ()
+                   values(?expr, ?"expr")
+                 end)
+  }
+end macro assert-false;
+
 define function %check-false
     (get-name :: <function>, get-arguments :: <function>)
- => ()
+ => (status :: <result-status>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -199,7 +238,7 @@ define function %check-false
               record-check(name | format-to-string("*** Invalid check name ***"),
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
-              return();
+              return($crashed);
             end;
           end method;
     name := get-name();
@@ -216,7 +255,8 @@ define function %check-false
                                   value-expr))
         end;
     record-check(name, status, reason);
-  end block;
+    status
+  end block
 end function %check-false;
 
 define macro check-condition
@@ -230,9 +270,21 @@ define macro check-condition
   }
 end macro check-condition;
 
+define macro assert-signals
+  { assert-signals(?condition:expression, ?expr:expression)
+  } => {
+    %check-condition(method ()
+                       ?"expr" " signals condition " ?"condition"
+                     end,
+                     method ()
+                       values(?condition, method () ?expr end, ?"expr")
+                     end)
+  }
+end macro assert-signals;
+
 define function %check-condition
     (get-name :: <function>, get-arguments :: <function>)
- => ()
+ => (status :: <result-status>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -244,7 +296,7 @@ define function %check-condition
               record-check(name | format-to-string("*** Invalid check name ***"),
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
-              return();
+              return($crashed);
             end;
           end method;
     name := get-name();
@@ -267,7 +319,8 @@ define function %check-condition
                                            ex.object-class, condition-class))
         end;
     record-check(name, status, reason);
-  end block;
+    status
+  end block
 end function %check-condition;
 
 
@@ -285,6 +338,14 @@ define macro check-no-errors
     check-true(?check-name, begin ?check-body; #t end)
   }
 end macro check-no-errors;
+
+define macro assert-no-errors
+  { assert-no-errors(?expr:expression)
+  } => {
+    check-true(?"expr" " doesn't signal an error ",
+               begin ?expr; #t end)
+  }
+end macro assert-no-errors;
 
 
 // Try twice to get a nice error message and then give up!

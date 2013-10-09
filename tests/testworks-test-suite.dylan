@@ -73,6 +73,12 @@ define test testworks-check-true-test ()
               $crashed);
 end test testworks-check-true-test;
 
+define test testworks-assert-true-test ()
+  assert-equal($passed, without-recording () assert-true(#t) end);
+  assert-equal($failed, without-recording () assert-true(#f) end);
+  assert-equal($crashed, without-recording () assert-true(test-error()) end);
+end test testworks-assert-true-test;
+
 define test testworks-check-false-test ()
   check-equal("check-false(#t) fails",
               without-recording ()
@@ -90,6 +96,12 @@ define test testworks-check-false-test ()
               end,
               $crashed);
 end test testworks-check-false-test;
+
+define test testworks-assert-false-test ()
+  assert-equal($failed, without-recording () assert-false(#t) end);
+  assert-equal($passed, without-recording () assert-false(#f) end);
+  assert-equal($crashed, without-recording () assert-false(test-error()) end);
+end test testworks-assert-false-test;
 
 define test testworks-check-equal-test ()
   check-equal("check-equal(1, 1) passes",
@@ -113,6 +125,13 @@ define test testworks-check-equal-test ()
               end,
               $crashed);
 end test testworks-check-equal-test;
+
+define test testworks-assert-equal-test ()
+  assert-equal($passed, without-recording () assert-equal(1, 1) end);
+  assert-equal($passed, without-recording () assert-equal("1", "1") end);
+  assert-equal($failed, without-recording () assert-equal(1, 2) end);
+  assert-equal($crashed, without-recording () assert-equal(1, test-error()) end);
+end test testworks-assert-equal-test;
 
 define test testworks-check-instance?-test ()
   check-equal("check-instance?(1, <integer>) passes",
@@ -168,6 +187,31 @@ define test testworks-check-condition-test ()
               end);
 end test testworks-check-condition-test;
 
+define test testworks-assert-signals-test ()
+  begin
+    let success? = #f;
+    assert-equal($passed,
+                 without-recording ()
+                  assert-signals(<test-error>,
+                                 begin
+                                   // default-handler for <warning> returns #f
+                                   test-warning();
+                                   success? := #t;
+                                   test-error()
+                                 end)
+                 end);
+    assert-true(success?);
+  end;
+  assert-equal($failed,
+               without-recording ()
+                 assert-signals(<test-error>, #f)
+               end);
+  assert-equal($failed,
+               without-recording ()
+                 assert-signals(<test-error>, test-warning());
+               end);
+end test testworks-assert-signals-test;
+
 define test testworks-check-no-errors-test ()
   check-equal("check-no-errors of #t passes",
               without-recording ()
@@ -186,6 +230,12 @@ define test testworks-check-no-errors-test ()
               end);
 end test testworks-check-no-errors-test;
 
+define test testworks-assert-no-errors-test ()
+  assert-equal($passed, without-recording () assert-no-errors(#t) end);
+  assert-equal($passed, without-recording () assert-no-errors(#f) end);
+  assert-equal($crashed, without-recording () assert-no-errors(test-error()) end);
+end test testworks-assert-no-errors-test;
+
 define suite testworks-check-macros-suite ()
   test testworks-check-test;
   test testworks-check-true-test;
@@ -194,6 +244,13 @@ define suite testworks-check-macros-suite ()
   test testworks-check-instance?-test;
   test testworks-check-condition-test;
   test testworks-check-no-errors-test;
+
+  // Assert macros (newer).
+  test testworks-assert-true-test;
+  test testworks-assert-false-test;
+  test testworks-assert-equal-test;
+  test testworks-assert-signals-test;
+  test testworks-assert-no-errors-test;
 end suite testworks-check-macros-suite;
 
 

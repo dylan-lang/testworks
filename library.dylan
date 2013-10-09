@@ -68,6 +68,13 @@ define module testworks
          check-instance?,
          check-true;
 
+  // Assertions
+  export assert-equal,
+         assert-signals,
+         assert-no-errors,
+         assert-true,
+         assert-false;
+
   // Tests
   export <test>,
          test-definer,
