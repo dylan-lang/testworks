@@ -180,6 +180,8 @@ define variable *default-report-function* = failures-report-function;
 
 /// Log report
 
+// TODO(cgay): either delete this or replace it with a json report.
+
 define constant $test-log-header = "--------Test Log Report--------";
 define constant $test-log-footer = "--------End Log Report---------";
 
@@ -321,7 +323,11 @@ define method xml-report-function (result :: <result>) => ()
                  end);
 end method;
 
-define function emit-surefire-suite (suite :: <suite-result>)
+
+/// Surefire report
+
+define function emit-surefire-suite
+    (suite :: <suite-result>) => ()
   let is-test-result? = rcurry(instance?, <test-result>);
   let test-results = choose(is-test-result?, result-subresults(suite));
   if (~empty?(test-results))
@@ -333,51 +339,45 @@ define function emit-surefire-suite (suite :: <suite-result>)
     do(curry(emit-surefire-test, suite), test-results);
     test-output("  </testsuite>\n");
   end if;
-end function;
+end function emit-surefire-suite;
 
-define function emit-surefire-test (suite :: <suite-result>,
-                                    test :: <test-result>)
+define function emit-surefire-test
+    (suite :: <suite-result>, test :: <test-result>) => ()
   test-output("    <testcase name=\"%s\" classname=\"%s\">",
               test.result-name, suite.result-name);
   let status = test.result-status;
   select (status)
     $passed => #f;
     $skipped =>
-      test-output("<skipped />");
+      test-output("\n      <skipped />\n");
     $not-implemented =>
-      test-output("<failure message=\"Not implemented\" />");
+      test-output("\n      <failure message=\"Not implemented\" />\n");
     otherwise =>
-      if (instance?(status, <error>))
-        test-output("<failure>%s</failure>",
-                    safe-error-to-string(status));
-      else
-        let checks = choose(rcurry(instance?, <check-result>),
-                            result-subresults(test));
-        do(emit-surefire-check, checks);
-      end if;
+      // If this test failed then we know at least one of the checks
+      // failed.  Note that (due to testworks-specs) a <test-result>
+      // may contain <test-unit-result>s and we flatten those into
+      // this result because they don't (apparently?) match Surefire's
+      // format.
+      test-output("\n      <failure>\n");
+      do-results(emit-surefire-check, test,
+                 test: rcurry(instance?, <check-result>));
+      test-output("\n      </failure>\n");
   end select;
-  test-output("</testcase>\n");
-end function;
+  test-output("    </testcase>\n");
+end function emit-surefire-test;
 
-define function emit-surefire-check (result :: <check-result>)
+define function emit-surefire-check
+    (result :: <check-result>) => ()
   let status = result.result-status;
-  if (status ~= $passed)
-    let reason = if (status == $failed)
-                   result.result-reason
-                 elseif (instance?(status, <error>))
-                   safe-error-to-string(status)
-                 else
-                   format-to-string("Unknown failure: %=", status)
-                 end if;
-    if (reason)
-      test-output("\n<failure>");
-      xml-output-pcdata(reason);
-      test-output("</failure>\n");
-    end if;
-  end if;
-end function;
+  let reason = result.result-reason;
+  if (reason & status ~= $passed & status ~= $skipped)
+    xml-output-pcdata(reason);
+    test-output("\n");
+  end;
+end function emit-surefire-check;
 
-define function collect-suite-results (result :: <result>) => (results :: <sequence>)
+define function collect-suite-results
+    (result :: <result>) => (results :: <sequence>)
   let all-suites = make(<stretchy-vector>);
   iterate collect (r :: <result> = result)
     if (instance?(r, <suite-result>))
@@ -386,11 +386,12 @@ define function collect-suite-results (result :: <result>) => (results :: <seque
     end if;
   end iterate;
   all-suites
-end function;
+end function collect-suite-results;
 
-define method surefire-report-function (result :: <result>) => ()
+define function surefire-report-function
+    (result :: <result>) => ()
   test-output("%s\n", $xml-version-header);
   test-output("<testsuites>\n");
   do(emit-surefire-suite, collect-suite-results(result));
   test-output("</testsuites>\n");
-end method;
+end function surefire-report-function;
