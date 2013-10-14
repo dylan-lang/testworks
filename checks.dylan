@@ -348,21 +348,6 @@ define macro assert-no-errors
 end macro assert-no-errors;
 
 
-// Try twice to get a nice error message and then give up!
-define function safe-error-to-string
-    (error :: <serious-condition>) => (string :: <string>)
-  block ()
-    format-to-string("%s", error)
-  exception (format-error :: <error>)
-    block ()
-      format-to-string("*** Crashed printing error: %s", format-error)
-    exception (<error>)
-      "*** Crashed printing error ***"
-    end
-  end
-end function safe-error-to-string;
-
-
 /// Check progress functions
 
 define method print-check-progress

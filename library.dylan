@@ -143,8 +143,7 @@ define module testworks
   export $test-log-header,
          $test-log-footer,
          $xml-version-header,
-         *check-recording-function*,
-         safe-error-to-string;
+         *check-recording-function*;
 
   // Internals -- mostly due to macro hygiene failures
   export $test-objects-table,

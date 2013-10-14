@@ -204,9 +204,8 @@ define method log-report-function (result :: <result>) => ()
           test-output("Status: %s\n", status-name(result-status(result)));
           let status = result.result-status;
           if (instance?(result, <component-result>))
-            if (instance?(status, <error>))
-              test-output("Reason: %s\n",
-                          remove-newlines(safe-error-to-string(status)))
+            if (result.result-reason)
+              test-output("Reason: %s\n", result.result-reason);
             end;
             for (subresult in result-subresults(result))
               generate-report(subresult)
