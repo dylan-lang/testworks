@@ -145,11 +145,11 @@ the description be provided as the first argument.
          assert-signals(<division-by-zero-error>, 3 / 0,
                         "my super special description")
 
-.. macro:: assert-no-error
+.. macro:: assert-no-errors
 
    Assert that an expression does not signal any errors.
 
-   :signature: assert-no-error *expression* [ *description* ]
+   :signature: assert-no-errors *expression* [ *description* ]
 
    :parameter expression: any expression 
    :parameter description: A description of what the assertion tests.
@@ -164,9 +164,9 @@ the description be provided as the first argument.
 
       .. code-block:: dylan
 
-         assert-no-error(my-hairy-logic())
-         assert-no-error(my-hairy-logic(),
-                         "hairy logic completes without error")
+         assert-no-errors(my-hairy-logic())
+         assert-no-errors(my-hairy-logic(),
+                          "hairy logic completes without error")
 
 .. function:: check
 
