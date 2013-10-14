@@ -9,7 +9,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 /// Check/assert macros
 
 // The check-* macros require the caller to provide a name.
-// The assert-* macros auto-generate a name.
+// The assert-* macros auto-generate a name by default.
 
 // Note that these macros wrap up the real macro arguments inside
 // methods to delay their evaluation until they are within the scope
@@ -38,9 +38,9 @@ define macro assert-equal
   } => {
     assert-equal(?expr1, ?expr2, ?"expr1" " = " ?"expr2")
   }
-  { assert-equal (?expr1:expression, ?expr2:expression, ?name:expression)
+  { assert-equal (?expr1:expression, ?expr2:expression, ?description:expression)
   } => {
-    %check-equal(method () ?name end,
+    %check-equal(method () ?description end,
                  method ()
                    values(?expr1, ?expr2, ?"expr1", ?"expr2")
                  end)
@@ -164,7 +164,12 @@ end macro check-true;
 define macro assert-true
   { assert-true (?expr:expression)
   } => {
-    %check-true(method () ?"expr" " is false" end,
+    assert-true(?expr, ?"expr" " evaluates to true (not #f)")
+  }
+
+  { assert-true (?expr:expression, ?description:expression)
+  } => {
+    %check-true(method () ?description end,
                 method () values(?expr, ?"expr") end)
   }
 end macro assert-true;
@@ -217,7 +222,12 @@ end macro check-false;
 define macro assert-false
   { assert-false (?expr:expression)
   } => {
-    %check-false(method () ?"expr" " = #f" end,
+    assert-false(?expr, ?"expr" " evaluates to #f")
+  }
+
+  { assert-false (?expr:expression, ?description:expression)
+  } => {
+    %check-false(method () ?description end,
                  method ()
                    values(?expr, ?"expr")
                  end)
@@ -244,8 +254,7 @@ define function %check-false
     name := get-name();
     phase := "evaluating check arguments";
     let (value, value-expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if %= evaluates to #f",
-                              value-expr);
+    phase := format-to-string("checking if %= evaluates to #f", value-expr);
     let (status, reason)
       = if (~value)
           $passed
@@ -273,9 +282,12 @@ end macro check-condition;
 define macro assert-signals
   { assert-signals(?condition:expression, ?expr:expression)
   } => {
-    %check-condition(method ()
-                       ?"expr" " signals condition " ?"condition"
-                     end,
+    assert-signals(?condition, ?expr, ?"expr" " signals condition " ?"condition")
+  }
+
+  { assert-signals(?condition:expression, ?expr:expression, ?description:expression)
+  } => {
+    %check-condition(method () ?description end,
                      method ()
                        values(?condition, method () ?expr end, ?"expr")
                      end)
@@ -342,8 +354,12 @@ end macro check-no-errors;
 define macro assert-no-errors
   { assert-no-errors(?expr:expression)
   } => {
-    check-true(?"expr" " doesn't signal an error ",
-               begin ?expr; #t end)
+    assert-no-errors(?expr, ?"expr" " doesn't signal an error ")
+  }
+
+  { assert-no-errors(?expr:expression, ?description:expression)
+  } => {
+    assert-true(begin ?expr; #t end, ?description)
   }
 end macro assert-no-errors;
 

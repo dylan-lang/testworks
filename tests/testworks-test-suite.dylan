@@ -74,6 +74,8 @@ define test testworks-check-true-test ()
 end test testworks-check-true-test;
 
 define test testworks-assert-true-test ()
+  assert-true(#t);
+  assert-true(#t, "#t is true with description");
   assert-equal($passed, without-recording () assert-true(#t) end);
   assert-equal($failed, without-recording () assert-true(#f) end);
   assert-equal($crashed, without-recording () assert-true(test-error()) end);
@@ -98,6 +100,8 @@ define test testworks-check-false-test ()
 end test testworks-check-false-test;
 
 define test testworks-assert-false-test ()
+  assert-false(#f);
+  assert-false(#f, "#f is false with description");
   assert-equal($failed, without-recording () assert-false(#t) end);
   assert-equal($passed, without-recording () assert-false(#f) end);
   assert-equal($crashed, without-recording () assert-false(test-error()) end);
@@ -127,6 +131,8 @@ define test testworks-check-equal-test ()
 end test testworks-check-equal-test;
 
 define test testworks-assert-equal-test ()
+  assert-equal(8, 8);
+  assert-equal(8, 8, "8 = 8 with description");
   assert-equal($passed, without-recording () assert-equal(1, 1) end);
   assert-equal($passed, without-recording () assert-equal("1", "1") end);
   assert-equal($failed, without-recording () assert-equal(1, 2) end);
@@ -188,6 +194,8 @@ define test testworks-check-condition-test ()
 end test testworks-check-condition-test;
 
 define test testworks-assert-signals-test ()
+  assert-signals(<error>, error("foo"));
+  assert-signals(<error>, error("foo"), "error signals error w/ description");
   begin
     let success? = #f;
     assert-equal($passed,
