@@ -29,11 +29,6 @@ define function parse-args
                   default: #t,
                   help: "Adjust output verbosity."));
   add-option(parser,
-             make(<flag-option>,
-                  names: #("profile"),
-                  default: #f,
-                  help: "Turn on code profiling."));
-  add-option(parser,
              make(<parameter-option>,
                   names: #("report"),
                   default: "failures",
