@@ -40,15 +40,11 @@ define class <result> (<object>)
     required-init-keyword: name:;
   constant slot result-status :: <result-status>,
     required-init-keyword: status:;
+  // This is #f if the test passed; otherwise a string.
+  constant slot result-reason :: false-or(<string>) = #f,
+    required-init-keyword: reason:;
 end class <result>;
 
-define generic result-reason
-    (result :: <result>) => (reason :: false-or(<string>));
-
-define method result-reason
-    (result :: <result>) => (reason :: false-or(<string>))
-  #f
-end;
 
 define open generic result-type-name
     (result :: <result>) => (name :: <string>);

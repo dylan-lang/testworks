@@ -36,10 +36,7 @@ define method find-test-object
 end method find-test-object;
 
 define class <unit-result> (<result>)
-  // This is #f if the test passed; otherwise a string.
-  constant slot result-reason :: false-or(<string>),
-    required-init-keyword: reason:;
-end class <unit-result>;
+end;
 
 define class <check-result> (<unit-result>)
 end;
@@ -175,11 +172,11 @@ end method list-component;
 
 define method execute-component
     (test :: <test>, options :: <perform-options>)
- => (subresults :: <sequence>, status :: <result-status>,
+ => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
      seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults = make(<stretchy-vector>);
   let (seconds, microseconds, bytes) = values(0, 0, 0);
-  let status :: <result-status>
+  let (status, reason)
     = dynamic-bind (*debug?* = options.perform-debug?,
                     *check-recording-function* =
                       method (result :: <result>)
@@ -198,8 +195,7 @@ define method execute-component
         end profiling;
         case
           instance?(cond, <serious-condition>) =>
-            // TODO(cgay): Capture the failure reason here.
-            $crashed;
+            values($crashed, format-to-string("%s", cond));
           empty?(subresults) & ~test.test-allow-empty? =>
             $not-implemented;
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
@@ -208,10 +204,10 @@ define method execute-component
                  subresults) =>
             $passed;
           otherwise =>
-            $failed
+            $failed;
         end
       end;
-  values(subresults, status, seconds, microseconds, bytes)
+  values(subresults, status, reason, seconds, microseconds, bytes)
 end method execute-component;
 
 /// Some progress functions

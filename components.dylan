@@ -143,7 +143,7 @@ define method maybe-execute-component
   if (announce-function)
     announce-function(component)
   end;
-  let (subresults, status, seconds, microseconds, bytes)
+  let (subresults, status, reason, seconds, microseconds, bytes)
     = if (execute-component?(component, options))
         execute-component(component, options)
       else
@@ -152,6 +152,7 @@ define method maybe-execute-component
   make(component-result-type(component),
        name: component.component-name,
        status: status,
+       reason: reason,
        subresults: subresults,
        seconds: seconds,
        microseconds: microseconds,

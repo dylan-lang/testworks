@@ -179,13 +179,13 @@ end method list-component;
     
 define method execute-component
     (suite :: <suite>, options :: <perform-options>)
- => (subresults :: <sequence>, status :: <result-status>,
+ => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
      seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults :: <stretchy-vector> = make(<stretchy-vector>);
   let seconds :: <integer> = 0;
   let microseconds :: <integer> = 0;
   let bytes :: <integer> = 0;
-  let status
+  let (status, reason)
     = block ()
         suite.suite-setup-function();
         for (component in suite.suite-components)
@@ -220,7 +220,7 @@ define method execute-component
       cleanup
         suite.suite-cleanup-function();
       end block;
-  values(subresults, status, seconds, microseconds, bytes)
+  values(subresults, status, reason, seconds, microseconds, bytes)
 end method execute-component;
 
 define function add-times
