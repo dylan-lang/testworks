@@ -7,49 +7,83 @@ Usage
 Defining Tests
 ==============
 
-Checks
-------
+Assertions
+----------
 
-Checks are the fundamental elements of writing a test-suite. A check
-accepts an expression to evaluate and report back on, saying if the
-expression passed, failed, or crashed. Checks are of the form:
+Assertions come in two flavors: macros that start with "assert" and
+macros that start with "check".  The "check" macros require a check
+description as the first argument and the "assert" macros do not.  The
+assert macros will generate a description based on the expressions
+being evaluated if none is supplied.
+
+(Why are there two kinds of assertions?  Because the "check" macros
+are older and there was no way to compatibly change them to make the
+description optional.  Use your discretion about when to provide a
+description for the "assert-\*" macros.  Frequently they aren't
+necessary if you use descriptive variable names in the assertion
+expressions, but sometimes a good description can save debugging time
+when a test fails for some future hacker who doesn't know the code as
+well as you.)
+
+An assertion accepts an expression to evaluate and report back on,
+saying if the expression passed, failed, or crashed. Assertions are of
+the form:
 
 .. code-block:: dylan
 
-    check(name :: <string>, func :: <function>, #rest arguments);
+    assert-true(foo > bar)
 
-Here the function is applied to the arguments, and the result is reported.
-The following are some examples of simple checks::
+Here the expression ``foo > bar`` is compared to ``#f``, and the
+result is reported.  The following are some examples of simple
+assertions::
 
-    TESTWORKS 1 ?  check("Test less than operator", \<, 2, 3);
-    Ran check: Test less than operator passed
+    TESTWORKS 1 ?  assert-true(2 < 3);
+    Ran check: 2 < 3 passed
 
-    TESTWORKS 2 ? check("Test my method",
-                    method (a, b, c) a + b = c end,
-                    3, 5, 10);
-    Ran check: Test my method failed
+    TESTWORKS 1 ?  assert-true(2 < 3, "two is less than three");
+    Ran check: two is less than three passed
 
-    TESTWORKS 3 ? check("Flamed check", \<, 5, 'c');
-    Ran check: Flamed check crashed [No applicable methods for
-               <STANDARD-GENERIC-FUNCTION < 1096F208> with args
-               (5 #\c)]
+    TESTWORKS 1 ?  check("two is less than three", \<, 2, 3);
+    Ran check: two is less than three passed
+
+    TESTWORKS 2 ?  check("my method is awesome",
+                         method (a, b, c) a + b = c end,
+                         3, 5, 10);
+    Ran check: my method is awesome failed
+
+    TESTWORKS 3 ?  assert-true(5 < 'c')
+    Ran check: 5 < 'c' crashed [No applicable methods for
+               <generic-function < 1096F208> with args (5, 'c')]
 
     TESTWORKS 4 ? check("Bad Arguments", zero?, asdfdf);
-    Ran check: Bad Arguments crashed [The variable
-             DYLAN+DYLAN/TESTWORKS::ASDFDF is unbound]
+    Ran check: Bad Arguments crashed [The variable "asdfdf" is unbound.]
 
-There are five additional types of checks: :func:`check-equal`,
-:func:`check-true`, :func:`check-false`, :func:`check-instance?`
-and :func:`check-condition`. As the mnemonic names suggest they
-are very useful in testing code in a variety of situations.
+Here is the full list of check/assert macros:
 
-The format for :func:`check-equal` is:
+  * :func:`assert-true`
+  * :func:`assert-false`
+  * :func:`assert-equal`
+  * :func:`assert-signals`
+  * :func:`assert-no-errors`
+  * :func:`check`
+  * :func:`check-true`
+  * :func:`check-false`
+  * :func:`check-equal`
+  * :func:`check-instance?`
+  * :func:`check-condition`
+  * :func:`check-no-condition`  (also called :func:`check-no-errors`)
+
+Note that there is no ``assert-instance?`` macro corresponding to
+``check-instance?``.  Use ``assert-true(instance?(...))`` instead.
+
+:func:`assert-equal` and :func:`check-equal`
 
 .. code-block:: dylan
 
-    check-equal(name :: <string>, expression-1, expression-2);
+    assert-equal(expression1, expression2 [ , description ])
+    check-equal(description, expression-1, expression-2)
 
-The objective of this check is to see if ``expression-1`` and ``expression-2``
+The objective of this assertion is to see if ``expression-1`` and ``expression-2``
 evaluate to the same object.  Examples::
 
     TESTWORKS 7 ? check-equal("Test the addition operator", 4, 1 + 3);
@@ -65,15 +99,15 @@ The format for :func:`check-true` is the following:
     check-true(name :: <string>, expression);
 
 Its objective is to see if the expression does not evaluate to ``#f``. An
-example of this check would be::
+example of this assertion would be::
 
     TESTWORKS 9 ? check-true("Test zero?", zero?(0));
     Ran check: Test zero? passed
 
-:func:`check-false` is of the same form as :func:`check-true`, except that
-it sees if the expression evaluates to ``#f``. If you want to explicitly
-check if an expression evaluates to ``#t``, you should use :func:`check-equal`
-to explicitly check.
+:func:`check-false` is of the same form as :func:`check-true`, except
+that it sees if the expression evaluates to ``#f``. If you want to
+explicitly check if an expression evaluates to ``#t``, you should use
+:func:`check-equal`.
 
 The format for :func:`check-instance?` is the following:
 
@@ -81,17 +115,17 @@ The format for :func:`check-instance?` is the following:
 
     check-instance?(name :: <string>, type, expression);
 
-The objective of this check is to see if ``expression`` results in an
+The objective of this assertion is to see if ``expression`` results in an
 instance of ``type``.
 
-:func:`check-condition` is the final variety of checks. Its basic format
+:func:`check-condition` is the final variety of assertions. Its basic format
 is:
 
 .. code-block:: dylan
 
     check-condition(name :: <string>, the-condition :: subclass(<condition>), expression);
 
-This check determines if the evaluation of expression results in
+This assertion determines if the evaluation of expression results in
 an instance of ``the-condition`` being signaled.  Examples::
 
     TESTWORKS 10 ? check-condition("Raise simple-error", <simple-error>,
@@ -109,7 +143,7 @@ an instance of ``the-condition`` being signaled.  Examples::
 Tests
 -----
 
-Tests are objects which contain checks and any arbitrary code. Tests
+Tests are objects which contain assertions and any arbitrary code. Tests
 may be defined with a set of optional arguments, namely:
 
  * ``name``: A required keyword - an instance of ``<string>``.
@@ -216,30 +250,59 @@ Similar to :func:`perform-test`, there is a function called
 Organzing Your Test Suites
 ==========================
 
-Tests and suites should be viewed as "super" objects to organize and
-observe control over checks.  The test suite library may look something like:
+The overall structure of a test library may look something like this:
 
 .. code-block:: dylan
 
-    define library xxx-test-suite
-      use dylan;
+    // --- library.dylan ---
+    define library xxx-tests
+      use common-dylan;
       use testworks;
-      use xxx;       // <- the library you are testing
-    end library;
+      use xxx;                 // the library you are testing
+      export xxx-tests;        // so other test libs can include it
+    end;
 
-The number of checks per test should be kept to a minimum since it is
-much easier to track failures and errors in smaller tests. Putting
-names on checks and descriptions on tests and suites is something that
-is often ignored. It might seem like too much work at first but
-introducing names and descriptions allows better error tracking and
-saves significant time by providing information at a glance.
+    define module xxx-tests
+      use common-dylan;
+      use testworks;
+      use xxx;                 // the module you are testing
+      export xxx-test-suite;   // so other suites can include it
+    end;
 
-(In the future, there should be support for check failures to include
-the source file line number for the check, but even then the check
-name can be useful, for example if it is being run inside a loop.)
+    // --- main.dylan ---
+    define suite xxx-test-suite ()
+      test my-awesome-test;
+      ...
+    end;
 
-Tests can be used to combine similar checks into a unit and suites can
-further organize similar or related tests into units.
+    define test my-awesome-test ()
+      assert-true(...);
+      assert-equal(...);
+      ...
+    end;
+
+    run-test-application(my-test-suite);
+
+Tests and suites should be viewed as "super" objects to organize and
+observe control over assertions.  The number of assertions per test
+should be kept to a minimum since it is much easier to track failures
+and errors in smaller tests.
+
+Add descriptions to assertions if the assertion expressions aren't
+obvious.  The default descriptions use the text of the code in failure
+reports, so if there's anything unclear about the code you should add
+a description of what the intention of the assertion is.  This can
+make it much easier for the next maintainer of the code.  In general,
+testworks should be pretty good at reporting the actual values that
+caused the failure so it shouldn't be necessary to include them in the
+description.
+
+In the future, there will be support for failures to include the
+source file line number for the assertion.
+
+Tests are used used to combine related assertions into a unit and
+suites further organize related tests.  Suites may also contain other
+suites.
 
 It is common for the test suite for library xxx to export a single
 test suite named xxx-test-suite, which is further subdivided into
@@ -327,7 +390,7 @@ An additional slot on :class:`<test>` and :class:`<suite>` objects is
 
 The ``tags`` argument to :func:`perform-test` and :func:`perform-suite`
 controls whether a test defined with certain tags is performed or not.
-Tags are either a list of symbols or the constant :const:`$all`.
+Tags are either a list of symbols or the constant :const:`$all-tags`.
 For example:
 
 .. code-block:: dylan
@@ -364,7 +427,7 @@ For example:
       Ran 0 tests: 0 passed (100%), 0 failed, 1 not executed, 0 crashed
       Ran 0 checks: 0 passed (100%), 0 failed, 0 not executed, 0 crashed
 
-    TESTWORKS 24 ? perform-test(my-test-2, tags: $all);
+    TESTWORKS 24 ? perform-test(my-test-2, tags: $all-tags);
     MY-TEST-2 passed
 
     MY-TEST-2 summary:
@@ -381,8 +444,8 @@ For example:
       Ran 1 test:  1 passed (100.0%), 0 failed, 0 not executed, 0 crashed
       Ran 1 check:  1 passed (100.0%), 0 failed, 0 not executed, 0 crashed
 
-If tags is set to ``$all``, then the test will be performed regardless of
-its tags. By default ``tags = $all``.
+If tags is set to ``$all-tags``, then the test will be performed
+regardless of its tags. By default ``tags = $all-tags``.
 
 
 Report Functions

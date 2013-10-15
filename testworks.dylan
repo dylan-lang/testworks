@@ -6,17 +6,8 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-///*** Constants ***///
+define constant $all-tags = #[#"all"];
 
-define constant $all = #[#"all"];
-
-define constant <check-operation-type>
-  = false-or(type-union(<function>, <error>, <string>, subclass(<condition>)));
-
-define constant <check-value-type>
-  = false-or(type-union(<sequence>, <serious-condition>));
-
-
 /// Result handling
 
 define constant $passed = #"passed";
@@ -25,10 +16,8 @@ define constant $crashed = #"crashed";
 define constant $skipped = #"skipped";
 define constant $not-implemented  = #"nyi";
 
-// TODO(cgay): Get rid of type-union, just store the condition
-// and use $crashed in the one-of.
 define constant <result-status>
-  = type-union(one-of($passed, $failed, $skipped, $not-implemented), <condition>);
+  = one-of($passed, $failed, $crashed, $skipped, $not-implemented);
 
 // It looks like this and testworks-reports:parse-status are meant to
 // be inverses.
@@ -37,9 +26,12 @@ define method status-name
   select (status)
     $passed => "passed";
     $failed => "failed";
+    $crashed => "crashed";
     $skipped => "skipped";
     $not-implemented => "not implemented";
-    otherwise => "crashed";
+    otherwise =>
+      error("Unrecognized test result status: %=.  This is a testworks bug.",
+            status);
   end
 end method status-name;
 
@@ -48,7 +40,11 @@ define class <result> (<object>)
     required-init-keyword: name:;
   constant slot result-status :: <result-status>,
     required-init-keyword: status:;
+  // This is #f if the test passed; otherwise a string.
+  constant slot result-reason :: false-or(<string>) = #f,
+    required-init-keyword: reason:;
 end class <result>;
+
 
 define open generic result-type-name
     (result :: <result>) => (name :: <string>);
@@ -56,23 +52,10 @@ define open generic result-type-name
 define method \=
     (result1 :: <result>, result2 :: <result>)
  => (equal? :: <boolean>)
-  // We want to know if two error messages are the same, so that "crashed"
-  // tests aren't always presented as differences.  However, \= isn't
-  // specialized on <error>, so we create our own test:
-  local method same-error-message?
-            (s1 :: <object>, s2 :: <object>)
-         => (same? :: <boolean>)
-          instance?(s1, <simple-error>)
-          & instance?(s2, <simple-error>)
-          & format-to-string(condition-format-string(s1),
-                             condition-format-arguments(s1))
-            = format-to-string(condition-format-string(s2),
-                               condition-format-arguments(s2));
-        end method same-error-message?;
   result1.result-name = result2.result-name
   & (result1.result-status = result2.result-status
-     | same-error-message?(result1.result-status, result2.result-status))
-end method \=;
+     | result1.result-reason = result2.result-reason)
+end;
 
 
 ///*** State Variables ***///
@@ -130,7 +113,7 @@ end macro maybe-trap-errors;
 
 define method tags-match? (run-tags :: <sequence>, object-tags :: <sequence>)
  => (bool :: <boolean>)
-  run-tags = $all | ~empty?(intersection(run-tags, object-tags))
+  run-tags = $all-tags | ~empty?(intersection(run-tags, object-tags))
 end method tags-match?;
 
 
@@ -140,7 +123,7 @@ end method tags-match?;
 // to control test suite performing.
 
 define open class <perform-options> (<object>)
-  slot perform-tags :: <sequence> = $all,
+  slot perform-tags :: <sequence> = $all-tags,
     init-keyword: tags:;
   slot perform-announce-function :: false-or(<function>) = *announce-function*,
     init-keyword: announce-function:;
@@ -153,4 +136,3 @@ define open class <perform-options> (<object>)
   slot perform-debug? = *debug?*,
     init-keyword: debug?:;
 end class <perform-options>;
-

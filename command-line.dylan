@@ -236,7 +236,8 @@ define method run-test-application
                results);
     for (component :: <component> in final-results)
       format-out("%s %s\n", component.component-type-name, component.component-name)
-    end for
+    end for;
+    #f
   else
     // Run the appropriate test or suite
     block ()
@@ -251,26 +252,17 @@ define method run-test-application
             report-format-function("Warning: %s\n", warning);
             next-handler()
           end;
-      profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
-        result := perform-component(start-suite, options, report-function: #f);
-      results
-        display-results(result,
-                        report-function: report-function,
-                        report-format-function: report-format-function);
-        if (get-option-value(parser, "profile"))
-          format-out("\nTest run took %d.%s seconds, allocating %d byte%s\n",
-                     cpu-time-seconds,
-                     integer-to-string(cpu-time-microseconds, size: 6),
-                     allocation, plural(allocation));
-        end if;
-        format-out("\n");
-        force-output(*standard-output*);
-      end profiling;
+      result := perform-component(start-suite, options, report-function: #f);
+      display-results(result,
+                      report-function: report-function,
+                      report-format-function: report-format-function);
+      format-out("\n");
+      force-output(*standard-output*);
       result
     afterwards
       end-test();
-    end block;
-  end if;
+    end block
+  end if
 end method run-test-application;
 
 define not-inline function end-test ()
