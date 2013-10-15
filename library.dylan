@@ -8,9 +8,8 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks
   use command-line-parser;
-  use common-dylan;
-  use io;
-  use system;
+  use common-dylan, import: { common-dylan, threads };
+  use io, import: { format-out, standard-io, streams };
 
   export testworks;
 end library testworks;
@@ -63,13 +62,18 @@ define module testworks
          check-condition,
          check-no-condition,
          check-equal,
+           check-equal-failure-detail,
          check-false,
          check-no-errors,
          check-instance?,
          check-true;
 
-  // Benchmarks
-  export benchmark;
+  // Assertions
+  export assert-equal,
+         assert-signals,
+         assert-no-errors,
+         assert-true,
+         assert-false;
 
   // Tests
   export <test>,
@@ -108,17 +112,11 @@ define module testworks
          <test-result>,
          <suite-result>,
          <unit-result>,
-         result-operation,
-         result-value,
+         result-reason,
          do-results,
 
          <check-result>,
-         <test-unit-result>,
-         <benchmark-result>,
-         $benchmark-result-divider,
-         print-one-benchmark-result,
-         print-benchmark-result-header,
-         print-benchmark-result-footer;
+         <test-unit-result>;
 
   // Progress functions
   export *default-progress-function*,
@@ -145,15 +143,9 @@ define module testworks
   export $test-log-header,
          $test-log-footer,
          $xml-version-header,
-         *check-recording-function*,
-         failure-reason,
-         safe-error-to-string;
+         *check-recording-function*;
 
   // Internals -- mostly due to macro hygiene failures
   export $test-objects-table,
-         *test-unit-options*,
-         do-check,
-         do-check-condition,
-         do-benchmark,
-         print-failure-reason;
+         *test-unit-options*;
 end module testworks;

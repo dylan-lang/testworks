@@ -31,24 +31,15 @@ define method print-status-line
   end if;
 end method print-status-line;
 
-define method result-failure-reason
-    (result :: <check-result>) => (reason :: false-or(<string>))
-  failure-reason
-    (result-status(result), result-operation(result), result-value(result))
-end method result-failure-reason;
-
-define method result-failure-reason
-    (result :: <test-result>) => (reason :: false-or(<string>))
-  let status = result-status(result);
-  instance?(status, <error>) & safe-error-to-string(status)
-end method result-failure-reason;
-
 define method print-result-reason
     (name :: <string>, result :: <result>, #key indent = "") => ()
-  let reason = result-failure-reason(result);
   format-out("%s  %s %s%s\n",
              indent, name, status-name(result.result-status),
-             if (reason) format-to-string(" [%s]", reason) else "" end);
+             if (result.result-reason)
+               format-to-string(" [%s]", reason)
+             else
+               ""
+             end);
 end method print-result-reason;
 
 define method print-result-reason
@@ -59,7 +50,7 @@ define method print-result-reason
     format-out("%s  %s %s in %s seconds, %d bytes allocated\n",
                indent, name, status-name(result-status(result)),
                result-time(result), result-bytes(result))
-  end if
+  end if;
 end method print-result-reason;
 
 define method print-result-reason

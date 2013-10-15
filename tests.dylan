@@ -36,11 +36,7 @@ define method find-test-object
 end method find-test-object;
 
 define class <unit-result> (<result>)
-  constant slot result-operation :: <check-operation-type>,
-    required-init-keyword: operation:;
-  constant slot result-value :: <check-value-type>,
-    required-init-keyword: value:;
-end class <unit-result>;
+end;
 
 define class <check-result> (<unit-result>)
 end;
@@ -58,27 +54,25 @@ define method result-type-name
   "Test-unit"
 end;
 
-define class <benchmark-result> (<unit-result>)
-  constant slot result-seconds :: false-or(<integer>),
-    required-init-keyword: seconds:;
-  constant slot result-microseconds :: false-or(<integer>),
-    required-init-keyword: microseconds:;
-  // Hopefully no benchmarks will allocated more than 536MB...
-  constant slot result-bytes :: false-or(<integer>),
-    required-init-keyword: bytes:;
-end;
-
-define method result-type-name
-    (result :: <benchmark-result>) => (name :: <string>)
-  "Benchmark"
-end;
-
 define method result-time
-    (result :: <benchmark-result>, #key pad-seconds-to :: false-or(<integer>))
+    (result :: <component-result>, #key pad-seconds-to :: false-or(<integer>))
  => (seconds :: <string>)
-  time-to-string(result-seconds(result), result-microseconds(result),
+  time-to-string(result.result-seconds, result.result-microseconds,
                  pad-seconds-to: pad-seconds-to)
 end method result-time;
+
+define function time-to-string
+    (seconds :: false-or(<integer>), microseconds :: false-or(<integer>),
+     #key pad-seconds-to :: false-or(<integer>))
+ => (seconds :: <string>)
+  if (seconds & microseconds)
+    concatenate(integer-to-string(seconds, size: pad-seconds-to | 1, fill: ' '),
+                ".",
+                integer-to-string(microseconds, size: 6))
+  else
+    "N/A"
+  end
+end function time-to-string;
 
 // the test macro
 
@@ -117,7 +111,7 @@ end macro with-test-unit;
 
 define method perform-test
     (test :: <test>,
-     #key tags                     = $all,
+     #key tags                     = $all-tags,
           announce-function        = *announce-function*,
           announce-checks?         = *announce-checks?*,
           progress-format-function = *format-function*,
@@ -141,7 +135,7 @@ end method perform-test;
 
 define method perform-test
     (function :: <function>,
-     #key tags                     = $all,
+     #key tags                     = $all-tags,
           announce-function        = *announce-function*,
           announce-checks?         = *announce-checks?*,
           progress-format-function = *format-function*,
@@ -178,23 +172,30 @@ end method list-component;
 
 define method execute-component
     (test :: <test>, options :: <perform-options>)
- => (subresults :: <sequence>, status :: <result-status>,
-     seconds, useconds, bytes)
+ => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
+     seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults = make(<stretchy-vector>);
-  let status :: <result-status>
-    = dynamic-bind
-        (*debug?* = options.perform-debug?,
-         *check-recording-function* =
-           method (result :: <result>)
-             add!(subresults, result);
-             options.perform-progress-function(result);
-             result
-           end,
-         *test-unit-options* = options)
-        let cond = maybe-trap-errors(test.test-function());
+  let (seconds, microseconds, bytes) = values(0, 0, 0);
+  let (status, reason)
+    = dynamic-bind (*debug?* = options.perform-debug?,
+                    *check-recording-function* =
+                      method (result :: <result>)
+                        add!(subresults, result);
+                        options.perform-progress-function(result);
+                        result
+                      end,
+                    *test-unit-options* = options)
+        let cond = #f;
+        profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
+          cond := maybe-trap-errors(test.test-function());
+        results
+          seconds := cpu-time-seconds;
+          microseconds := cpu-time-microseconds;
+          bytes := allocation;
+        end profiling;
         case
           instance?(cond, <serious-condition>) =>
-            cond;
+            values($crashed, format-to-string("%s", cond));
           empty?(subresults) & ~test.test-allow-empty? =>
             $not-implemented;
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
@@ -203,31 +204,11 @@ define method execute-component
                  subresults) =>
             $passed;
           otherwise =>
-            $failed
+            $failed;
         end
       end;
-  values(subresults, status)
+  values(subresults, status, reason, seconds, microseconds, bytes)
 end method execute-component;
-
-define method make-result
-    (test :: <test>, subresults :: <sequence>, status :: <result-status>)
- => (result :: <component-result>)
-  make(<test-result>,
-       name:         test.component-name,
-       status:       status,
-       subresults:   subresults)
-end method make-result;
-
-define method make-result
-    (test :: <test-unit>, subresults :: <sequence>, status :: <result-status>)
- => (result :: <component-result>)
-  make(<test-unit-result>,
-       name:         test.component-name,
-       status:       status,
-       subresults:   subresults,
-       operation:    test.test-function,
-       value:        #f)
-end method make-result;
 
 /// Some progress functions
 
@@ -252,10 +233,9 @@ define method print-result-info
   ignore(indent);
   next-method();
   let show-result? = if (test) test(result) else #t end;
-  if (show-result?)
-    print-failure-reason(result.result-status,
-                         result.result-operation,
-                         result.result-value)
-  end
+  let reason = result.result-reason;
+  if (show-result? & reason)
+    test-output(" [%s]", reason);
+  end;
 end method print-result-info;
 

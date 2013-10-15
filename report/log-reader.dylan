@@ -33,15 +33,15 @@ define method make-result
   select (as(<symbol>, type))
     #"check" =>
       make(<check-result>,
-           name: name, status: status, operation: reason, value: #f);
+           name: name, status: status, reason: reason);
     #"test-unit" =>
       unless (member?(as-lowercase(name), ignored-tests, test: \=))
         make(<test-unit-result>,
-             name: name, status: status, operation: reason, value: #f);
+             name: name, status: status, reason: reason);
       end;
     #"benchmark" =>
       make(<benchmark-result>,
-           name: name, status: status, operation: reason, value: #f,
+           name: name, status: status, reason: reason,
            seconds: seconds, microseconds: microseconds,
            bytes: allocation);
     #"test" =>
@@ -257,11 +257,11 @@ define method convert-xml-node
              subresults: get-subresults());
       #"test-unit" =>
         make(<test-unit-result>,
-             name: name, status: status, operation: reason, value: #f,
+             name: name, status: status, reason: reason,
              subresults: get-subresults());
       #"check" =>
         make(<check-result>,
-             name: name, status: status, operation: reason, value: #f);
+             name: name, status: status, reason: reason);
       #"benchmark" =>
         let seconds = child-named(node, #"seconds");
         let seconds = seconds & string-to-integer(xml/text(seconds));
@@ -272,8 +272,7 @@ define method convert-xml-node
         make(<benchmark-result>,
              name: name,
              status: status,
-             operation: reason,
-             value: #f,
+             reason: reason,
              seconds: seconds,
              microseconds: microseconds,
              allocation: allocation);

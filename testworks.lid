@@ -6,7 +6,6 @@ Files:  library
         testworks
         components
         checks
-        benchmarks
         tests
         suites
         reports
