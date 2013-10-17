@@ -29,11 +29,6 @@ define function parse-args
                   default: #t,
                   help: "Adjust output verbosity."));
   add-option(parser,
-             make(<flag-option>,
-                  names: #("profile"),
-                  default: #f,
-                  help: "Turn on code profiling."));
-  add-option(parser,
              make(<parameter-option>,
                   names: #("report"),
                   default: "failures",
@@ -88,15 +83,6 @@ define table $report-functions :: <string-table> = {
     "xml"      => xml-report-function,
     "surefire" => surefire-report-function
     };
-
-// Encapsulates the components to be ignored
-
-define class <perform-criteria> (<perform-options>)
-  slot perform-ignore :: <stretchy-vector>,
-    init-keyword: ignore:;
-  slot list-suites? :: <boolean> = #f;
-  slot list-tests? :: <boolean> = #f;
-end class <perform-criteria>;
 
 define method execute-component?
     (component :: <component>, options :: <perform-criteria>)
