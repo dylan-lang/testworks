@@ -6,6 +6,11 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
+// TODO(cgay): Rename %check-* to do-check-* since that's sort of the
+// convention for macros like this.  Try and figure out a good way to
+// remove some of the duplicate code in those functions, too.
+
+
 /// Check/assert macros
 
 // The check-* macros require the caller to provide a name.
