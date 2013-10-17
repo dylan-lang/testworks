@@ -3,12 +3,12 @@ Synopsis:     TestWorks - a test harness library for dylan
 Author:       Andy Armstrong, James Kirsch, Shri Amit
 Target-Type:  dll
 Files:  library
-        testworks
+        utils
+        results
         components
-        checks
-        tests
-        suites
+        assertions
         reports
+        run
         command-line
 Major-Version: 2
 Minor-Version: 1

@@ -1,17 +1,15 @@
 Module:       testworks
-Synopsis:     Contains <component> definitions for Testworks test harness
+Synopsis:     Components are suites and tests.
 Author:       Shri Amit, Andrew Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-/// Component
-///
-/// This is the class of objects that can be performed in a test suite.
-/// It is the superclass of both <test> and <suite>.  Note that there are
-/// no <check> or <benchmark> classes so they aren't considered "components".
 
+/// This is the class of objects that can be performed in a test
+/// suite.  Note that there are no <assertion> or <check> classes so
+/// they aren't considered "components".
 define class <component> (<object>)
   // TODO(cgay): For tests and suites, name is a name, but for
   // assertions it tends to be a description.
@@ -28,8 +26,45 @@ define class <component> (<object>)
 end class <component>;
 
 
+define class <suite> (<component>)
+  // TODO(cgay): Why should this ever be anything but a sequence?
+  constant slot %components :: false-or(type-union(<sequence>, <function>)) = #f,
+    init-keyword: components:;
+  constant slot suite-setup-function :: <function> = method () end,
+    init-keyword: setup-function:;
+  constant slot suite-cleanup-function :: <function> = method () end,
+    init-keyword: cleanup-function:;
+end class <suite>;
+
+
+define class <test> (<component>)
+  constant slot test-function :: <function>,
+    required-init-keyword: function:;
+  constant slot test-allow-empty? :: <boolean>,
+    init-value: #f, init-keyword: allow-empty:;
+end class <test>;
+
+define class <test-unit> (<test>)
+end class <test-unit>;
+
+
 define generic component-type-name
     (component :: <component>) => (type-name :: <string>);
+
+define method component-type-name
+    (test :: <test>) => (type-name :: <string>)
+  "test"
+end;
+
+define method component-type-name
+    (test-unit :: <test-unit>) => (type-name :: <string>)
+  "test unit"
+end;
+
+define method component-type-name
+    (suite :: <suite>) => (type-name :: <string>)
+  "suite"
+end;
 
 define method component-type-name
     (component :: <component>) => (type-name :: <string>)
@@ -63,98 +98,165 @@ define method component-result-type
 end;
 
 
-
-/// Result handling
+/// Suites
 
-define class <component-result> (<result>)
-  constant slot result-subresults :: <sequence> = make(<stretchy-vector>),
-    init-keyword: subresults:;
+define variable *all-suites*
+  = make(<suite>,
+         name: "All Defined Suites",
+         components: make(<stretchy-vector>));
 
-  // Profiling data...
+define method root-suite () => (suite :: <suite>)
+  *all-suites*
+end method root-suite;
 
-  constant slot result-seconds :: false-or(<integer>),
-    required-init-keyword: seconds:;
-  constant slot result-microseconds :: false-or(<integer>),
-    required-init-keyword: microseconds:;
-  // Hopefully no benchmarks will allocate more than 536MB haha...
-  constant slot result-bytes :: false-or(<integer>),
-    required-init-keyword: bytes:;
-end class <component-result>;
+define method ensure-suite-components
+    (components :: <sequence>, suite :: <suite>)
+ => (components :: <sequence>)
+  map(method (component)
+        select (component by instance?)
+          <component> =>
+            component;
+          <function>  =>
+            find-test-object(component)
+              | error("Non-test function %= in suite %s",
+                      component, component-name(suite));
+          otherwise   =>
+            error("Invalid object %= in suite %s", component, component-name(suite))
+        end
+      end,
+      components)
+end method ensure-suite-components;
 
-define class <test-result> (<component-result>)
-end class <test-result>;
+define method suite-components
+    (suite :: <suite>) => (components :: <sequence>)
+  let components = suite.%components;
+  select (components by instance?)
+    <sequence> => components;
+    <function> => ensure-suite-components(components(), suite)
+  end
+end method suite-components;
 
-define method result-type-name
-    (result :: <test-result>) => (name :: <string>)
-  "Test"
-end;
-
-define class <suite-result> (<component-result>)
-end class <suite-result>;
-
-define method result-type-name
-    (result :: <suite-result>) => (name :: <string>)
-  "Suite"
-end;
-
-
-/// Perform component
-
-define method perform-component
-    (component :: <component>, options :: <perform-options>,
-     #key report-function        = *default-report-function*,
-          report-format-function = *format-function*)
- => (component-result :: <component-result>)
-  let progress-format-function
-    = options.perform-progress-format-function;
-  let announce-checks? = options.perform-announce-checks?;
-  let result
-    = dynamic-bind (*format-function* = progress-format-function,
-                    *announce-checks?* = announce-checks?)
-        maybe-execute-component(component, options)
-      end;
-  display-results(result,
-                  report-function: report-function,
-                  report-format-function: report-format-function);
-  result;
-end method perform-component;
-
-
-/// Execute component
-
-// This function can be used to implement any desired
-// criteria to execute or not execute independent
-// tests & suites.
-
-define open generic execute-component?
-    (component :: <component>, options :: <perform-options>);
-
-define method execute-component?
-    (component :: <component>, options :: <perform-options>)
- => (answer :: <boolean>)
-  tags-match?(options.perform-tags, component.component-tags);
-end method execute-component?;
-
-define method maybe-execute-component
-    (component :: <component>, options :: <perform-options>)
- => (result :: <component-result>)
-  let announce-function
-    = options.perform-announce-function;
-  if (announce-function)
-    announce-function(component)
+define method make-suite
+    (name :: <string>, components, #rest keyword-args)
+ => (suite :: <suite>)
+  let suite = apply(make, <suite>,
+                    name: name,
+                    components: components,
+                    keyword-args);
+  let all-suites :: <stretchy-vector> = root-suite().suite-components;
+  let position = find-key(all-suites,
+                          method (suite)
+                            suite.component-name = name
+                          end);
+  if (position)
+    all-suites[position] := suite
+  else
+    add!(all-suites, suite)
   end;
-  let (subresults, status, reason, seconds, microseconds, bytes)
-    = if (execute-component?(component, options))
-        execute-component(component, options)
-      else
-        values(#(), $skipped, 0, 0, 0)
-      end;
-  make(component-result-type(component),
-       name: component.component-name,
-       status: status,
-       reason: reason,
-       subresults: subresults,
-       seconds: seconds,
-       microseconds: microseconds,
-       bytes: bytes)
-end method maybe-execute-component;
+  suite
+end method make-suite;
+
+define macro suite-definer
+  { define suite ?suite-name:name (?keyword-args:*) ?components end } =>
+    {define variable ?suite-name
+       = make-suite(?"suite-name",
+                    method ()
+                      list(?components)
+                    end,
+                    ?keyword-args) }
+
+  components:
+    { } => { }
+    { test ?:name; ... }
+      => { ?name, ... }
+    { suite ?:name; ... }
+      => { ?name, ... }
+end macro suite-definer;
+
+
+/// Tests
+
+define constant $test-objects-table = make(<table>);
+
+define method find-test-object
+    (function :: <function>) => (test :: false-or(<test>))
+  element($test-objects-table, function, default: #f)
+end method find-test-object;
+
+// the test macro
+
+//---*** We could use 'define function' but it doesn't debug as well right now
+define macro test-definer
+  { define test ?test-name:name (?keyword-args:*) ?test-body:body end }
+    => { define method ?test-name ()
+           ?test-body
+         end;
+         $test-objects-table[?test-name]
+           := make(<test>,
+                   name: ?"test-name",
+                   function: ?test-name,
+                   ?keyword-args); }
+end macro test-definer;
+
+// with-test-unit macro
+
+
+define thread variable *test-unit-options* = make(<perform-options>);
+
+define macro with-test-unit
+  { with-test-unit (?name:expression, ?keyword-args:*) ?test-body:body end }
+    => { begin
+           let test
+             = make(<test-unit>,
+                    name: concatenate("Test unit ", ?name),
+                    function: method () ?test-body end,
+                    ?keyword-args);
+           let result = perform-component(test, *test-unit-options*,
+                                          report-function: #f);
+           *check-recording-function*(result);
+         end; }
+end macro with-test-unit;
+
+
+define method find-suite
+    (name :: <string>, #key search-suite = root-suite())
+ => (suite :: false-or(<suite>))
+  let lowercase-name = as-lowercase(name);
+  local method do-find-suite (suite :: <suite>)
+          if (as-lowercase(component-name(suite)) = lowercase-name)
+            suite
+          else
+            block (return)
+              for (object in suite-components(suite))
+                if (instance?(object, <suite>))
+                  let subsuite = do-find-suite(object);
+                  if (subsuite) return(subsuite) end;
+                end
+              end
+            end
+          end
+        end;
+  do-find-suite(search-suite);
+end method find-suite;
+
+define method find-test
+    (name :: <string>, #key search-suite = root-suite())
+ => (test :: false-or(<test>))
+  let lowercase-name = as-lowercase(name);
+  local method do-find-test (suite :: <suite>)
+          block (return)
+            for (object in suite-components(suite))
+              select (object by instance?)
+                <test> =>
+                  if (as-lowercase(component-name(object)) = lowercase-name)
+                    return(object)
+                  end if;
+                <suite> =>
+                  let test = do-find-test(object);
+                  if (test) return(test) end;
+              end
+            end
+          end
+        end;
+  do-find-test(search-suite);
+end method find-test;

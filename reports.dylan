@@ -1,12 +1,11 @@
 Module:       testworks
-Synopsis:     Reporting functions for TestWorks
+Synopsis:     Report generation
 Author:       Shri Amit
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-/// Display results
 
 define method display-results
     (result :: <result>,
@@ -16,12 +15,9 @@ define method display-results
   if (report-function)
     dynamic-bind (*format-function* = report-format-function)
       report-function(result)
-    end
-  end
+    end;
+  end;
 end method display-results;
-
-
-/// Results component
 
 define method do-results
     (function :: <function>, result :: <result>,
@@ -75,7 +71,6 @@ define method count-results
 end method count-results;
 
 
-
 /// Summary generation
 
 define method print-result-summary
@@ -128,6 +123,18 @@ define method print-result-info
   for (subresult in result-subresults(result))
     print-result-info(subresult, indent: subindent, test: test)
   end
+end method print-result-info;
+
+// This 'after' method prints the reason for the result's failure
+define method print-result-info
+    (result :: <unit-result>, #key indent = "", test) => ()
+  ignore(indent);
+  next-method();
+  let show-result? = if (test) test(result) else #t end;
+  let reason = result.result-reason;
+  if (show-result? & reason)
+    test-output(" [%s]", reason);
+  end;
 end method print-result-info;
 
 

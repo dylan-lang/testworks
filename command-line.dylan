@@ -84,15 +84,6 @@ define table $report-functions :: <string-table> = {
     "surefire" => surefire-report-function
     };
 
-// Encapsulates the components to be ignored
-
-define class <perform-criteria> (<perform-options>)
-  slot perform-ignore :: <stretchy-vector>,
-    init-keyword: ignore:;
-  slot list-suites? :: <boolean> = #f;
-  slot list-tests? :: <boolean> = #f;
-end class <perform-criteria>;
-
 define method execute-component?
     (component :: <component>, options :: <perform-criteria>)
  => (answer :: <boolean>)
