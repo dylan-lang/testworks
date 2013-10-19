@@ -233,11 +233,6 @@ define method run-test-application
         display-run-options(start-suite, report-function, options)
       end;
       let result = #f;
-      let handler <warning>
-        = method (warning :: <warning>, next-handler :: <function>) => ()
-            report-format-function("Warning: %s\n", warning);
-            next-handler()
-          end;
       result := perform-component(start-suite, options, report-function: #f);
       display-results(result,
                       report-function: report-function,
