@@ -22,6 +22,11 @@ end macro with-debugging;
 define macro without-recording
   { without-recording () ?body:body end }
     => { let old-check-recording-function = *check-recording-function*;
+
+         // This prevents default-handler(condition :: <warning>) from
+         // outputting a message to stderr when these warnings are
+         // signaled.
+         let handler <test-warning> = always(#f);
          block ()
            *check-recording-function* := always(#t);
            ?body
