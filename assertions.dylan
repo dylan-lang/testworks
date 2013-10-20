@@ -375,13 +375,16 @@ define method print-check-progress
     (result :: <unit-result>) => ()
   let status = result.result-status;
   let name = result.result-name;
+  let reason = result.result-reason;
   select (status)
     $skipped =>
       test-output("Ignored check: %s", name);
     otherwise =>
-      test-output("Ran check: %s %s", name, status-name(status));
+      test-output("Ran check: %s %s%s\n",
+                  name,
+                  status-name(status),
+                  reason & format-to-string(" [%s]", reason) | "");
   end;
-  test-output(" [%s]\n", result.result-reason);
 end method print-check-progress;
 
 
