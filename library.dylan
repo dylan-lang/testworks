@@ -9,7 +9,8 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use command-line-parser;
   use common-dylan, import: { common-dylan, threads };
-  use io, import: { format-out, standard-io, streams };
+  use io, import: { format, format-out, standard-io, streams };
+  use system, import: { file-system };
 
   export testworks;
 end library testworks;
@@ -18,7 +19,9 @@ end library testworks;
 // (%testworks) and external (testworks) modules.
 define module testworks
   use command-line-parser;
-  use common-dylan;
+  use common-dylan, exclude: { format-to-string };
+  use file-system;
+  use format;
   use format-out;
   use standard-io;
   use streams;

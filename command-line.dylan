@@ -34,6 +34,12 @@ define function parse-args
                   default: "failures",
                   help: "Type of final report to generate: "
                     "none|full|failures|summary|log|xml|surefire"));
+  add-option(parser,
+             make(<parameter-option>,
+                  names: #("report-file"),
+                  variable: "FILE",
+                  help: "File in which to store the report."));
+
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
   // to tests/suites specified as regular arguments plus --ignore.
@@ -50,11 +56,13 @@ define function parse-args
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("ignore-suite"),
+                  variable: "SUITE",
                   help: "Ignore these named suites.  May be "
                     "used multiple times."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("ignore-test"),
+                  variable: "TEST",
                   help: "Ignore these named tests.  May be "
                     "used multiple times."));
   add-option(parser,
@@ -226,22 +234,30 @@ define method run-test-application
     #f
   else
     // Run the appropriate test or suite
+    let report-stream = #f;
     block ()
+      let pathname = get-option-value(parser, "report-file");
+      if (pathname)
+        report-stream := make(<file-stream>,
+                              locator: pathname,
+                              direction: #"output",
+                              if-exists: #"overwrite");
+        report-format-function := curry(format, report-stream);
+      end;
       if (get-option-value(parser, "verbose")
             & (report-function ~= xml-report-function)
             & (report-function ~= surefire-report-function))
         display-run-options(start-suite, report-function, options)
       end;
-      let result = #f;
-      result := perform-component(start-suite, options, report-function: #f);
+      let result = perform-component(start-suite, options, report-function: #f);
       display-results(result,
                       report-function: report-function,
                       report-format-function: report-format-function);
-      format-out("\n");
-      force-output(*standard-output*);
       result
     afterwards
       end-test();
+    cleanup
+      report-stream & close(report-stream);
     end block
   end if
 end method run-test-application;
