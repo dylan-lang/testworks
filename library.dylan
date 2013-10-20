@@ -9,7 +9,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use command-line-parser;
   use common-dylan, import: { common-dylan, threads };
-  use io, import: { format, format-out, standard-io, streams };
+  use io, import: { format, standard-io, streams };
   use system, import: { file-system };
 
   export testworks;
@@ -22,7 +22,6 @@ define module testworks
   use common-dylan, exclude: { format-to-string };
   use file-system;
   use format;
-  use format-out;
   use standard-io;
   use streams;
   use threads,
@@ -34,8 +33,8 @@ define module testworks
          debug?;
 
   // Formatting
-  export *format-function*,
-         test-output,
+  export test-output,
+         *test-output*,
          plural;
 
   // Announcing suite/test/check names
@@ -56,7 +55,6 @@ define module testworks
          perform-tags, perform-tags-setter,
          perform-announce-function, perform-announce-function-setter,
          perform-announce-checks?, perform-announce-checks?-setter,
-         perform-progress-format-function, perform-progress-format-function-setter,
          perform-progress-function, perform-progress-function-setter,
          perform-debug?, perform-debug?-setter;
 
@@ -128,7 +126,6 @@ define module testworks
 
   // Report functions
   export *default-report-function*,
-         display-results,
          null-report-function,
          summary-report-function,
          failures-report-function,

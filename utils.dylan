@@ -8,7 +8,10 @@ Warranty: Distributed WITHOUT WARRANTY OF ANY KIND
 
 define thread variable *debug?* = #f;
 
-define thread variable *format-function* = format-out;
+// The stream on which output is done.  Note that this may be bound to
+// different streams during the test run and when the report is
+// generated.  e.g., to output the report to a file.
+define thread variable *test-output* :: <stream> = *standard-output*;
 
 define thread variable *announce-checks?* :: <boolean> = #f;
 
