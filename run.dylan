@@ -191,16 +191,6 @@ define method perform-test
   end
 end method perform-test;
 
-define method list-component
-    (test :: <test>, options :: <perform-options>)
- => (list :: <sequence>)
-  if (execute-component?(test, options))
-    vector(test);
-  else
-    #[];
-  end if
-end method list-component;
-
 
 
 /// Execute component
@@ -328,6 +318,16 @@ define method execute-component
 end method execute-component;
 
 define method list-component
+    (test :: <test>, options :: <perform-options>)
+ => (list :: <sequence>)
+  if (execute-component?(test, options))
+    vector(test);
+  else
+    #[];
+  end if
+end method list-component;
+
+define method list-component
     (suite :: <suite>, options :: <perform-options>)
  => (list :: <sequence>)
   let sublist :: <stretchy-vector> = make(<stretchy-vector>);
@@ -340,18 +340,6 @@ define method list-component
   sublist
 end method list-component;
     
-define function add-times
-    (sec1, usec1, sec2, usec2) => (sec, usec)
-  let sec = sec1 + sec2;
-  let usec = usec1 + usec2;
-  if (usec >= 1000000)
-    usec := usec - 1000000;
-    sec1 := sec1 + 1;
-  end if;
-  values(sec, usec)
-end function add-times;
-
-
 
 
 define method null-progress-function

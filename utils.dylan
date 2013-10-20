@@ -15,3 +15,16 @@ define thread variable *announce-checks?* :: <boolean> = #f;
 define thread variable *announce-check-function* :: false-or(<function>) = #f;
 
 define thread variable *announce-function* :: false-or(<function>) = method (c) end;
+
+
+define function add-times
+    (sec1 :: <integer>, usec1 :: <integer>, sec2 :: <integer>, usec2 :: <integer>)
+ => (sec :: <integer>, usec :: <integer>)
+  let sec = sec1 + sec2;
+  let usec = usec1 + usec2;
+  if (usec >= 1000000)
+    usec := usec - 1000000;
+    sec1 := sec1 + 1;
+  end if;
+  values(sec, usec)
+end function add-times;
