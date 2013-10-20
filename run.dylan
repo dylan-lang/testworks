@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Summary:      Test run execution logic.
 Author:       Andrew Armstrong, James Kirsch
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.

@@ -18,6 +18,7 @@ define module testworks-test-suite
   use command-line-parser;
   use dylan;
   use testworks;
+  use %testworks;
 
   export testworks-test-suite,
          \with-debugging;

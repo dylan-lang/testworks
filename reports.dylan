@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Synopsis:     Report generation
 Author:       Shri Amit
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.

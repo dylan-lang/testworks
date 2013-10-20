@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Synopsis:     Implementation of run-test-application
 Author:       Andy Armstrong, Shri Amit
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.

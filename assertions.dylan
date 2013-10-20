@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Synopsis:     Testworks testing harness
 Author:       Andrew Armstrong, James Kirsch
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
