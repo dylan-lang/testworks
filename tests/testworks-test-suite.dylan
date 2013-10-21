@@ -115,33 +115,42 @@ end test testworks-assert-false-test;
 define test testworks-check-equal-test ()
   check-equal("check-equal(1, 1) passes",
               without-recording ()
-                check-equal($internal-check-name, 1, 1)
+                result-status(check-equal($internal-check-name, 1, 1))
               end,
               $passed);
   check-equal("check-equal(\"1\", \"1\") passes",
               without-recording ()
-                check-equal($internal-check-name, "1", "1")
+                result-status(check-equal($internal-check-name, "1", "1"))
               end,
               $passed);
   check-equal("check-equal(1, 2) fails",
               without-recording ()
-                check-equal($internal-check-name, 1, 2)
+                result-status(check-equal($internal-check-name, 1, 2))
               end,
               $failed);
   check-equal("check-equal of error crashes",
               without-recording ()
-                check-equal($internal-check-name, 1, test-error())
+                result-status(check-equal($internal-check-name, 1, test-error()))
               end,
               $crashed);
 end test testworks-check-equal-test;
 
+define test testworks-check-equal-failure-detail ()
+  let result = without-recording ()
+                 assert-equal(#[1, 2, 3], #[1, 3, 2])
+               end;
+  let reason = result.result-reason;
+  assert-true(reason & find-substring(reason, "element 1 is"));
+end test testworks-check-equal-failure-detail;
+
+
 define test testworks-assert-equal-test ()
   assert-equal(8, 8);
   assert-equal(8, 8, "8 = 8 with description");
-  assert-equal($passed, without-recording () assert-equal(1, 1) end);
-  assert-equal($passed, without-recording () assert-equal("1", "1") end);
-  assert-equal($failed, without-recording () assert-equal(1, 2) end);
-  assert-equal($crashed, without-recording () assert-equal(1, test-error()) end);
+  assert-equal($passed, without-recording () result-status(assert-equal(1, 1)) end);
+  assert-equal($passed, without-recording () result-status(assert-equal("1", "1")) end);
+  assert-equal($failed, without-recording () result-status(assert-equal(1, 2)) end);
+  assert-equal($crashed, without-recording () result-status(assert-equal(1, test-error())) end);
 end test testworks-assert-equal-test;
 
 define test testworks-check-instance?-test ()
@@ -254,6 +263,7 @@ define suite testworks-check-macros-suite ()
   test testworks-check-true-test;
   test testworks-check-false-test;
   test testworks-check-equal-test;
+  test testworks-check-equal-failure-detail;
   test testworks-check-instance?-test;
   test testworks-check-condition-test;
   test testworks-check-no-errors-test;

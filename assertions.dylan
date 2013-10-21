@@ -53,7 +53,7 @@ end macro assert-equal;
 
 define function do-check-equal
     (get-name :: <function>, get-arguments :: <function>)
- => (status :: <result-status>)
+ => (result :: <result>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -62,10 +62,9 @@ define function do-check-equal
             if (*debug?*)
               next-handler()  // decline to handle it
             else
-              record-check(name | format-to-string("*** Invalid check name ***"),
-                           $crashed,
-                           format-to-string("Error %s: %s", phase, condition));
-              return($crashed);
+              return(record-check(name | format-to-string("*** Invalid check name ***"),
+                                  $crashed,
+                                  format-to-string("Error %s: %s", phase, condition)));
             end;
           end method;
     name := get-name();
@@ -80,35 +79,46 @@ define function do-check-equal
           phase := "getting check-equal failure detail";
           let detail = check-equal-failure-detail(val1, val2);
           values($failed,
-                 format-to-string("%s (from expression %=) and %s (from "
-                                    "expression %=) are not equal (=).%s%s",
+                 format-to-string("%= (from expression %=) and %= (from "
+                                    "expression %=) are not =.%s%s",
                                   val1, expr1, val2, expr2,
                                   if (detail) "  " else "" end,
                                   detail | ""))
         end;
-    record-check(name, status, reason);
-    status
+    record-check(name, status, reason)
   end block
 end function do-check-equal;
 
-// Users can potentially override this for their own classes.
+// Return a string with details about why two objects are not =.
+// Users can override this for their own classes.
 define open generic check-equal-failure-detail
     (val1 :: <object>, val2 :: <object>) => (detail :: false-or(<string>));
 
 define method check-equal-failure-detail
     (val1 :: <object>, val2 :: <object>) => (detail :: false-or(<string>))
-  #f
+  #f  // We have no details.
 end;
 
 define method check-equal-failure-detail
-    (val1 :: <sequence>, val2 :: <sequence>) => (detail :: false-or(<string>))
-  // TODO(cgay):
-end;
+    (coll1 :: <collection>, coll2 :: <collection>) => (detail :: false-or(<string>))
+  if (coll1.size ~= coll2.size)
+    format-to-string("sizes differ (%d and %d)", coll2.size, coll1.size)
+  end
+end method check-equal-failure-detail;
 
 define method check-equal-failure-detail
-    (val1 :: <collection>, val2 :: <collection>) => (detail :: false-or(<string>))
-  // TODO(cgay):
-end;
+    (seq1 :: <sequence>, seq2 :: <sequence>) => (detail :: false-or(<string>))
+  let detail1 = next-method();
+  let detail2 = #f;
+  for (e1 in seq1, e2 in seq2, i from 0, while: e1 = e2)
+  finally
+    if (i < seq1.size & i < seq2.size)
+      // TODO(cgay): show the two element values.
+      detail2 := format-to-string("element %d is the first non-matching element", i);
+    end;
+  end for;
+  join(choose(identity, vector(detail1, detail2)), ", ")
+end method check-equal-failure-detail;
 
 define macro check-instance?
   { check-instance? (?check-name:expression, ?type:expression, ?value:expression)
@@ -392,12 +402,10 @@ end method print-check-progress;
 define thread variable *check-recording-function* = print-check-progress;
 
 define method record-check
-    (name :: <string>,
-     status :: <result-status>,
-     reason :: false-or(<string>))
- => (status :: <result-status>)
+    (name :: <string>, status :: <result-status>, reason :: false-or(<string>))
+ => (status :: <result>)
   let result = make(<check-result>,
                     name: name, status: status, reason: reason);
   *check-recording-function*(result);
-  status
+  result
 end method record-check;
