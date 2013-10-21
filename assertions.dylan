@@ -32,7 +32,7 @@ define macro check-equal
   } => {
     do-check-equal(method () ?name end,
                    method ()
-                     values(?expr2, ?expr2, ?"expr1", ?"expr2")
+                     values(?expr1, ?expr2, ?"expr1", ?"expr2")
                    end)
   }
 end macro check-equal;
