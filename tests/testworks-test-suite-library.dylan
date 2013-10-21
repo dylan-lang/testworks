@@ -9,6 +9,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks-test-suite
   use command-line-parser;
   use dylan;
+  use strings;
   use testworks;
 
   export testworks-test-suite;
@@ -17,7 +18,9 @@ end library testworks-test-suite;
 define module testworks-test-suite
   use command-line-parser;
   use dylan;
+  use strings;
   use testworks;
+  use %testworks;
 
   export testworks-test-suite,
          \with-debugging;

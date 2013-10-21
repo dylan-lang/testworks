@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Synopsis:     Implementation of run-test-application
 Author:       Andy Armstrong, Shri Amit
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
@@ -34,6 +34,12 @@ define function parse-args
                   default: "failures",
                   help: "Type of final report to generate: "
                     "none|full|failures|summary|log|xml|surefire"));
+  add-option(parser,
+             make(<parameter-option>,
+                  names: #("report-file"),
+                  variable: "FILE",
+                  help: "File in which to store the report."));
+
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
   // to tests/suites specified as regular arguments plus --ignore.
@@ -50,11 +56,13 @@ define function parse-args
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("ignore-suite"),
+                  variable: "SUITE",
                   help: "Ignore these named suites.  May be "
                     "used multiple times."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("ignore-test"),
+                  variable: "TEST",
                   help: "Ignore these named tests.  May be "
                     "used multiple times."));
   add-option(parser,
@@ -127,25 +135,25 @@ define method display-run-options
      report-function :: <function>,
      options :: <perform-criteria>)
  => ()
-  format-out
-     ("\nRunning %s %s, with options:\n"
-        "   progress-function: %s\n"
-        "     report-function: %s\n"
-        "              debug?: %s\n"
-        "              ignore: %s\n\n",
-      if (instance?(start-suite, <suite>)) "suite" else "test" end,
-      component-name(start-suite),
-      select (options.perform-progress-function)
-        full-progress-function => "full";
-        null-progress-function => "none";
-      end,
-      find-key($report-functions, curry(\=, report-function)),
-      select (options.perform-debug?)
-        #"crashes" => "crashes";
-        #t         => "failures";
-        otherwise  => "no";
-      end,
-      join(options.perform-ignore, ", ", key: component-name))
+  format(*test-output*,
+         "\nRunning %s %s, with options:\n"
+           "   progress-function: %s\n"
+           "     report-function: %s\n"
+           "              debug?: %s\n"
+           "              ignore: %s\n\n",
+         component-type-name(start-suite),
+         component-name(start-suite),
+         select (options.perform-progress-function)
+           full-progress-function => "full";
+           null-progress-function => "none";
+         end,
+         find-key($report-functions, curry(\=, report-function)),
+         select (options.perform-debug?)
+           #"crashes" => "crashes";
+           #t         => "failures";
+           otherwise  => "no";
+         end,
+         join(options.perform-ignore, ", ", key: component-name));
 end method display-run-options;
 
 define method compute-application-options
@@ -201,14 +209,14 @@ define method run-test-application
     (parent :: <component>,
      #key command-name = application-name(),
           arguments = application-arguments(),
-          report-format-function = *format-function*)
+          output-stream = *test-output*)
  => (result :: false-or(<result>))
   let parser = parse-args(arguments);
   let (start-suite, options, report-function)
     = block ()
         compute-application-options(parent, parser)
       exception (ex :: <usage-error>)
-        format-out("%s\n", condition-to-string(ex));
+        format(*standard-error*, "%s\n", condition-to-string(ex));
         exit-application(2);
       end;
 
@@ -221,27 +229,34 @@ define method run-test-application
                end,
                results);
     for (component :: <component> in final-results)
-      format-out("%s %s\n", component.component-type-name, component.component-name)
-    end for;
+      format(output-stream, "%s %s\n",
+             component.component-type-name, component.component-name)
+    end;
     #f
   else
     // Run the appropriate test or suite
+    let pathname = get-option-value(parser, "report-file");
     block ()
-      if (get-option-value(parser, "verbose")
-            & (report-function ~= xml-report-function)
-            & (report-function ~= surefire-report-function))
-        display-run-options(start-suite, report-function, options)
-      end;
-      let result = #f;
-      result := perform-component(start-suite, options, report-function: #f);
-      display-results(result,
-                      report-function: report-function,
-                      report-format-function: report-format-function);
-      format-out("\n");
-      force-output(*standard-output*);
-      result
+      dynamic-bind (*test-output* = output-stream)
+        if (get-option-value(parser, "verbose")
+              & (report-function ~= xml-report-function)
+              & (report-function ~= surefire-report-function))
+          display-run-options(start-suite, report-function, options)
+        end;
+        let result = perform-component(start-suite, options, report-function: #f);
+        if (pathname)
+          *test-output* := make(<file-stream>,
+                                locator: pathname,
+                                direction: #"output",
+                                if-exists: #"overwrite");
+        end;
+        report-function & report-function(result);
+        result
+      end dynamic-bind
     afterwards
       end-test();
+    cleanup
+      pathname & close(output-stream);
     end block
   end if
 end method run-test-application;

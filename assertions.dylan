@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Synopsis:     Testworks testing harness
 Author:       Andrew Armstrong, James Kirsch
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
@@ -6,9 +6,8 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-// TODO(cgay): Rename %check-* to do-check-* since that's sort of the
-// convention for macros like this.  Try and figure out a good way to
-// remove some of the duplicate code in those functions, too.
+// TODO(cgay): Try and figure out a good way to remove some of the
+// duplicate code in the do-check* functions.
 
 
 /// Check/assert macros
@@ -31,10 +30,10 @@ end macro check;
 define macro check-equal
   { check-equal (?name:expression, ?expr1:expression, ?expr2:expression)
   } => {
-    %check-equal(method () ?name end,
-                 method ()
-                   values(?expr2, ?expr2, ?"expr1", ?"expr2")
-                 end)
+    do-check-equal(method () ?name end,
+                   method ()
+                     values(?expr1, ?expr2, ?"expr1", ?"expr2")
+                   end)
   }
 end macro check-equal;
 
@@ -45,16 +44,16 @@ define macro assert-equal
   }
   { assert-equal (?expr1:expression, ?expr2:expression, ?description:expression)
   } => {
-    %check-equal(method () ?description end,
-                 method ()
-                   values(?expr1, ?expr2, ?"expr1", ?"expr2")
-                 end)
+    do-check-equal(method () ?description end,
+                   method ()
+                     values(?expr1, ?expr2, ?"expr1", ?"expr2")
+                   end)
   }
 end macro assert-equal;
 
-define function %check-equal
+define function do-check-equal
     (get-name :: <function>, get-arguments :: <function>)
- => (status :: <result-status>)
+ => (result :: <result>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -63,10 +62,9 @@ define function %check-equal
             if (*debug?*)
               next-handler()  // decline to handle it
             else
-              record-check(name | format-to-string("*** Invalid check name ***"),
-                           $crashed,
-                           format-to-string("Error %s: %s", phase, condition));
-              return($crashed);
+              return(record-check(name | format-to-string("*** Invalid check name ***"),
+                                  $crashed,
+                                  format-to-string("Error %s: %s", phase, condition)));
             end;
           end method;
     name := get-name();
@@ -81,47 +79,58 @@ define function %check-equal
           phase := "getting check-equal failure detail";
           let detail = check-equal-failure-detail(val1, val2);
           values($failed,
-                 format-to-string("%s (from expression %=) and %s (from "
-                                    "expression %=) are not equal (=).%s%s",
+                 format-to-string("%= (from expression %=) and %= (from "
+                                    "expression %=) are not =.%s%s",
                                   val1, expr1, val2, expr2,
                                   if (detail) "  " else "" end,
                                   detail | ""))
         end;
-    record-check(name, status, reason);
-    status
+    record-check(name, status, reason)
   end block
-end function %check-equal;
+end function do-check-equal;
 
-// Users can potentially override this for their own classes.
+// Return a string with details about why two objects are not =.
+// Users can override this for their own classes.
 define open generic check-equal-failure-detail
     (val1 :: <object>, val2 :: <object>) => (detail :: false-or(<string>));
 
 define method check-equal-failure-detail
     (val1 :: <object>, val2 :: <object>) => (detail :: false-or(<string>))
-  #f
+  #f  // We have no details.
 end;
 
 define method check-equal-failure-detail
-    (val1 :: <sequence>, val2 :: <sequence>) => (detail :: false-or(<string>))
-  // TODO(cgay):
-end;
+    (coll1 :: <collection>, coll2 :: <collection>) => (detail :: false-or(<string>))
+  if (coll1.size ~= coll2.size)
+    format-to-string("sizes differ (%d and %d)", coll2.size, coll1.size)
+  end
+end method check-equal-failure-detail;
 
 define method check-equal-failure-detail
-    (val1 :: <collection>, val2 :: <collection>) => (detail :: false-or(<string>))
-  // TODO(cgay):
-end;
+    (seq1 :: <sequence>, seq2 :: <sequence>) => (detail :: false-or(<string>))
+  let detail1 = next-method();
+  let detail2 = #f;
+  for (e1 in seq1, e2 in seq2, i from 0, while: e1 = e2)
+  finally
+    if (i < seq1.size & i < seq2.size)
+      // TODO(cgay): show the two element values.
+      detail2 := format-to-string("element %d is the first non-matching element", i);
+    end;
+  end for;
+  join(choose(identity, vector(detail1, detail2)), ", ")
+end method check-equal-failure-detail;
 
 define macro check-instance?
   { check-instance? (?check-name:expression, ?type:expression, ?value:expression)
   } => {
-    %check-instance?(method () ?check-name end,
-                     method ()
-                       values(?type, ?value, ?"value")
-                     end)
+    do-check-instance?(method () ?check-name end,
+                       method ()
+                         values(?type, ?value, ?"value")
+                       end)
   }
 end macro check-instance?;
 
-define function %check-instance?
+define function do-check-instance?
     (get-name :: <function>, get-arguments :: <function>)
  => (status :: <result-status>)
   let phase = "evaluating check name";
@@ -154,15 +163,15 @@ define function %check-instance?
     record-check(name, status, reason);
     status
   end block
-end function %check-instance?;
+end function do-check-instance?;
 
 define macro check-true
   { check-true (?check-name:expression, ?expr:expression)
   } => {
-    %check-true(method () ?check-name end,
-                method ()
-                  values(?expr, ?"expr")
-                end)
+    do-check-true(method () ?check-name end,
+                  method ()
+                    values(?expr, ?"expr")
+                  end)
   }
 end macro check-true;
 
@@ -174,12 +183,12 @@ define macro assert-true
 
   { assert-true (?expr:expression, ?description:expression)
   } => {
-    %check-true(method () ?description end,
-                method () values(?expr, ?"expr") end)
+    do-check-true(method () ?description end,
+                  method () values(?expr, ?"expr") end)
   }
 end macro assert-true;
 
-define function %check-true
+define function do-check-true
     (get-name :: <function>, get-arguments :: <function>)
  => (status :: <result-status>)
   let phase = "evaluating check name";
@@ -212,15 +221,15 @@ define function %check-true
     record-check(name, status, reason);
     status
   end block
-end function %check-true;
+end function do-check-true;
 
 define macro check-false
    { check-false (?check-name:expression, ?expr:expression)
    } => {
-     %check-false(method () ?check-name end,
-                  method ()
-                    values(?expr, ?"expr")
-                  end)
+     do-check-false(method () ?check-name end,
+                    method ()
+                      values(?expr, ?"expr")
+                    end)
    }
 end macro check-false;
 
@@ -232,14 +241,14 @@ define macro assert-false
 
   { assert-false (?expr:expression, ?description:expression)
   } => {
-    %check-false(method () ?description end,
-                 method ()
-                   values(?expr, ?"expr")
-                 end)
+    do-check-false(method () ?description end,
+                   method ()
+                     values(?expr, ?"expr")
+                   end)
   }
 end macro assert-false;
 
-define function %check-false
+define function do-check-false
     (get-name :: <function>, get-arguments :: <function>)
  => (status :: <result-status>)
   let phase = "evaluating check name";
@@ -271,16 +280,16 @@ define function %check-false
     record-check(name, status, reason);
     status
   end block
-end function %check-false;
+end function do-check-false;
 
 define macro check-condition
   { check-condition(?check-name:expression, ?condition:expression,
                     ?expr:expression)
   } => {
-    %check-condition(method () ?check-name end,
-                     method ()
-                       values(?condition, method () ?expr end, ?"expr")
-                     end)
+    do-check-condition(method () ?check-name end,
+                       method ()
+                         values(?condition, method () ?expr end, ?"expr")
+                       end)
   }
 end macro check-condition;
 
@@ -292,14 +301,14 @@ define macro assert-signals
 
   { assert-signals(?condition:expression, ?expr:expression, ?description:expression)
   } => {
-    %check-condition(method () ?description end,
-                     method ()
-                       values(?condition, method () ?expr end, ?"expr")
-                     end)
+    do-check-condition(method () ?description end,
+                       method ()
+                         values(?condition, method () ?expr end, ?"expr")
+                       end)
   }
 end macro assert-signals;
 
-define function %check-condition
+define function do-check-condition
     (get-name :: <function>, get-arguments :: <function>)
  => (status :: <result-status>)
   let phase = "evaluating check name";
@@ -338,7 +347,7 @@ define function %check-condition
     record-check(name, status, reason);
     status
   end block
-end function %check-condition;
+end function do-check-condition;
 
 
 // Same as check-no-errors, for symmetry with check-condition...
@@ -375,13 +384,16 @@ define method print-check-progress
     (result :: <unit-result>) => ()
   let status = result.result-status;
   let name = result.result-name;
+  let reason = result.result-reason;
   select (status)
     $skipped =>
       test-output("Ignored check: %s", name);
     otherwise =>
-      test-output("Ran check: %s %s", name, status-name(status));
+      test-output("Ran check: %s %s%s\n",
+                  name,
+                  status-name(status),
+                  reason & format-to-string(" [%s]", reason) | "");
   end;
-  test-output(" [%s]\n", result.result-reason);
 end method print-check-progress;
 
 
@@ -390,12 +402,10 @@ end method print-check-progress;
 define thread variable *check-recording-function* = print-check-progress;
 
 define method record-check
-    (name :: <string>,
-     status :: <result-status>,
-     reason :: false-or(<string>))
- => (status :: <result-status>)
+    (name :: <string>, status :: <result-status>, reason :: false-or(<string>))
+ => (status :: <result>)
   let result = make(<check-result>,
                     name: name, status: status, reason: reason);
   *check-recording-function*(result);
-  status
+  result
 end method record-check;

@@ -284,12 +284,13 @@ Stand-alone Executable Functions
 
    Runs a test suite or test as part of a stand-alone test executable.
 
-   :signature: run-test-application *suite-or-test* #key *command-name* *arguments* *report-format-function*
+   :signature: run-test-application *suite-or-test* #key *command-name* *arguments*
 
    :parameter suite-or-test: An instance of :class:`<suite>` or :class:`<test>`.
    :parameter #key command-name: Defaults to ``application-name()``.
    :parameter #key arguments: Defaults to ``application-arguments()``.
-   :parameter #key report-format-function: Defaults to ``*format-function*``.
+   :parameter #key output-stream: Defaults to ``*test-output*``, which defaults
+      to ``*standard-output*``.
 
 
 Report Functions

@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Summary:      Test result classes, APIs, and utilities directly related to them.
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.

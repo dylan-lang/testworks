@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Synopsis:     Report generation
 Author:       Shri Amit
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
@@ -6,18 +6,6 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-
-define method display-results
-    (result :: <result>,
-     #key report-function = *default-report-function*,
-          report-format-function = *format-function*)
- => ()
-  if (report-function)
-    dynamic-bind (*format-function* = report-format-function)
-      report-function(result)
-    end;
-  end;
-end method display-results;
 
 define method do-results
     (function :: <function>, result :: <result>,

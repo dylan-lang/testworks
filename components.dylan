@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Synopsis:     Components are suites and tests.
 Author:       Shri Amit, Andrew Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.

@@ -1,4 +1,4 @@
-Module:       testworks
+Module:       %testworks
 Summary:      Test run execution logic.
 Author:       Andrew Armstrong, James Kirsch
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
@@ -20,17 +20,17 @@ end;
 define method debug-failures?
     () => (debug-failures? :: <boolean>)
   *debug?* == #t
-end method debug-failures?;
+end;
 
 define method debug?
     () => (debug? :: <boolean>)
   *debug?* ~= #f
-end method debug?;
+end;
 
 define method test-output
     (format-string :: <string>, #rest format-args) => ()
-  apply(*format-function*, format-string, format-args)
-end method test-output;
+  apply(format, *test-output*, format-string, format-args);
+end;
 
 /// Perform options
 
@@ -49,8 +49,6 @@ define open class <perform-options> (<object>)
     init-keyword: announce-function:;
   slot perform-announce-checks? :: <boolean> = *announce-checks?*,
     init-keyword: announce-checks?:;
-  slot perform-progress-format-function = *format-function*,
-    init-keyword: progress-format-function:;
   slot perform-progress-function = *default-progress-function*,
     init-keyword: progress-function:;
   slot perform-debug? = *debug?*,
@@ -71,10 +69,12 @@ end class <perform-criteria>;
 
 ///*** Generic Classes, Helper Functions, and Helper Macros ***///
 
+// TODO(cgay): Move this to utils.dylan.
 define method plural (n :: <integer>) => (ending :: <string>)
   if (n == 1) "" else "s" end if
 end;
 
+// TODO(cgay): Use let handler instead.
 define macro maybe-trap-errors
   { maybe-trap-errors (?body:body) }
     => { local method maybe-trap-errors-body () ?body end;
@@ -89,6 +89,7 @@ define macro maybe-trap-errors
          end; }
 end macro maybe-trap-errors;
 
+// TODO(cgay): Move this to utils.dylan.
 define method tags-match? (run-tags :: <sequence>, object-tags :: <sequence>)
  => (bool :: <boolean>)
   run-tags = $all-tags | ~empty?(intersection(run-tags, object-tags))
@@ -96,21 +97,15 @@ end method tags-match?;
 
 define method perform-component
     (component :: <component>, options :: <perform-options>,
-     #key report-function        = *default-report-function*,
-          report-format-function = *format-function*)
+     #key report-function = *default-report-function*)
  => (component-result :: <component-result>)
-  let progress-format-function
-    = options.perform-progress-format-function;
   let announce-checks? = options.perform-announce-checks?;
   let result
-    = dynamic-bind (*format-function* = progress-format-function,
-                    *announce-checks?* = announce-checks?)
+    = dynamic-bind (*announce-checks?* = announce-checks?)
         maybe-execute-component(component, options)
       end;
-  display-results(result,
-                  report-function: report-function,
-                  report-format-function: report-format-function);
-  result;
+  report-function & report-function(result);
+  result
 end method perform-component;
 
 define method perform-suite
@@ -118,8 +113,6 @@ define method perform-suite
      #key tags                     = $all-tags,
           announce-function        = #f,
           announce-checks?         = *announce-checks?*,
-          report-format-function   = *format-function*,
-          progress-format-function = *format-function*,
           report-function          = *default-report-function*,
           progress-function        = *default-progress-function*,
           debug?                   = *debug?*)
@@ -130,11 +123,9 @@ define method perform-suite
           tags:                     tags,
           announce-function:        announce-function,
           announce-checks?:         announce-checks?,
-          progress-format-function: progress-format-function,
           progress-function:        progress-function | null-progress-function,
           debug?:                   debug?),
-     report-function:        report-function | null-report-function,
-     report-format-function: report-format-function)
+     report-function:        report-function | null-report-function)
 end method perform-suite;
 
 // perform-test takes a <test> object and returns a component-result object.
@@ -144,8 +135,6 @@ define method perform-test
      #key tags                     = $all-tags,
           announce-function        = *announce-function*,
           announce-checks?         = *announce-checks?*,
-          progress-format-function = *format-function*,
-          report-format-function   = *format-function*,
           progress-function        = *default-progress-function*,
           report-function          = *default-report-function*,
           debug?                   = *debug?*)
@@ -156,11 +145,9 @@ define method perform-test
           tags:                     tags,
           announce-function:        announce-function,
           announce-checks?:         announce-checks?,
-          progress-report-function: progress-format-function,
           progress-function:        progress-function | null-progress-function,
           debug?:                   debug?),
-     report-function:        report-function | null-report-function,
-     report-format-function: report-format-function);
+     report-function:        report-function | null-report-function);
 end method perform-test;
 
 // TODO(cgay): Remove this; it's not needed.
@@ -169,8 +156,6 @@ define method perform-test
      #key tags                     = $all-tags,
           announce-function        = *announce-function*,
           announce-checks?         = *announce-checks?*,
-          progress-format-function = *format-function*,
-          report-format-function   = *format-function*,
           progress-function        = *default-progress-function*,
           report-function          = *default-report-function*,
           debug?                   = *debug?*)
@@ -181,8 +166,6 @@ define method perform-test
                  tags: tags,
                  announce-function:        announce-function,
                  announce-checks?:         announce-checks?,
-                 progress-format-function: progress-format-function,
-                 report-format-function:   report-format-function,
                  progress-function:        progress-function,
                  report-function:          report-function,
                  debug?:                   debug?)
@@ -190,16 +173,6 @@ define method perform-test
     error("Cannot perform-test on the non-test function %=", function)
   end
 end method perform-test;
-
-define method list-component
-    (test :: <test>, options :: <perform-options>)
- => (list :: <sequence>)
-  if (execute-component?(test, options))
-    vector(test);
-  else
-    #[];
-  end if
-end method list-component;
 
 
 
@@ -328,6 +301,16 @@ define method execute-component
 end method execute-component;
 
 define method list-component
+    (test :: <test>, options :: <perform-options>)
+ => (list :: <sequence>)
+  if (execute-component?(test, options))
+    vector(test);
+  else
+    #[];
+  end if
+end method list-component;
+
+define method list-component
     (suite :: <suite>, options :: <perform-options>)
  => (list :: <sequence>)
   let sublist :: <stretchy-vector> = make(<stretchy-vector>);
@@ -340,18 +323,6 @@ define method list-component
   sublist
 end method list-component;
     
-define function add-times
-    (sec1, usec1, sec2, usec2) => (sec, usec)
-  let sec = sec1 + sec2;
-  let usec = usec1 + usec2;
-  if (usec >= 1000000)
-    usec := usec - 1000000;
-    sec1 := sec1 + 1;
-  end if;
-  values(sec, usec)
-end function add-times;
-
-
 
 
 define method null-progress-function
