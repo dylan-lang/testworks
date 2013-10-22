@@ -33,7 +33,8 @@ define function parse-args
                   names: #("report"),
                   default: "failures",
                   help: "Type of final report to generate: "
-                    "none|full|failures|summary|log|xml|surefire"));
+                    "none|full|failures|summary|log|xml|surefire "
+                    "(default: %default)"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report-file"),
