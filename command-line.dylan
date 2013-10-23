@@ -103,33 +103,29 @@ end method execute-component?;
 define method find-component
     (suite-name :: false-or(<string>), test-name :: false-or(<string>))
  => (test :: <component>)
-  let suite
-    = if (suite-name)
-        find-suite(suite-name)
-          | usage-error("Suite not found: %s", suite-name);
-      end;
-  let test
-    = if (test-name)
-        find-test(test-name, search-suite: suite | root-suite())
-          | usage-error("Test not found: %s", test-name);
-      end;
-  test | suite;
+  let suite = if (suite-name)
+                find-suite(suite-name)
+                  | usage-error("Suite not found: %s", suite-name);
+              end;
+  let test = if (test-name)
+               find-test(test-name, search-suite: suite | root-suite())
+                 | usage-error("Test not found: %s", test-name);
+             end;
+  test | suite
 end method find-component;
 
-define method find-component
-    (suite-names :: false-or(<sequence>), test-names :: false-or(<sequence>))
- => (tests :: <sequence>)
-  let tests = make(<stretchy-vector>);
-  suite-names
-    & for (name in suite-names)
-        add!(tests, find-component(name, #f));
-      end for;
-  test-names
-    & for (name in test-names)
-        add!(tests, find-component(#f, name));
-      end for;
-  values(tests);
-end method find-component;
+define method find-components
+    (suite-names :: <sequence>, test-names :: <sequence>)
+ => (tests :: <stretchy-vector>)
+  let components = make(<stretchy-vector>);
+  for (name in suite-names | #[])
+    add!(components, find-component(name, #f));
+  end;
+  for (name in test-names | #[])
+    add!(components, find-component(#f, name));
+  end;
+  values(components)
+end method find-components;
 
 define method display-run-options
     (start-suite :: <component>,
@@ -186,8 +182,8 @@ define method compute-application-options
   let report-function = element($report-functions, report, default: #f)
     | usage-error("Invalid --report option: %s", report);
 
-  let components = find-component(get-option-value(parser, "suite"),
-                                  get-option-value(parser, "test"));
+  let components = find-components(get-option-value(parser, "suite"),
+                                   get-option-value(parser, "test"));
   let start-suite = select (components.size)
                       0 => parent;
                       1 => components[0];
@@ -200,7 +196,7 @@ define method compute-application-options
 
   let ignore-suites = get-option-value(parser, "ignore-suite");
   let ignore-tests = get-option-value(parser, "ignore-test");
-  options.perform-ignore := find-component(ignore-suites, ignore-tests);
+  options.perform-ignore := find-components(ignore-suites, ignore-tests);
   options.list-suites? := get-option-value(parser, "list-suites");
   options.list-tests? := get-option-value(parser, "list-tests");
   values(start-suite, options, report-function)
