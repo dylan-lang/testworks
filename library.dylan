@@ -94,7 +94,6 @@ define module %testworks;
     execute-component?,
     perform-component,
     component-name,
-    component-description,
     component-tags,
     status-name;
 

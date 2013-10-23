@@ -157,11 +157,7 @@ define function gui-progress-pause-with-check-name (message :: <string>)
 end function gui-progress-pause-with-check-name;
 
 define function gui-announce-function (component :: <component>)
-  gui-progress-display-message
-    (component.object-class,
-     concatenate
-       (component.component-name, "\n",
-        component.component-description));
+  gui-progress-display-message(component.object-class, component.component-name);
 end function gui-announce-function;
 
 
