@@ -7,8 +7,6 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 
-define constant $all-tags = #[#"all"];
-
 define method announce-component
     (component :: <component>) => ()
   test-output("Running %s %s...\n",
@@ -53,26 +51,16 @@ define open class <perform-options> (<object>)
     init-keyword: progress-function:;
   slot perform-debug? = *debug?*,
     init-keyword: debug?:;
+  constant slot perform-ignore :: <sequence> = #[],   // of components
+    init-keyword: ignore:;
+  constant slot list-suites? :: <boolean> = #f,
+    init-keyword: list-suites?:;
+  constant slot list-tests? :: <boolean> = #f,
+    init-keyword: list-tests?:;
 end class <perform-options>;
 
 
-// Encapsulates the components to be ignored
-// TODO(cgay): I see no reason for this to be separate from <perform-options>.
-
-define class <perform-criteria> (<perform-options>)
-  slot perform-ignore :: <stretchy-vector>,   // of components
-    init-keyword: ignore:;
-  slot list-suites? :: <boolean> = #f;
-  slot list-tests? :: <boolean> = #f;
-end class <perform-criteria>;
-
-
 ///*** Generic Classes, Helper Functions, and Helper Macros ***///
-
-// TODO(cgay): Move this to utils.dylan.
-define method plural (n :: <integer>) => (ending :: <string>)
-  if (n == 1) "" else "s" end if
-end;
 
 // TODO(cgay): Use let handler instead.
 define macro maybe-trap-errors
@@ -88,12 +76,6 @@ define macro maybe-trap-errors
            end;
          end; }
 end macro maybe-trap-errors;
-
-// TODO(cgay): Move this to utils.dylan.
-define method tags-match? (run-tags :: <sequence>, object-tags :: <sequence>)
- => (bool :: <boolean>)
-  run-tags = $all-tags | ~empty?(intersection(run-tags, object-tags))
-end method tags-match?;
 
 define method perform-component
     (component :: <component>, options :: <perform-options>,
@@ -178,16 +160,15 @@ end method perform-test;
 
 /// Execute component
 
-// This function can be used to implement any desired
-// criteria to execute or not execute independent
-// tests & suites.
 define open generic execute-component?
-    (component :: <component>, options :: <perform-options>);
+    (component :: <component>, options :: <perform-options>)
+ => (execute? :: <boolean>);
 
 define method execute-component?
     (component :: <component>, options :: <perform-options>)
- => (answer :: <boolean>)
-  tags-match?(options.perform-tags, component.component-tags);
+ => (execute? :: <boolean>)
+  tags-match?(options.perform-tags, component.component-tags)
+  & ~member?(component, options.perform-ignore)
 end method execute-component?;
 
 define method maybe-execute-component

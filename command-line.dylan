@@ -33,7 +33,8 @@ define function parse-args
                   names: #("report"),
                   default: "failures",
                   help: "Type of final report to generate: "
-                    "none|full|failures|summary|log|xml|surefire"));
+                    "none|full|failures|summary|log|xml|surefire "
+                    "(default: %default)"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report-file"),
@@ -92,48 +93,37 @@ define table $report-functions :: <string-table> = {
     "surefire" => surefire-report-function
     };
 
-define method execute-component?
-    (component :: <component>, options :: <perform-criteria>)
- => (answer :: <boolean>)
-  next-method()
-     & ~member?(component, options.perform-ignore)
-end method execute-component?;
-
 define method find-component
     (suite-name :: false-or(<string>), test-name :: false-or(<string>))
  => (test :: <component>)
-  let suite
-    = if (suite-name)
-        find-suite(suite-name)
-          | usage-error("Suite not found: %s", suite-name);
-      end;
-  let test
-    = if (test-name)
-        find-test(test-name, search-suite: suite | root-suite())
-          | usage-error("Test not found: %s", test-name);
-      end;
-  test | suite;
+  let suite = if (suite-name)
+                find-suite(suite-name)
+                  | usage-error("Suite not found: %s", suite-name);
+              end;
+  let test = if (test-name)
+               find-test(test-name, search-suite: suite | root-suite())
+                 | usage-error("Test not found: %s", test-name);
+             end;
+  test | suite
 end method find-component;
 
-define method find-component
-    (suite-names :: false-or(<sequence>), test-names :: false-or(<sequence>))
- => (tests :: <sequence>)
-  let tests = make(<stretchy-vector>);
-  suite-names
-    & for (name in suite-names)
-        add!(tests, find-component(name, #f));
-      end for;
-  test-names
-    & for (name in test-names)
-        add!(tests, find-component(#f, name));
-      end for;
-  values(tests);
-end method find-component;
+define method find-components
+    (suite-names :: <sequence>, test-names :: <sequence>)
+ => (tests :: <stretchy-vector>)
+  let components = make(<stretchy-vector>);
+  for (name in suite-names | #[])
+    add!(components, find-component(name, #f));
+  end;
+  for (name in test-names | #[])
+    add!(components, find-component(#f, name));
+  end;
+  values(components)
+end method find-components;
 
 define method display-run-options
     (start-suite :: <component>,
      report-function :: <function>,
-     options :: <perform-criteria>)
+     options :: <perform-options>)
  => ()
   format(*test-output*,
          "\nRunning %s %s, with options:\n"
@@ -159,20 +149,22 @@ end method display-run-options;
 define method compute-application-options
     (parent :: <component>, parser :: <command-line-parser>)
  => (start-suite :: <component>,
-     options :: <perform-criteria>,
+     options :: <perform-options>,
      report-function :: <function>)
-  let options = make(<perform-criteria>);
-
   let debug = get-option-value(parser, "debug");
-  options.perform-debug?
-    := select (debug by \=)
-         #f, "no" => #f;
-         "crashes" => #"crashes";
-         #t, "failures" => #t;
-         otherwise =>
-           usage-error("Invalid --debug option: %s", debug);
-       end select;
-
+  let options
+    = make(<perform-options>,
+           list-suites?: get-option-value(parser, "list-suites"),
+           list-tests?: get-option-value(parser, "list-tests"),
+           debug?: select (debug by \=)
+                     #f, "no" => #f;
+                     "crashes" => #"crashes";
+                     #t, "failures" => #t;
+                     otherwise =>
+                       usage-error("Invalid --debug option: %s", debug);
+                   end select,
+           ignore: find-components(get-option-value(parser, "ignore-suite"),
+                                   get-option-value(parser, "ignore-test")));
   if (get-option-value(parser, "progress"))
     options.perform-progress-function := full-progress-function;
     options.perform-announce-function := announce-component;
@@ -180,13 +172,11 @@ define method compute-application-options
     options.perform-progress-function := null-progress-function;
     options.perform-announce-function := method (component) end;
   end;
-
   let report = get-option-value(parser, "report") | "failures";
   let report-function = element($report-functions, report, default: #f)
     | usage-error("Invalid --report option: %s", report);
-
-  let components = find-component(get-option-value(parser, "suite"),
-                                  get-option-value(parser, "test"));
+  let components = find-components(get-option-value(parser, "suite"),
+                                   get-option-value(parser, "test"));
   let start-suite = select (components.size)
                       0 => parent;
                       1 => components[0];
@@ -196,12 +186,6 @@ define method compute-application-options
                              description: "arguments to -suite and -test",
                              components: components);
                     end select;
-
-  let ignore-suites = get-option-value(parser, "ignore-suite");
-  let ignore-tests = get-option-value(parser, "ignore-test");
-  options.perform-ignore := find-component(ignore-suites, ignore-tests);
-  options.list-suites? := get-option-value(parser, "list-suites");
-  options.list-tests? := get-option-value(parser, "list-tests");
   values(start-suite, options, report-function)
 end method compute-application-options;
 

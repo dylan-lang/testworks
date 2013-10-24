@@ -31,3 +31,19 @@ define function add-times
   end if;
   values(sec, usec)
 end function add-times;
+
+
+define method plural
+    (n :: <integer>) => (ending :: <string>)
+  if (n == 1) "" else "s" end if
+end;
+
+
+define constant $all-tags = #[#"all"];
+
+define method tags-match?
+    (run-tags :: <sequence>, object-tags :: <sequence>)
+ => (bool :: <boolean>)
+  run-tags = $all-tags | ~empty?(intersection(run-tags, object-tags))
+end method tags-match?;
+

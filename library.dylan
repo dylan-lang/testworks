@@ -60,7 +60,7 @@ end module testworks;
 
 
 // Internals, for use by test suite.
-define module %testworks;
+define module %testworks
   use command-line-parser;
   use common-dylan, exclude: { format-to-string };
   use file-system;
@@ -94,7 +94,6 @@ define module %testworks;
     execute-component?,
     perform-component,
     component-name,
-    component-description,
     component-tags,
     status-name;
 

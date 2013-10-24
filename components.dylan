@@ -11,15 +11,8 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 /// suite.  Note that there are no <assertion> or <check> classes so
 /// they aren't considered "components".
 define class <component> (<object>)
-  // TODO(cgay): For tests and suites, name is a name, but for
-  // assertions it tends to be a description.
   constant slot component-name :: <string>,
     required-init-keyword: name:;
-
-  // TODO(cgay): This is more or less unused.  I think we can get rid
-  // of it and simply rely on doc comments on the tests and suites.
-  constant slot component-description :: <string> = "",
-    init-keyword: description:;
 
   constant slot component-tags :: <sequence> = #[],
     init-keyword: tags:;
@@ -94,7 +87,7 @@ end;
 
 define method component-result-type
     (component :: <test-unit>) => (result-type :: subclass(<result>))
-  <unit-result>
+  <test-unit-result>
 end;
 
 
