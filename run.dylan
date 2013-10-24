@@ -51,18 +51,13 @@ define open class <perform-options> (<object>)
     init-keyword: progress-function:;
   slot perform-debug? = *debug?*,
     init-keyword: debug?:;
-end class <perform-options>;
-
-
-// Encapsulates the components to be ignored
-// TODO(cgay): I see no reason for this to be separate from <perform-options>.
-
-define class <perform-criteria> (<perform-options>)
-  slot perform-ignore :: <stretchy-vector>,   // of components
+  constant slot perform-ignore :: <sequence> = #[],   // of components
     init-keyword: ignore:;
-  slot list-suites? :: <boolean> = #f;
-  slot list-tests? :: <boolean> = #f;
-end class <perform-criteria>;
+  constant slot list-suites? :: <boolean> = #f,
+    init-keyword: list-suites?:;
+  constant slot list-tests? :: <boolean> = #f,
+    init-keyword: list-tests?:;
+end class <perform-options>;
 
 
 ///*** Generic Classes, Helper Functions, and Helper Macros ***///
@@ -165,16 +160,15 @@ end method perform-test;
 
 /// Execute component
 
-// This function can be used to implement any desired
-// criteria to execute or not execute independent
-// tests & suites.
 define open generic execute-component?
-    (component :: <component>, options :: <perform-options>);
+    (component :: <component>, options :: <perform-options>)
+ => (execute? :: <boolean>);
 
 define method execute-component?
     (component :: <component>, options :: <perform-options>)
- => (answer :: <boolean>)
-  tags-match?(options.perform-tags, component.component-tags);
+ => (execute? :: <boolean>)
+  tags-match?(options.perform-tags, component.component-tags)
+  & ~member?(component, options.perform-ignore)
 end method execute-component?;
 
 define method maybe-execute-component

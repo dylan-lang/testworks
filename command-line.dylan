@@ -93,13 +93,6 @@ define table $report-functions :: <string-table> = {
     "surefire" => surefire-report-function
     };
 
-define method execute-component?
-    (component :: <component>, options :: <perform-criteria>)
- => (answer :: <boolean>)
-  next-method()
-     & ~member?(component, options.perform-ignore)
-end method execute-component?;
-
 define method find-component
     (suite-name :: false-or(<string>), test-name :: false-or(<string>))
  => (test :: <component>)
@@ -130,7 +123,7 @@ end method find-components;
 define method display-run-options
     (start-suite :: <component>,
      report-function :: <function>,
-     options :: <perform-criteria>)
+     options :: <perform-options>)
  => ()
   format(*test-output*,
          "\nRunning %s %s, with options:\n"
@@ -156,20 +149,22 @@ end method display-run-options;
 define method compute-application-options
     (parent :: <component>, parser :: <command-line-parser>)
  => (start-suite :: <component>,
-     options :: <perform-criteria>,
+     options :: <perform-options>,
      report-function :: <function>)
-  let options = make(<perform-criteria>);
-
   let debug = get-option-value(parser, "debug");
-  options.perform-debug?
-    := select (debug by \=)
-         #f, "no" => #f;
-         "crashes" => #"crashes";
-         #t, "failures" => #t;
-         otherwise =>
-           usage-error("Invalid --debug option: %s", debug);
-       end select;
-
+  let options
+    = make(<perform-options>,
+           list-suites?: get-option-value(parser, "list-suites"),
+           list-tests?: get-option-value(parser, "list-tests"),
+           debug?: select (debug by \=)
+                     #f, "no" => #f;
+                     "crashes" => #"crashes";
+                     #t, "failures" => #t;
+                     otherwise =>
+                       usage-error("Invalid --debug option: %s", debug);
+                   end select,
+           ignore: find-components(get-option-value(parser, "ignore-suite"),
+                                   get-option-value(parser, "ignore-test")));
   if (get-option-value(parser, "progress"))
     options.perform-progress-function := full-progress-function;
     options.perform-announce-function := announce-component;
@@ -177,11 +172,9 @@ define method compute-application-options
     options.perform-progress-function := null-progress-function;
     options.perform-announce-function := method (component) end;
   end;
-
   let report = get-option-value(parser, "report") | "failures";
   let report-function = element($report-functions, report, default: #f)
     | usage-error("Invalid --report option: %s", report);
-
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
   let start-suite = select (components.size)
@@ -193,12 +186,6 @@ define method compute-application-options
                              description: "arguments to -suite and -test",
                              components: components);
                     end select;
-
-  let ignore-suites = get-option-value(parser, "ignore-suite");
-  let ignore-tests = get-option-value(parser, "ignore-test");
-  options.perform-ignore := find-components(ignore-suites, ignore-tests);
-  options.list-suites? := get-option-value(parser, "list-suites");
-  options.list-tests? := get-option-value(parser, "list-tests");
   values(start-suite, options, report-function)
 end method compute-application-options;
 
