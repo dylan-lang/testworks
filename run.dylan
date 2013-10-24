@@ -7,8 +7,6 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 
-define constant $all-tags = #[#"all"];
-
 define method announce-component
     (component :: <component>) => ()
   test-output("Running %s %s...\n",
@@ -69,11 +67,6 @@ end class <perform-criteria>;
 
 ///*** Generic Classes, Helper Functions, and Helper Macros ***///
 
-// TODO(cgay): Move this to utils.dylan.
-define method plural (n :: <integer>) => (ending :: <string>)
-  if (n == 1) "" else "s" end if
-end;
-
 // TODO(cgay): Use let handler instead.
 define macro maybe-trap-errors
   { maybe-trap-errors (?body:body) }
@@ -88,12 +81,6 @@ define macro maybe-trap-errors
            end;
          end; }
 end macro maybe-trap-errors;
-
-// TODO(cgay): Move this to utils.dylan.
-define method tags-match? (run-tags :: <sequence>, object-tags :: <sequence>)
- => (bool :: <boolean>)
-  run-tags = $all-tags | ~empty?(intersection(run-tags, object-tags))
-end method tags-match?;
 
 define method perform-component
     (component :: <component>, options :: <perform-options>,
