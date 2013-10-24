@@ -87,7 +87,7 @@ end;
 
 define method component-result-type
     (component :: <test-unit>) => (result-type :: subclass(<result>))
-  <unit-result>
+  <test-unit-result>
 end;
 
 
