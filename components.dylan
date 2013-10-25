@@ -194,7 +194,7 @@ end macro test-definer;
 // with-test-unit macro
 
 
-define thread variable *test-unit-options* = make(<perform-options>);
+define thread variable *test-unit-runner* = make(<test-runner>);
 
 define macro with-test-unit
   { with-test-unit (?name:expression, ?keyword-args:*) ?test-body:body end }
@@ -204,7 +204,7 @@ define macro with-test-unit
                     name: concatenate("Test unit ", ?name),
                     function: method () ?test-body end,
                     ?keyword-args);
-           let result = perform-component(test, *test-unit-options*,
+           let result = perform-component(test, *test-unit-runner*,
                                           report-function: #f);
            *check-recording-function*(result);
          end; }

@@ -6,18 +6,8 @@ License: See License.txt in this distribution for details.
 Warranty: Distributed WITHOUT WARRANTY OF ANY KIND
 
 
-define thread variable *debug?* = #f;
-
-// The stream on which output is done.  Note that this may be bound to
-// different streams during the test run and when the report is
-// generated.  e.g., to output the report to a file.
-define thread variable *test-output* :: <stream> = *standard-output*;
-
-define thread variable *announce-checks?* :: <boolean> = #f;
-
-define thread variable *announce-check-function* :: false-or(<function>) = #f;
-
-define thread variable *announce-function* :: false-or(<function>) = method (c) end;
+// The active test run object.
+define thread variable *runner* :: false-or(<test-runner>) = #f;
 
 
 define function add-times

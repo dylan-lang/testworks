@@ -10,6 +10,7 @@ define library testworks
   use command-line-parser;
   use common-dylan, import: { common-dylan, threads };
   use io, import: { format, standard-io, streams };
+  use strings, import: { string-equal-ic };
   use system, import: { file-system };
 
   export
@@ -23,7 +24,13 @@ define module testworks
 
   // Top level
   create
-    run-test-application;
+    run-test-application,
+    run-tests,
+    <test-runner>,
+    runner-tags,
+    runner-announce-function,
+    runner-progress-function,
+    debug-runner?;
 
   // Checks
   create
@@ -47,12 +54,10 @@ define module testworks
 
   // Suites
   create
-    perform-suite,
     suite-definer;
 
   // Tests
   create
-    perform-test,
     test-definer,
     with-test-unit;
 
@@ -73,38 +78,21 @@ define module %testworks
 
   // Debugging options
   export
-    *debug?*,
     debug-failures?,
     debug?;
 
   // Formatting
   export
     test-output,
-    *test-output*,
     plural;
-
-  // Announcing suite/test/check names
-  export
-    *announce-checks?*,
-    *announce-check-function*;
 
   // Components
   export
     <component>,
     execute-component?,
-    perform-component,
     component-name,
     component-tags,
     status-name;
-
-  // Perform options
-  export
-    <perform-options>,
-    perform-tags, perform-tags-setter,
-    perform-announce-function, perform-announce-function-setter,
-    perform-announce-checks?, perform-announce-checks?-setter,
-    perform-progress-function, perform-progress-function-setter,
-    perform-debug?, perform-debug?-setter;
 
   // Tests
   export
@@ -169,7 +157,7 @@ define module %testworks
 
   // Command line handling
   export
-    compute-application-options,
+    make-runner-from-command-line,
     parse-args;
 
   export
@@ -181,5 +169,5 @@ define module %testworks
   // Internals -- mostly due to macro hygiene failures
   export
     $test-objects-table,
-    *test-unit-options*;
+    *test-unit-runner*;
 end module %testworks;

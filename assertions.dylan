@@ -59,7 +59,7 @@ define function do-check-equal
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
-            if (*debug?*)
+            if (debug?())
               next-handler()  // decline to handle it
             else
               return(record-check(name | format-to-string("*** Invalid check name ***"),
@@ -138,7 +138,7 @@ define function do-check-instance?
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
-            if (*debug?*)
+            if (debug?())
               next-handler()  // decline to handle it
             else
               record-check(name | format-to-string("*** Invalid check name ***"),
@@ -196,7 +196,7 @@ define function do-check-true
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
-            if (*debug?*)
+            if (debug?())
               next-handler()  // decline to handle it
             else
               record-check(name | format-to-string("*** Invalid check name ***"),
@@ -256,7 +256,7 @@ define function do-check-false
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
-            if (*debug?*)
+            if (debug?())
               next-handler()  // decline to handle it
             else
               record-check(name | format-to-string("*** Invalid check name ***"),
@@ -316,7 +316,7 @@ define function do-check-condition
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
-            if (*debug?*)
+            if (debug?())
               next-handler()  // decline to handle it
             else
               record-check(name | format-to-string("*** Invalid check name ***"),
