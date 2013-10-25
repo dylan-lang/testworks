@@ -281,12 +281,11 @@ end suite testworks-check-macros-suite;
 /// Verify the result objects
 
 define test testworks-perform-test-results-test ()
-  let test-to-check = testworks-check-test;
-  let test-results
-    = perform-test(test-to-check,
-                   progress-function: #f,
-                   report-function: #f,
-                   announce-function: #f);
+  let test-to-check = find-test-object(testworks-check-test);
+  let test-results = perform-test(test-to-check,
+                                  progress-function: #f,
+                                  report-function: #f,
+                                  announce-function: #f);
   check-true("perform-test returns <test-result>",
              instance?(test-results, <test-result>));
   check-equal("perform-test returns $passed when passing",

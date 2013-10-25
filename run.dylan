@@ -121,41 +121,15 @@ define method perform-test
           report-function          = *default-report-function*,
           debug?                   = *debug?*)
  => (result :: <component-result>)
-  perform-component
-    (test,
-     make(<perform-options>,
-          tags:                     tags,
-          announce-function:        announce-function,
-          announce-checks?:         announce-checks?,
-          progress-function:        progress-function | null-progress-function,
-          debug?:                   debug?),
-     report-function:        report-function | null-report-function);
+  let options = make(<perform-options>,
+                     tags: tags,
+                     announce-function: announce-function,
+                     announce-checks?: announce-checks?,
+                     progress-function: progress-function | null-progress-function,
+                     debug?: debug?);
+  perform-component (test, options,
+                     report-function: report-function | null-report-function);
 end method perform-test;
-
-// TODO(cgay): Remove this; it's not needed.
-define method perform-test
-    (function :: <function>,
-     #key tags                     = $all-tags,
-          announce-function        = *announce-function*,
-          announce-checks?         = *announce-checks?*,
-          progress-function        = *default-progress-function*,
-          report-function          = *default-report-function*,
-          debug?                   = *debug?*)
- => (result :: <component-result>)
-  let test = find-test-object(function);
-  if (test)
-    perform-test(test,
-                 tags: tags,
-                 announce-function:        announce-function,
-                 announce-checks?:         announce-checks?,
-                 progress-function:        progress-function,
-                 report-function:          report-function,
-                 debug?:                   debug?)
-  else
-    error("Cannot perform-test on the non-test function %=", function)
-  end
-end method perform-test;
-
 
 
 /// Execute component
