@@ -8,17 +8,6 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// Some utilities for testing TestWorks
 
-define macro with-debugging
-  { with-debugging () ?body:body end }
-    => { let old-debug? = *debug?*;
-         block ()
-           *debug?* := #t;
-           ?body
-         cleanup
-           *debug?* := old-debug?;
-         end }
-end macro with-debugging;
-
 define macro without-recording
   { without-recording () ?body:body end }
     => { let old-check-recording-function = *check-recording-function*;
@@ -281,12 +270,11 @@ end suite testworks-check-macros-suite;
 /// Verify the result objects
 
 define test testworks-perform-test-results-test ()
-  let test-to-check = testworks-check-test;
-  let test-results
-    = perform-test(test-to-check,
-                   progress-function: #f,
-                   report-function: #f,
-                   announce-function: #f);
+  let test-to-check = find-test-object(testworks-check-test);
+  let runner = make(<test-runner>,
+                    progress-function: always(#f),
+                    announce-function: always(#f));
+  let test-results = run-tests(runner, test-to-check, report-function: #f);
   check-true("perform-test returns <test-result>",
              instance?(test-results, <test-result>));
   check-equal("perform-test returns $passed when passing",
@@ -297,8 +285,10 @@ end test testworks-perform-test-results-test;
 
 define test testworks-perform-suite-results-test ()
   let suite-to-check = testworks-check-macros-suite;
-  let suite-results
-    = perform-suite(suite-to-check, progress-function: #f, report-function: #f);
+  let runner = make(<test-runner>,
+                    progress-function: always(#f),
+                    announce-function: always(#f));
+  let suite-results = run-tests(runner, suite-to-check, report-function: #f);
   check-true("perform-suite returns <suite-result>",
              instance?(suite-results, <suite-result>));
   check-equal("perform-suite returns $passed when passing",

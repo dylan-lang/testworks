@@ -201,50 +201,38 @@ end method handle-event;
 
 /// Simple wrapper function
 
-// Note: These should be functions, but the emu messes up #all-keys then.
+// TODO(cgay): In the testworks library I replaced perform-{suite,test,component}
+// with run-tests.  It should be done here too but I'm making minimal changes in
+// testworks-gui right now since it's difficult to test it.
 
-define method gui-perform-suite
+define function gui-perform-suite
     (suite :: <suite>,
-     #rest args,
-     #key announce-function = gui-announce-function,
-          announce-checks?  = #t,
-     #all-keys)
+     #rest args, #key announce-function = gui-announce-function, #all-keys)
  => (result :: <component-result>)
   block ()
     start-progress-window();
-    dynamic-bind
-        (*announce-check-function* = gui-progress-pause-with-check-name)
-      apply
-        (perform-suite,
-         suite,
-         announce-function: announce-function,
-         announce-checks?:  announce-checks?,
-         args)
-    end
+    apply(perform-suite, suite,
+          announce-function: announce-function,
+          args)
   cleanup
     exit-progress-window();
-  end;
+  end
 end method gui-perform-suite;
 
 define method gui-perform-test
     (test :: <test>,
      #rest args,
      #key announce-function = gui-announce-function,
-          announce-checks?  = #t,
      #all-keys)
  => (result :: <component-result>)
   block ()
     start-progress-window();
-    dynamic-bind
-        (*announce-check-function* = gui-progress-pause-with-check-name)
-      apply
-        (perform-test,
-         test,
-         announce-function: announce-function,
-         announce-checks?:  announce-checks?,
-         args)
+    apply(perform-test,
+          test,
+          announce-function: announce-function,
+          args)
     end
   cleanup
     exit-progress-window();
-  end;
+  end
 end method gui-perform-test;

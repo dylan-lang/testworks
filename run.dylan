@@ -13,51 +13,47 @@ define method announce-component
               component.component-type-name, component.component-name);
 end;
 
-*announce-function* := announce-component;
-
-define method debug-failures?
+define inline function debug-failures?
     () => (debug-failures? :: <boolean>)
-  *debug?* == #t
+  debug-runner?(*runner*) == #t
 end;
 
-define method debug?
+define inline function debug?
     () => (debug? :: <boolean>)
-  *debug?* ~= #f
+  debug-runner?(*runner*) ~= #f
 end;
 
 define method test-output
     (format-string :: <string>, #rest format-args) => ()
-  apply(format, *test-output*, format-string, format-args);
+  apply(format, runner-output-stream(*runner*), format-string, format-args);
 end;
 
-/// Perform options
 
-// this class defines all the options that might be used
-// to control test suite performing.
-
-// TODO(cgay): Rename to <test-run> and dispatch on it so that we
-// don't need all these thread variables and there are better
-// opportunities to modify testworks' behavior.  Or just rename to
-// <options> for brevity.
-
-define open class <perform-options> (<object>)
-  slot perform-tags :: <sequence> = $all-tags,
+// A <test-runner> holds options for the test run and collects results.
+// TODO(cgay): Remove the *-function slots and provide methods for
+// subclassers to override instead.
+define open class <test-runner> (<object>)
+  // TODO(cgay): <report> = one-of(#"failures", #"crashes", #"none", ...)
+  //constant slot runner-report :: <string> = "failures",
+  //  init-keyword: report:;
+  constant slot runner-tags :: <sequence> = $all-tags,
     init-keyword: tags:;
-  slot perform-announce-function :: false-or(<function>) = *announce-function*,
+  slot runner-announce-function :: false-or(<function>) = announce-component,
     init-keyword: announce-function:;
-  slot perform-announce-checks? :: <boolean> = *announce-checks?*,
-    init-keyword: announce-checks?:;
-  slot perform-progress-function = *default-progress-function*,
+  slot runner-progress-function = null-progress-function,
     init-keyword: progress-function:;
-  slot perform-debug? = *debug?*,
+  constant slot debug-runner? = #f,
     init-keyword: debug?:;
-  constant slot perform-ignore :: <sequence> = #[],   // of components
+  constant slot runner-ignore :: <sequence> = #[],   // of components
     init-keyword: ignore:;
-  constant slot list-suites? :: <boolean> = #f,
-    init-keyword: list-suites?:;
-  constant slot list-tests? :: <boolean> = #f,
-    init-keyword: list-tests?:;
-end class <perform-options>;
+
+  // The stream on which output is done.  Note that this may be bound
+  // to different streams during the test run and when the report is
+  // generated.  e.g., to output the report to a file.
+  constant slot runner-output-stream :: <stream> = *standard-output*,
+    init-keyword: output-stream:;
+
+end class <test-runner>;
 
 
 ///*** Generic Classes, Helper Functions, and Helper Macros ***///
@@ -66,7 +62,7 @@ end class <perform-options>;
 define macro maybe-trap-errors
   { maybe-trap-errors (?body:body) }
     => { local method maybe-trap-errors-body () ?body end;
-         if (*debug?*)
+         if (debug?())
            maybe-trap-errors-body();
          else
            block ()
@@ -77,111 +73,43 @@ define macro maybe-trap-errors
          end; }
 end macro maybe-trap-errors;
 
-define method perform-component
-    (component :: <component>, options :: <perform-options>,
+// TODO(cgay): Move report-function into <test-runner>.
+define function run-tests
+    (runner :: <test-runner>, component :: <component>,
      #key report-function = *default-report-function*)
  => (component-result :: <component-result>)
-  let announce-checks? = options.perform-announce-checks?;
-  let result
-    = dynamic-bind (*announce-checks?* = announce-checks?)
-        maybe-execute-component(component, options)
-      end;
+  let result = dynamic-bind (*runner* = runner)
+                 maybe-execute-component(component, runner)
+               end;
   report-function & report-function(result);
   result
-end method perform-component;
-
-define method perform-suite
-    (suite :: <suite>,
-     #key tags                     = $all-tags,
-          announce-function        = #f,
-          announce-checks?         = *announce-checks?*,
-          report-function          = *default-report-function*,
-          progress-function        = *default-progress-function*,
-          debug?                   = *debug?*)
- => (result :: <component-result>)
-  perform-component
-    (suite,
-     make(<perform-options>,
-          tags:                     tags,
-          announce-function:        announce-function,
-          announce-checks?:         announce-checks?,
-          progress-function:        progress-function | null-progress-function,
-          debug?:                   debug?),
-     report-function:        report-function | null-report-function)
-end method perform-suite;
-
-// perform-test takes a <test> object and returns a component-result object.
-
-define method perform-test
-    (test :: <test>,
-     #key tags                     = $all-tags,
-          announce-function        = *announce-function*,
-          announce-checks?         = *announce-checks?*,
-          progress-function        = *default-progress-function*,
-          report-function          = *default-report-function*,
-          debug?                   = *debug?*)
- => (result :: <component-result>)
-  perform-component
-    (test,
-     make(<perform-options>,
-          tags:                     tags,
-          announce-function:        announce-function,
-          announce-checks?:         announce-checks?,
-          progress-function:        progress-function | null-progress-function,
-          debug?:                   debug?),
-     report-function:        report-function | null-report-function);
-end method perform-test;
-
-// TODO(cgay): Remove this; it's not needed.
-define method perform-test
-    (function :: <function>,
-     #key tags                     = $all-tags,
-          announce-function        = *announce-function*,
-          announce-checks?         = *announce-checks?*,
-          progress-function        = *default-progress-function*,
-          report-function          = *default-report-function*,
-          debug?                   = *debug?*)
- => (result :: <component-result>)
-  let test = find-test-object(function);
-  if (test)
-    perform-test(test,
-                 tags: tags,
-                 announce-function:        announce-function,
-                 announce-checks?:         announce-checks?,
-                 progress-function:        progress-function,
-                 report-function:          report-function,
-                 debug?:                   debug?)
-  else
-    error("Cannot perform-test on the non-test function %=", function)
-  end
-end method perform-test;
-
+end function run-tests;
 
 
 /// Execute component
 
 define open generic execute-component?
-    (component :: <component>, options :: <perform-options>)
+    (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>);
 
 define method execute-component?
-    (component :: <component>, options :: <perform-options>)
+    (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>)
-  tags-match?(options.perform-tags, component.component-tags)
-  & ~member?(component, options.perform-ignore)
+  tags-match?(runner.runner-tags, component.component-tags)
+  & ~member?(component, runner.runner-ignore)
 end method execute-component?;
 
 define method maybe-execute-component
-    (component :: <component>, options :: <perform-options>)
+    (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
   let announce-function
-    = options.perform-announce-function;
+    = runner.runner-announce-function;
   if (announce-function)
     announce-function(component)
   end;
   let (subresults, status, reason, seconds, microseconds, bytes)
-    = if (execute-component?(component, options))
-        execute-component(component, options)
+    = if (execute-component?(component, runner))
+        execute-component(component, runner)
       else
         values(#(), $skipped, 0, 0, 0)
       end;
@@ -196,7 +124,7 @@ define method maybe-execute-component
 end method maybe-execute-component;
 
 define method execute-component
-    (suite :: <suite>, options :: <perform-options>)
+    (suite :: <suite>, runner :: <test-runner>)
  => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
      seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults :: <stretchy-vector> = make(<stretchy-vector>);
@@ -207,7 +135,7 @@ define method execute-component
     = block ()
         suite.suite-setup-function();
         for (component in suite.suite-components)
-          let subresult = maybe-execute-component(component, options);
+          let subresult = maybe-execute-component(component, runner);
           add!(subresults, subresult);
           if (instance?(subresult, <component-result>)
               & subresult.result-seconds
@@ -242,20 +170,19 @@ define method execute-component
 end method execute-component;
 
 define method execute-component
-    (test :: <test>, options :: <perform-options>)
+    (test :: <test>, runner :: <test-runner>)
  => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
      seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults = make(<stretchy-vector>);
   let (seconds, microseconds, bytes) = values(0, 0, 0);
   let (status, reason)
-    = dynamic-bind (*debug?* = options.perform-debug?,
-                    *check-recording-function* =
+    = dynamic-bind (*check-recording-function* =
                       method (result :: <result>)
                         add!(subresults, result);
-                        options.perform-progress-function(result);
+                        runner.runner-progress-function(result);
                         result
                       end,
-                    *test-unit-options* = options)
+                    *test-unit-runner* = runner)
         let cond = #f;
         profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
           cond := maybe-trap-errors(test.test-function());
@@ -282,9 +209,9 @@ define method execute-component
 end method execute-component;
 
 define method list-component
-    (test :: <test>, options :: <perform-options>)
+    (test :: <test>, runner :: <test-runner>)
  => (list :: <sequence>)
-  if (execute-component?(test, options))
+  if (execute-component?(test, runner))
     vector(test);
   else
     #[];
@@ -292,13 +219,13 @@ define method list-component
 end method list-component;
 
 define method list-component
-    (suite :: <suite>, options :: <perform-options>)
+    (suite :: <suite>, runner :: <test-runner>)
  => (list :: <sequence>)
   let sublist :: <stretchy-vector> = make(<stretchy-vector>);
-  if (execute-component?(suite, options))
+  if (execute-component?(suite, runner))
     add!(sublist, suite);
     for (component in suite.suite-components)
-      sublist := concatenate!(sublist, list-component(component, options));
+      sublist := concatenate!(sublist, list-component(component, runner));
     end for;
   end if;
   sublist

@@ -22,6 +22,5 @@ define module testworks-test-suite
   use testworks;
   use %testworks;
 
-  export testworks-test-suite,
-         \with-debugging;
+  export testworks-test-suite;
 end module testworks-test-suite;

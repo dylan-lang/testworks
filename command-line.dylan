@@ -23,12 +23,6 @@ define function parse-args
                   default: #f,
                   help: "Show progress as tests are run."));
   add-option(parser,
-             make(<flag-option>,
-                  names: #("verbose"),
-                  negative-names: #("quiet"),
-                  default: #t,
-                  help: "Adjust output verbosity."));
-  add-option(parser,
              make(<parameter-option>,
                   names: #("report"),
                   default: "failures",
@@ -120,61 +114,34 @@ define method find-components
   values(components)
 end method find-components;
 
-define method display-run-options
-    (start-suite :: <component>,
-     report-function :: <function>,
-     options :: <perform-options>)
- => ()
-  format(*test-output*,
-         "\nRunning %s %s, with options:\n"
-           "   progress-function: %s\n"
-           "     report-function: %s\n"
-           "              debug?: %s\n"
-           "              ignore: %s\n\n",
-         component-type-name(start-suite),
-         component-name(start-suite),
-         select (options.perform-progress-function)
-           full-progress-function => "full";
-           null-progress-function => "none";
-         end,
-         find-key($report-functions, curry(\=, report-function)),
-         select (options.perform-debug?)
-           #"crashes" => "crashes";
-           #t         => "failures";
-           otherwise  => "no";
-         end,
-         join(options.perform-ignore, ", ", key: component-name));
-end method display-run-options;
-
-define method compute-application-options
+// Create a <test-runner> from command-line options.
+define function make-runner-from-command-line
     (parent :: <component>, parser :: <command-line-parser>)
- => (start-suite :: <component>,
-     options :: <perform-options>,
-     report-function :: <function>)
+ => (start-suite :: <component>, runner :: <test-runner>, report-function :: <function>)
+  // TODO(cgay): Use init-keywords rather than setters so we can make <test-runner>
+  // immutable.
   let debug = get-option-value(parser, "debug");
-  let options
-    = make(<perform-options>,
-           list-suites?: get-option-value(parser, "list-suites"),
-           list-tests?: get-option-value(parser, "list-tests"),
-           debug?: select (debug by \=)
-                     #f, "no" => #f;
-                     "crashes" => #"crashes";
-                     #t, "failures" => #t;
-                     otherwise =>
-                       usage-error("Invalid --debug option: %s", debug);
-                   end select,
-           ignore: find-components(get-option-value(parser, "ignore-suite"),
-                                   get-option-value(parser, "ignore-test")));
-  if (get-option-value(parser, "progress"))
-    options.perform-progress-function := full-progress-function;
-    options.perform-announce-function := announce-component;
-  else
-    options.perform-progress-function := null-progress-function;
-    options.perform-announce-function := method (component) end;
-  end;
   let report = get-option-value(parser, "report") | "failures";
   let report-function = element($report-functions, report, default: #f)
     | usage-error("Invalid --report option: %s", report);
+  let runner = make(<test-runner>,
+                    debug?: select (debug by \=)
+                              #f, "no" => #f;
+                              "crashes" => #"crashes";
+                              #t, "failures" => #t;
+                              otherwise =>
+                                usage-error("Invalid --debug option: %s", debug);
+                            end select,
+                    ignore: find-components(get-option-value(parser, "ignore-suite"),
+                                            get-option-value(parser, "ignore-test")),
+                    report: report);
+  if (get-option-value(parser, "progress"))
+    runner.runner-progress-function := full-progress-function;
+    runner.runner-announce-function := announce-component;
+  else
+    runner.runner-progress-function := null-progress-function;
+    runner.runner-announce-function := method (component) end;
+  end;
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
   let start-suite = select (components.size)
@@ -186,67 +153,53 @@ define method compute-application-options
                              description: "arguments to -suite and -test",
                              components: components);
                     end select;
-  values(start-suite, options, report-function)
-end method compute-application-options;
+  values(start-suite, runner, report-function)
+end function make-runner-from-command-line;
 
+// Run a test or suite.  Uses a test runner created based on
+// command-line arguments.  Use run-tests instead if you want to
+// create the test-runner yourself.  Returns a <result> if any suites
+// or tests were executed; otherwise #f.
 define method run-test-application
-    (parent :: <component>,
-     #key command-name = application-name(),
-          arguments = application-arguments(),
-          output-stream = *test-output*)
- => (result :: false-or(<result>))
-  let parser = parse-args(arguments);
-  let (start-suite, options, report-function)
+    (parent :: <component>) => (result :: false-or(<result>))
+  let parser = parse-args(application-arguments());
+  let (start-suite, runner, report-function)
     = block ()
-        compute-application-options(parent, parser)
+        make-runner-from-command-line(parent, parser)
       exception (ex :: <usage-error>)
         format(*standard-error*, "%s\n", condition-to-string(ex));
+        // TODO(cgay): The caller should decide whether to exit the
+        // application.
         exit-application(2);
       end;
 
-  if (options.list-suites? | options.list-tests?)
-    let results = list-component(start-suite, options);
-    let final-results
-      = choose(method (c :: <component>)
-                 (options.list-suites? & instance?(c, <suite>))
-                 | (options.list-tests? & instance?(c, <test>))
-               end,
-               results);
+  let list-suites? = get-option-value(parser, "list-suites");
+  let list-tests? = get-option-value(parser, "list-tests");
+  if (list-suites? | list-tests?)
+    let results = list-component(start-suite, runner);
+    let final-results = choose(method (c :: <component>)
+                                 (list-suites? & instance?(c, <suite>))
+                                     | (list-tests? & instance?(c, <test>))
+                               end,
+                               results);
     for (component :: <component> in final-results)
-      format(output-stream, "%s %s\n",
+      format(*standard-output*, "%s %s\n",
              component.component-type-name, component.component-name)
     end;
     #f
   else
     // Run the appropriate test or suite
     let pathname = get-option-value(parser, "report-file");
-    block ()
-      dynamic-bind (*test-output* = output-stream)
-        if (get-option-value(parser, "verbose")
-              & (report-function ~= xml-report-function)
-              & (report-function ~= surefire-report-function))
-          display-run-options(start-suite, report-function, options)
-        end;
-        let result = perform-component(start-suite, options, report-function: #f);
-        if (pathname)
-          *test-output* := make(<file-stream>,
-                                locator: pathname,
-                                direction: #"output",
-                                if-exists: #"overwrite");
-        end;
-        report-function & report-function(result);
-        result
-      end dynamic-bind
-    afterwards
-      end-test();
-    cleanup
-      pathname & close(output-stream);
-    end block
+    let result = run-tests(runner, start-suite, report-function: #f);
+    if (pathname)
+      with-open-file(stream = pathname,
+                     direction: #"output",
+                     if-exists: #"overwrite")
+        report-function(runner, result, stream);
+      end;
+    else
+      report-function(result, *standard-output*);
+    end;
+    result
   end if
 end method run-test-application;
-
-define not-inline function end-test ()
-  // This function isn't intended to do anything; it just provides a place
-  // to set a breakpoint before the program terminates.
-  values()
-end function end-test;
