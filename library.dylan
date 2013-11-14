@@ -168,6 +168,5 @@ define module %testworks
 
   // Internals -- mostly due to macro hygiene failures
   export
-    $test-objects-table,
-    *test-unit-runner*;
+    $test-objects-table;
 end module %testworks;

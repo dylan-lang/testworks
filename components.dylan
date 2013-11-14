@@ -176,8 +176,6 @@ define method find-test-object
   element($test-objects-table, function, default: #f)
 end method find-test-object;
 
-// the test macro
-
 //---*** We could use 'define function' but it doesn't debug as well right now
 define macro test-definer
   { define test ?test-name:name (?keyword-args:*) ?test-body:body end }
@@ -191,25 +189,13 @@ define macro test-definer
                    ?keyword-args); }
 end macro test-definer;
 
-// with-test-unit macro
-
-
-define thread variable *test-unit-runner* = make(<test-runner>);
-
+// For backward compatibility.
 define macro with-test-unit
-  { with-test-unit (?name:expression, ?keyword-args:*) ?test-body:body end }
-    => { begin
-           let test
-             = make(<test-unit>,
-                    name: concatenate("Test unit ", ?name),
-                    function: method () ?test-body end,
-                    ?keyword-args);
-           let result = perform-component(test, *test-unit-runner*,
-                                          report-function: #f);
-           *check-recording-function*(result);
-         end; }
+  { with-test-unit (?name:expression, ?keyword-args:*)
+      ?test-body:body
+    end
+  } => { ?test-body }
 end macro with-test-unit;
-
 
 define method find-suite
     (name :: <string>, #key search-suite = root-suite())

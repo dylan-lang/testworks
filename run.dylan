@@ -181,8 +181,7 @@ define method execute-component
                         add!(subresults, result);
                         runner.runner-progress-function(result);
                         result
-                      end,
-                    *test-unit-runner* = runner)
+                      end)
         let cond = #f;
         profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
           cond := maybe-trap-errors(test.test-function());
@@ -240,8 +239,20 @@ end method null-progress-function;
 
 define method full-progress-function
     (result :: <unit-result>) => ()
-  print-check-progress(result)
+  let status = result.result-status;
+  let name = result.result-name;
+  let reason = result.result-reason;
+  select (status)
+    $skipped =>
+      test-output("Skipped check: %s", name);
+    otherwise =>
+      test-output("Ran check: %s %s%s\n",
+                  name,
+                  status-name(status),
+                  reason & format-to-string(" [%s]", reason) | "");
+  end;
 end method full-progress-function;
 
+// TODO(cgay): Default to displaying tests and suites only; not checks.
 define variable *default-progress-function* = null-progress-function;
 

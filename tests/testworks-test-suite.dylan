@@ -297,6 +297,18 @@ define test testworks-perform-suite-results-test ()
              instance?(suite-results.result-subresults, <vector>))
 end test testworks-perform-suite-results-test;
 
+// This simply exercises the with-test-unit macro.  It'll catch
+// compile time warnings at least, but doesn't actually verify
+// anything else.
+define test test-with-test-unit ()
+  with-test-unit ("foo-unit")
+    assert-equal(2, 2);
+  end;
+  with-test-unit ("bar-unit")
+    assert-equal(3, 3);
+  end;
+end test test-with-test-unit;
+
 define suite testworks-results-suite ()
   test testworks-perform-test-results-test;
   test testworks-perform-suite-results-test;
@@ -309,4 +321,5 @@ define suite testworks-test-suite ()
   suite testworks-check-macros-suite;
   suite testworks-results-suite;
   suite command-line-test-suite;
+  test test-with-test-unit;
 end suite testworks-test-suite;
