@@ -4,6 +4,74 @@ Usage
 .. current-library:: testworks
 .. current-module:: testworks
 
+.. TOC (C-c C-t TAB to insert a new TOC)
+   1   Quick Start
+   2   Defining Tests
+     2.1  Assertions
+     2.2  Tests
+     2.3  Suites
+   3   Organzing Your Test Suites
+   4   Running Your Tests As A Stand-alone Application
+   5   Setup and Cleanup Functions
+   6   Tags
+   7   Report Functions
+   8   Progress Functions
+   9   Comparing Test Results
+   10  Test Specifications
+   11  Generating Test Specifications
+
+Quick Start
+===========
+
+Add ``use testworks;`` to both your test library and test module.
+
+Suites are used to organize tests into groups and may be nested
+arbitrarily.  It is common to have a top-level suite named
+*my-library*-test-suite.
+
+.. code-block:: dylan
+
+   // Top-level test suite for the "example" library.
+   define suite example-test-suite ()
+     suite foo-module-test-suite;
+     suite bar-module-test-suite;
+     test fn1-test;
+     test fn2-test;
+   end;
+
+Tests contain arbitrary code plus assertions:
+
+.. code-block:: dylan
+
+   // Test fn1
+   define test fn1-test ()
+     let v = do-something();
+     assert-equal(fn1(v), "expected-value");
+     assert-equal(fn1(v, key: 7), "seven", "regression test for bug/12345");
+   end;
+
+See also: :func:`assert-true`, :func:`assert-false`,
+:func:`assert-signals`, and :func:`assert-no-errors`.  Each of these
+takes an optional *description* argument, which can be used to
+indicate the intent of the assertion if it isn't clear.
+
+To run the test suite call
+``run-test-application(example-test-suite)``.
+
+You may want to have both an "example-test-suite" library, which
+exports your top-level test suite so it can be included as a sub-suite
+in other testing libraries, and an "example-test-suite-app"
+executable, which can be used to run just the tests for "example"
+itself.  See `Running Your Tests As A Stand-alone Application`_.
+
+:func:`run-test-application` handles parsing the command line and
+running the suite.  Use ::
+
+  example-test-suite-app --help
+
+to see the command-line options.
+
+
 Defining Tests
 ==============
 
