@@ -378,28 +378,9 @@ define macro assert-no-errors
 end macro assert-no-errors;
 
 
-/// Check progress functions
-
-define method print-check-progress
-    (result :: <unit-result>) => ()
-  let status = result.result-status;
-  let name = result.result-name;
-  let reason = result.result-reason;
-  select (status)
-    $skipped =>
-      test-output("Ignored check: %s", name);
-    otherwise =>
-      test-output("Ran check: %s %s%s\n",
-                  name,
-                  status-name(status),
-                  reason & format-to-string(" [%s]", reason) | "");
-  end;
-end method print-check-progress;
-
-
 /// Check recording
 
-define thread variable *check-recording-function* = print-check-progress;
+define thread variable *check-recording-function* = always(#f);
 
 define method record-check
     (name :: <string>, status :: <result-status>, reason :: false-or(<string>))
