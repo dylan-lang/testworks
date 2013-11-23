@@ -195,7 +195,7 @@ define method run-test-application
       with-open-file(stream = pathname,
                      direction: #"output",
                      if-exists: #"overwrite")
-        report-function(runner, result, stream);
+        report-function(result, stream);
       end;
     else
       report-function(result, *standard-output*);
