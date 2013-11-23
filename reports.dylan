@@ -359,8 +359,8 @@ end function emit-surefire-suite;
 
 define function emit-surefire-test
     (suite :: <suite-result>, test :: <test-result>, stream :: <stream>) => ()
-  format(stream, "    <testcase name=\"%s\" classname=\"%s\">",
-         test.result-name, suite.result-name);
+  format(stream, "    <testcase name=\"%s\" classname=\"%s\" time=\"%s\">",
+         test.result-name, suite.result-name, test.result-time);
   let status = test.result-status;
   select (status)
     $passed => #f;
