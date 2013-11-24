@@ -363,7 +363,8 @@ define function emit-surefire-test
          test.result-name, suite.result-name, test.result-time);
   let status = test.result-status;
   select (status)
-    $passed => #f;
+    $passed =>
+      format(stream, "\n");
     $skipped =>
       format(stream, "\n      <skipped />\n");
     $not-implemented =>
