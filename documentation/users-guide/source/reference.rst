@@ -109,10 +109,9 @@ the description be provided as the first argument.
    :parameter expression1: any expression
    :parameter expression2: any expression
    :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "two is less
-      than three".  If no description is supplied one will be
-      automatically generated based on the text of the two
-      expressions.
+      This should be stated in positive form, such as "two equals
+      three".  If no description is supplied one will be automatically
+      generated based on the text of the two expressions.
 
    :example:
 
@@ -120,6 +119,29 @@ the description be provided as the first argument.
 
          assert-equal(2, my-complicated-method())
          assert-equal(this, that, "this and that are the same")
+
+.. macro:: assert-not-equal
+
+   Assert that two values are not equal using ``~=`` as the comparison
+   function.  Using this macro is preferable to using ``assert-true(a
+   ~= b)`` because the failure messages can be better.
+
+   :signature: assert-not-equal *expression1* *expression2* [ *description* ]
+
+   :parameter expression1: any expression
+   :parameter expression2: any expression
+   :parameter description: A description of what the assertion tests.
+      This should be stated so as to express what the correct result
+      would be, for example "two does not equal three".  If no
+      description is supplied one will be automatically generated
+      based on the text of the two expressions.
+
+   :example:
+
+      .. code-block:: dylan
+
+         assert-not-equal(2, my-complicated-method())
+         assert-not-equal(this, that, "this does not equal that")
 
 .. macro:: assert-signals
 

@@ -33,7 +33,8 @@ define macro check-equal
     do-check-equal(method () ?name end,
                    method ()
                      values(?expr1, ?expr2, ?"expr1", ?"expr2")
-                   end)
+                   end,
+                   #f)
   }
 end macro check-equal;
 
@@ -47,12 +48,28 @@ define macro assert-equal
     do-check-equal(method () ?description end,
                    method ()
                      values(?expr1, ?expr2, ?"expr1", ?"expr2")
-                   end)
+                   end,
+                   #f)
   }
 end macro assert-equal;
 
+define macro assert-not-equal
+  { assert-not-equal (?expr1:expression, ?expr2:expression)
+  } => {
+    assert-not-equal(?expr1, ?expr2, ?"expr1" " ~= " ?"expr2")
+  }
+  { assert-not-equal (?expr1:expression, ?expr2:expression, ?description:expression)
+  } => {
+    do-check-equal(method () ?description end,
+                   method ()
+                     values(?expr1, ?expr2, ?"expr1", ?"expr2")
+                   end,
+                   #t)
+  }
+end macro assert-not-equal;
+
 define function do-check-equal
-    (get-name :: <function>, get-arguments :: <function>)
+    (get-name :: <function>, get-arguments :: <function>, negate? :: <boolean>)
  => (result :: <result>)
   let phase = "evaluating check name";
   let name = #f;
@@ -72,16 +89,23 @@ define function do-check-equal
     let (val1, val2, expr1, expr2) = get-arguments();
     phase := format-to-string("while comparing %s and %s for equality",
                               expr1, expr2);
+    let compare = if (negate?) \~= else \= end;
     let (status, reason)
-      = if (val1 = val2)
+      = if (compare(val1, val2))
           $passed
         else
-          phase := "getting check-equal failure detail";
-          let detail = check-equal-failure-detail(val1, val2);
+          phase := format-to-string("getting check-%sequal failure detail",
+                                    if (negate?) "not-" else "" end);
+          let detail = if (negate?)
+                         ""
+                       else
+                         check-equal-failure-detail(val1, val2)
+                       end;
           values($failed,
                  format-to-string("%= (from expression %=) and %= (from "
-                                    "expression %=) are not =.%s%s",
+                                    "expression %=) are %s=.%s%s",
                                   val1, expr1, val2, expr2,
+                                  if (negate?) "" else "not " end,
                                   if (detail) "  " else "" end,
                                   detail | ""))
         end;

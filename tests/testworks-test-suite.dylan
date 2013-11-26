@@ -139,8 +139,21 @@ define test testworks-assert-equal-test ()
   assert-equal($passed, without-recording () result-status(assert-equal(1, 1)) end);
   assert-equal($passed, without-recording () result-status(assert-equal("1", "1")) end);
   assert-equal($failed, without-recording () result-status(assert-equal(1, 2)) end);
-  assert-equal($crashed, without-recording () result-status(assert-equal(1, test-error())) end);
+  assert-equal($crashed, without-recording ()
+                           result-status(assert-equal(1, test-error()))
+                         end);
 end test testworks-assert-equal-test;
+
+define test testworks-assert-not-equal-test ()
+  assert-not-equal(8, 9);
+  assert-not-equal(8, 9, "8 ~= 9 with description");
+  assert-equal($passed, without-recording () result-status(assert-not-equal(1, 2)) end);
+  assert-equal($passed, without-recording () result-status(assert-not-equal("1", "2")) end);
+  assert-equal($failed, without-recording () result-status(assert-not-equal(1, 1)) end);
+  assert-equal($crashed, without-recording ()
+                           result-status(assert-not-equal(1, test-error()))
+                         end);
+end test testworks-assert-not-equal-test;
 
 define test testworks-check-instance?-test ()
   check-equal("check-instance?(1, <integer>) passes",
@@ -261,6 +274,7 @@ define suite testworks-check-macros-suite ()
   test testworks-assert-true-test;
   test testworks-assert-false-test;
   test testworks-assert-equal-test;
+  test testworks-assert-not-equal-test;
   test testworks-assert-signals-test;
   test testworks-assert-no-errors-test;
 end suite testworks-check-macros-suite;
