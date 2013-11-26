@@ -63,6 +63,7 @@ Here is the full list of check/assert macros:
   * :func:`assert-true`
   * :func:`assert-false`
   * :func:`assert-equal`
+  * :func:`assert-not-equal`
   * :func:`assert-signals`
   * :func:`assert-no-errors`
   * :func:`check`

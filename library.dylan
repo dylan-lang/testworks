@@ -47,6 +47,7 @@ define module testworks
   // Assertions
   create
     assert-equal,
+    assert-not-equal,
     assert-signals,
     assert-no-errors,
     assert-true,
