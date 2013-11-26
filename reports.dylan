@@ -137,7 +137,10 @@ end;
 
 define method summary-report-function
     (result :: <result>, stream :: <stream>) => ()
-  format(stream, "\n\n%s summary:\n", result-name(result));
+  format(stream, "\n%s %s in %s seconds:\n",
+         result.result-name,
+         result.result-status.status-name.as-uppercase,
+         result.result-time);
   local method print-class-summary (result, name, class) => ()
           print-result-summary(result, name, stream,
                                test: method (subresult)
@@ -151,18 +154,13 @@ end method summary-report-function;
 
 define method failures-report-function
     (result :: <result>, stream :: <stream>) => ()
-  format(stream, "\n");
-  select (result.result-status)
-    $passed =>
-      format(stream, "%s passed\n", result.result-name);
-    otherwise =>
-      print-result-info
-        (result, stream,
-         test: method (result)
-                 let status = result.result-status;
-                 status ~== $passed & status ~== $skipped
-               end);
-      format(stream, "\n");
+  if (result.result-status ~= $passed)
+    print-result-info (result, stream,
+                       test: method (result)
+                               let status = result.result-status;
+                               status ~== $passed & status ~== $skipped
+                             end);
+    format(stream, "\n");
   end;
   summary-report-function(result, stream);
 end method failures-report-function;
