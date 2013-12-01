@@ -62,6 +62,10 @@ define module testworks
     test-definer,
     with-test-unit;
 
+  // Output
+  create
+    test-output;
+
 end module testworks;
 
 
@@ -84,7 +88,6 @@ define module %testworks
 
   // Formatting
   export
-    test-output,
     plural;
 
   // Components

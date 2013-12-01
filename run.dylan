@@ -23,6 +23,9 @@ define inline function debug?
   debug-runner?(*runner*) ~= #f
 end;
 
+// For tests to do debugging output.
+// TODO(cgay): Collect this and stdio into a log file per test run
+// or per test.  The Surefire report has a place for stdout, too.
 define method test-output
     (format-string :: <string>, #rest format-args) => ()
   apply(format, runner-output-stream(*runner*), format-string, format-args);
