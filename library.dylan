@@ -22,17 +22,18 @@ end library testworks;
 // Public API
 define module testworks
 
-  // Top level
+  // Top level and test runners
   create
     run-test-application,
     run-tests,
     <test-runner>,
     runner-tags,
-    runner-announce-function,
-    runner-progress-function,
+    runner-ignore,
+    runner-output-stream,
+    runner-progress,
     debug-runner?;
 
-  // Checks
+  // Checks (deprecated, use assertions)
   create
     check,
     check-condition,
@@ -142,15 +143,13 @@ define module %testworks
     <check-result>,
     <test-unit-result>;
 
-  // Progress functions
+  // Progress
   export
-    *default-progress-function*,
-    null-progress-function,
-    full-progress-function;
+    show-progress,
+    $default, $verbose;
 
   // Report functions
   export
-    *default-report-function*,
     null-report-function,
     summary-report-function,
     failures-report-function,

@@ -15,20 +15,17 @@ define function parse-args
              make(<optional-parameter-option>,
                   names: #("debug"),
                   default: "no",
-                  help: "Enter the debugger on failure: no|crashes|failures"));
+                  help: "Enter the debugger on failure: NO|crashes|failures"));
   add-option(parser,
-             make(<flag-option>,
-                  names: #("progress"),
-                  negative-names: #("noprogress"),
-                  default: #f,
-                  help: "Show progress as tests are run."));
+             make(<parameter-option>,
+                  names: #("progress", "p"),
+                  default: "default",
+                  help: "Show output as the test run progresses: none|DEFAULT|verbose"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report"),
-                  default: "failures",
-                  help: "Type of final report to generate: "
-                    "none|full|failures|summary|log|xml|surefire "
-                    "(default: %default)"));
+                  default: "summary",
+                  help: "Final report to generate: none|SUMMARY|log|xml|surefire"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report-file"),
@@ -48,6 +45,7 @@ define function parse-args
                   names: #("test"),
                   help: "Run (or list) only these named tests.  "
                     "May be used multiple times."));
+  // TODO(cgay): Rename these options to --skip-*
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("ignore-suite"),
@@ -76,15 +74,17 @@ define function parse-args
   parser
 end function parse-args;
 
+// types of progress to display
+define constant $none = #"none";
+define constant $default = #"default";
+define constant $verbose = #"verbose";
 
 define table $report-functions :: <string-table> = {
-    "none"     => null-report-function,
-    "full"     => full-report-function,
-    "summary"  => summary-report-function,
-    "failures" => failures-report-function,
     "log"      => log-report-function,
-    "xml"      => xml-report-function,
-    "surefire" => surefire-report-function
+    "none"     => null-report-function,
+    "summary"  => summary-report-function,
+    "surefire" => surefire-report-function,
+    "xml"      => xml-report-function
     };
 
 define method find-component
@@ -121,9 +121,14 @@ define function make-runner-from-command-line
   // TODO(cgay): Use init-keywords rather than setters so we can make <test-runner>
   // immutable.
   let debug = get-option-value(parser, "debug");
-  let report = get-option-value(parser, "report") | "failures";
+  let report = get-option-value(parser, "report");
+  let progress = get-option-value(parser, "progress");
+  let sprogress = as(<symbol>, progress);
   let report-function = element($report-functions, report, default: #f)
     | usage-error("Invalid --report option: %s", report);
+  if (~member?(sprogress, list($none, $default, $verbose)))
+    usage-error("Invalid --progress option: %s", progress);
+  end;
   let runner = make(<test-runner>,
                     debug?: select (debug by \=)
                               #f, "no" => #f;
@@ -134,14 +139,8 @@ define function make-runner-from-command-line
                             end select,
                     ignore: find-components(get-option-value(parser, "ignore-suite"),
                                             get-option-value(parser, "ignore-test")),
-                    report: report);
-  if (get-option-value(parser, "progress"))
-    runner.runner-progress-function := full-progress-function;
-    runner.runner-announce-function := announce-component;
-  else
-    runner.runner-progress-function := null-progress-function;
-    runner.runner-announce-function := method (component) end;
-  end;
+                    report: report,
+                    progress: if (sprogress = $none) #f else sprogress end);
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
   let start-suite = select (components.size)
@@ -190,7 +189,7 @@ define method run-test-application
   else
     // Run the appropriate test or suite
     let pathname = get-option-value(parser, "report-file");
-    let result = run-tests(runner, start-suite, report-function: #f);
+    let result = run-tests(runner, start-suite);
     if (pathname)
       with-open-file(stream = pathname,
                      direction: #"output",
