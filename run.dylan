@@ -7,12 +7,6 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 
-define method announce-component
-    (component :: <component>) => ()
-  test-output("Running %s %s...\n",
-              component.component-type-name, component.component-name);
-end;
-
 define inline function debug-failures?
     () => (debug-failures? :: <boolean>)
   debug-runner?(*runner*) == #t
@@ -33,18 +27,14 @@ end;
 
 
 // A <test-runner> holds options for the test run and collects results.
-// TODO(cgay): Remove the *-function slots and provide methods for
-// subclassers to override instead.
 define open class <test-runner> (<object>)
   // TODO(cgay): <report> = one-of(#"failures", #"crashes", #"none", ...)
   //constant slot runner-report :: <string> = "failures",
   //  init-keyword: report:;
   constant slot runner-tags :: <sequence> = $all-tags,
     init-keyword: tags:;
-  slot runner-announce-function :: false-or(<function>) = announce-component,
-    init-keyword: announce-function:;
-  slot runner-progress-function = null-progress-function,
-    init-keyword: progress-function:;
+  constant slot runner-progress :: one-of(#f, $default, $verbose),
+    init-keyword: progress:;
   constant slot debug-runner? = #f,
     init-keyword: debug?:;
   constant slot runner-ignore :: <sequence> = #[],   // of components
@@ -76,16 +66,12 @@ define macro maybe-trap-errors
          end; }
 end macro maybe-trap-errors;
 
-// TODO(cgay): Move report-function into <test-runner>.
 define function run-tests
-    (runner :: <test-runner>, component :: <component>,
-     #key report-function = *default-report-function*)
+    (runner :: <test-runner>, component :: <component>)
  => (component-result :: <component-result>)
-  let result = dynamic-bind (*runner* = runner)
-                 maybe-execute-component(component, runner)
-               end;
-  report-function & report-function(result);
-  result
+  dynamic-bind (*runner* = runner)
+    maybe-execute-component(component, runner)
+  end;
 end function run-tests;
 
 
@@ -105,25 +91,27 @@ end method execute-component?;
 define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
-  let announce-function
-    = runner.runner-announce-function;
-  if (announce-function)
-    announce-function(component)
-  end;
   let (subresults, status, reason, seconds, microseconds, bytes)
     = if (execute-component?(component, runner))
+        if (runner.runner-progress)
+          show-progress(runner, component, #f);
+        end;
         execute-component(component, runner)
       else
         values(#(), $skipped, 0, 0, 0)
       end;
-  make(component-result-type(component),
-       name: component.component-name,
-       status: status,
-       reason: reason,
-       subresults: subresults,
-       seconds: seconds,
-       microseconds: microseconds,
-       bytes: bytes)
+  let result = make(component-result-type(component),
+                    name: component.component-name,
+                    status: status,
+                    reason: reason,
+                    subresults: subresults,
+                    seconds: seconds,
+                    microseconds: microseconds,
+                    bytes: bytes);
+  if (runner.runner-progress)
+    show-progress(runner, component, result);
+  end;
+  result
 end method maybe-execute-component;
 
 define method execute-component
@@ -182,7 +170,9 @@ define method execute-component
     = dynamic-bind (*check-recording-function* =
                       method (result :: <result>)
                         add!(subresults, result);
-                        runner.runner-progress-function(result);
+                        if (*runner*.runner-progress)
+                          show-progress(*runner*, #f, result);
+                        end;
                         result
                       end)
         let cond = #f;
@@ -234,28 +224,70 @@ define method list-component
 end method list-component;
     
 
+// TODO(cgay): Use indentation to show suite nesting.
 
-define method null-progress-function
-    (result :: <unit-result>) => ()
-  #f
-end method null-progress-function;
+// Show some output during the test run.  For each component this is
+// called both before and after it has been run.  If before, result
+// will be #f.  This function is only called if runner.runner-progress
+// ~= #f.
+define generic show-progress
+    (runner :: <test-runner>,
+     component :: false-or(<component>),
+     result :: false-or(<result>))
+ => ();
 
-define method full-progress-function
-    (result :: <unit-result>) => ()
-  let status = result.result-status;
-  let name = result.result-name;
-  let reason = result.result-reason;
-  select (status)
-    $skipped =>
-      test-output("Skipped check: %s", name);
-    otherwise =>
-      test-output("Ran check: %s %s%s\n",
-                  name,
-                  status-name(status),
-                  reason & format-to-string(" [%s]", reason) | "");
+// Default does nothing.
+define method show-progress
+    (runner :: <test-runner>,
+     component :: false-or(<component>),
+     result :: false-or(<result>))
+ => ()
+end;
+
+// Suites are only displayed before being run.
+define method show-progress
+    (runner :: <test-runner>, suite :: <suite>, result == #f)
+ => ()
+  test-output("Running suite %s:\n", suite.component-name);
+end method show-progress;
+
+// Tests are displayed before and after being run.
+define method show-progress
+    (runner :: <test-runner>, test :: <test>, result :: false-or(<result>))
+ => ()
+  let verbose? = runner.runner-progress = $verbose;
+  if (result)
+    let reason = result.result-reason;
+    test-output("%s%s in %ss\n",
+                verbose? & "  test " | " ",
+                result.result-status.status-name.as-uppercase,
+                result.result-time);
+    reason & test-output("    %s\n", reason);
+  else
+    test-output("Running test %s%s",
+                test.component-name, verbose? & ":\n" | " ");
   end;
-end method full-progress-function;
+end method show-progress;
 
-// TODO(cgay): Default to displaying tests and suites only; not checks.
-define variable *default-progress-function* = null-progress-function;
-
+// Assertions are only displayed when they fail or the verbose option
+// is set.
+define method show-progress
+    (runner :: <test-runner>, component == #f, result :: <result>)
+ => ()
+  let status = result.result-status;
+  let reason = result.result-reason;
+  if (runner.runner-progress = $verbose)
+    test-output("  %s: %s%s\n",
+                status.status-name.as-uppercase,
+                result.result-name,
+                reason & concatenate(" [", reason, "]") | "");
+  elseif (reason)
+    test-output("\n  %s: [%s]\n  ", result.result-name, reason);
+  else
+    test-output(select (status)
+                  $skipped => "S";
+                  $not-implemented => "X";
+                  otherwise => ".";
+                end);
+  end;
+end method show-progress;

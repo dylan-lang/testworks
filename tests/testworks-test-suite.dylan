@@ -281,10 +281,8 @@ end suite testworks-assertion-macros-suite;
 
 define test test-run-tests/test ()
   let test-to-check = find-test-object(testworks-check-test);
-  let runner = make(<test-runner>,
-                    progress-function: always(#f),
-                    announce-function: always(#f));
-  let test-results = run-tests(runner, test-to-check, report-function: #f);
+  let runner = make(<test-runner>, progress: #f);
+  let test-results = run-tests(runner, test-to-check);
   assert-true(instance?(test-results, <test-result>),
               "run-tests returns <test-result> when running a <test>");
   assert-equal($passed, test-results.result-status,
@@ -295,16 +293,14 @@ end test test-run-tests/test;
 
 define test test-run-tests/suite ()
   let suite-to-check = testworks-assertion-macros-suite;
-  let runner = make(<test-runner>,
-                    progress-function: always(#f),
-                    announce-function: always(#f));
-  let suite-results = run-tests(runner, suite-to-check, report-function: #f);
+  let runner = make(<test-runner>, progress: #f);
+  let suite-results = run-tests(runner, suite-to-check);
   assert-true(instance?(suite-results, <suite-result>),
               "run-tests returns <suite-result> when running a <suite>");
   assert-equal($passed, suite-results.result-status,
                "run-tests returns $passed when passing");
   assert-true(instance?(suite-results.result-subresults, <vector>),
-              "run-tests sub-results are in a vector")
+              "run-tests sub-results are in a vector");
 end test test-run-tests/suite;
 
 // This simply exercises the with-test-unit macro.  It'll catch

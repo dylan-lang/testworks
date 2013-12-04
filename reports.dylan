@@ -152,6 +152,7 @@ define method summary-report-function
   print-class-summary(result, "check", <check-result>);
 end method summary-report-function;
 
+// TODO(cgay): delete this when log-report-function is deleted.
 define method failures-report-function
     (result :: <result>, stream :: <stream>) => ()
   if (result.result-status ~= $passed)
@@ -171,8 +172,6 @@ define method full-report-function
   print-result-info(result, stream, test: always(#t));
   summary-report-function(result, stream);
 end method full-report-function;
-
-define variable *default-report-function* = failures-report-function;
 
 
 /// Log report
