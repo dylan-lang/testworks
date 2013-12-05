@@ -264,8 +264,8 @@ define method show-progress
                 result.result-time);
     reason & test-output("    %s\n", reason);
   else
-    test-output("Running test %s%s",
-                test.component-name, verbose? & ":\n" | " ");
+    test-output("Running test %s:%s",
+                test.component-name, verbose? & "\n" | "");
   end;
 end method show-progress;
 
@@ -283,11 +283,5 @@ define method show-progress
                 reason & concatenate(" [", reason, "]") | "");
   elseif (reason)
     test-output("\n  %s: [%s]\n  ", result.result-name, reason);
-  else
-    test-output(select (status)
-                  $skipped => "S";
-                  $not-implemented => "X";
-                  otherwise => ".";
-                end);
   end;
 end method show-progress;

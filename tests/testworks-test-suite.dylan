@@ -320,6 +320,29 @@ define suite testworks-results-suite ()
   test test-run-tests/test;
 end;
 
+// Make sure that if one assertion fails the remaining assertions
+// are still executed.
+define test test-assertion-failure-continue ()
+  let x = #f;
+  block ()
+    without-recording ()
+      assert-true(#f);            // fail
+      assert-true(error("blah")); // fail
+    end;
+    assert-true(x := #t);
+  cleanup
+    assert-true(x);
+  end;
+end test test-assertion-failure-continue;
+
+// Have one test that does a lot of assertions, which can affect the
+// progress reports.
+define test test-many-assertions ()
+  for (i from 1 to 1000)
+    assert-true(#t);
+  end;
+end;
+
 /// The top-level suite
 
 define suite testworks-test-suite ()
@@ -327,4 +350,6 @@ define suite testworks-test-suite ()
   suite testworks-results-suite;
   suite command-line-test-suite;
   test test-with-test-unit;
+  test test-assertion-failure-continue;
+  test test-many-assertions;
 end suite testworks-test-suite;

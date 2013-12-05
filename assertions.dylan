@@ -10,8 +10,9 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 // duplicate code in the do-check* functions.
 
 
-/// Check/assert macros
+/// Assertion macros
 
+// The check-* macros are deprecated.
 // The check-* macros require the caller to provide a name.
 // The assert-* macros auto-generate a name by default.
 
@@ -71,7 +72,7 @@ end macro assert-not-equal;
 define function do-check-equal
     (get-name :: <function>, get-arguments :: <function>, negate? :: <boolean>)
  => (result :: <result>)
-  let phase = "evaluating check name";
+  let phase = "evaluating assertion description";
   let name = #f;
   block (return)
     let handler <serious-condition>
@@ -79,22 +80,23 @@ define function do-check-equal
             if (debug?())
               next-handler()  // decline to handle it
             else
-              return(record-check(name | format-to-string("*** Invalid check name ***"),
+              return(record-check(name | "*** Invalid description ***",
                                   $crashed,
                                   format-to-string("Error %s: %s", phase, condition)));
             end;
           end method;
     name := get-name();
-    phase := "evaluating check arguments";
+    phase := "evaluating assertion expressions";
     let (val1, val2, expr1, expr2) = get-arguments();
-    phase := format-to-string("while comparing %s and %s for equality",
-                              expr1, expr2);
+    phase := format-to-string("while comparing %s and %s for %sequality",
+                              expr1, expr2,
+                              if (negate?) "in" else "" end);
     let compare = if (negate?) \~= else \= end;
     let (status, reason)
       = if (compare(val1, val2))
           $passed
         else
-          phase := format-to-string("getting check-%sequal failure detail",
+          phase := format-to-string("getting assert-%sequal failure detail",
                                     if (negate?) "not-" else "" end);
           let detail = if (negate?)
                          ""
@@ -165,7 +167,7 @@ define function do-check-instance?
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | format-to-string("*** Invalid check name ***"),
+              record-check(name | "*** Invalid check name ***",
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
               return($crashed);
@@ -202,7 +204,7 @@ end macro check-true;
 define macro assert-true
   { assert-true (?expr:expression)
   } => {
-    assert-true(?expr, ?"expr" " evaluates to true (not #f)")
+    assert-true(?expr, ?"expr" " is true")
   }
 
   { assert-true (?expr:expression, ?description:expression)
@@ -215,7 +217,7 @@ end macro assert-true;
 define function do-check-true
     (get-name :: <function>, get-arguments :: <function>)
  => (status :: <result-status>)
-  let phase = "evaluating check name";
+  let phase = "evaluating assertion description";
   let name = #f;
   block (return)
     let handler <serious-condition>
@@ -223,17 +225,16 @@ define function do-check-true
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | format-to-string("*** Invalid check name ***"),
+              record-check(name | "*** Invalid description ***",
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
               return($crashed);
             end;
           end method;
     name := get-name();
-    phase := "evaluating check arguments";
+    phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if %= evaluates to a true value",
-                              value-expr);
+    phase := format-to-string("checking if %= evaluates to true", value-expr);
     let (status, reason)
       = if (value)
           $passed
@@ -275,7 +276,7 @@ end macro assert-false;
 define function do-check-false
     (get-name :: <function>, get-arguments :: <function>)
  => (status :: <result-status>)
-  let phase = "evaluating check name";
+  let phase = "evaluating assertion description";
   let name = #f;
   block (return)
     let handler <serious-condition>
@@ -283,14 +284,14 @@ define function do-check-false
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | format-to-string("*** Invalid check name ***"),
+              record-check(name | "*** Invalid description ***",
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
               return($crashed);
             end;
           end method;
     name := get-name();
-    phase := "evaluating check arguments";
+    phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= evaluates to #f", value-expr);
     let (status, reason)
@@ -335,7 +336,7 @@ end macro assert-signals;
 define function do-check-condition
     (get-name :: <function>, get-arguments :: <function>)
  => (status :: <result-status>)
-  let phase = "evaluating check name";
+  let phase = "evaluating assertion description";
   let name = #f;
   block (return)
     let handler <serious-condition>
@@ -343,14 +344,14 @@ define function do-check-condition
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | format-to-string("*** Invalid check name ***"),
+              record-check(name | "*** Invalid description ***",
                            $crashed,
                            format-to-string("Error %s: %s", phase, condition));
               return($crashed);
             end;
           end method;
     name := get-name();
-    phase := "evaluating check arguments";
+    phase := "evaluating assertion expression";
     let (condition-class :: subclass(<condition>),
          thunk :: <function>, expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= signals a condition of class %s",
