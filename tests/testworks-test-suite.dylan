@@ -320,6 +320,21 @@ define suite testworks-results-suite ()
   test test-run-tests/test;
 end;
 
+// Make sure that if one assertion fails the remaining assertions
+// are still executed.
+define test test-assertion-failure-continue ()
+  let x = #f;
+  block ()
+    without-recording ()
+      assert-true(#f);            // fail
+      assert-true(error("blah")); // fail
+    end;
+    assert-true(x := #t);
+  cleanup
+    assert-true(x);
+  end;
+end test test-assertion-failure-continue;
+
 /// The top-level suite
 
 define suite testworks-test-suite ()
@@ -327,4 +342,5 @@ define suite testworks-test-suite ()
   suite testworks-results-suite;
   suite command-line-test-suite;
   test test-with-test-unit;
+  test test-assertion-failure-continue;
 end suite testworks-test-suite;
