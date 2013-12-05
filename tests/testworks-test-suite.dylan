@@ -335,6 +335,14 @@ define test test-assertion-failure-continue ()
   end;
 end test test-assertion-failure-continue;
 
+// Have one test that does a lot of assertions, which can affect the
+// progress reports.
+define test test-many-assertions ()
+  for (i from 1 to 1000)
+    assert-true(#t);
+  end;
+end;
+
 /// The top-level suite
 
 define suite testworks-test-suite ()
@@ -343,4 +351,5 @@ define suite testworks-test-suite ()
   suite command-line-test-suite;
   test test-with-test-unit;
   test test-assertion-failure-continue;
+  test test-many-assertions;
 end suite testworks-test-suite;
