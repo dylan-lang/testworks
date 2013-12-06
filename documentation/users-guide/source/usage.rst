@@ -4,21 +4,17 @@ Usage
 .. current-library:: testworks
 .. current-module:: testworks
 
-.. TOC (C-c C-t TAB to insert a new TOC)
-   1   Quick Start
-   2   Defining Tests
+.. 1  Quick Start
+   2  Defining Tests
      2.1  Assertions
      2.2  Tests
      2.3  Suites
-   3   Organzing Your Test Suites
-   4   Running Your Tests As A Stand-alone Application
-   5   Setup and Cleanup Functions
-   6   Tags
-   7   Report Functions
-   8   Progress Functions
-   9   Comparing Test Results
-   10  Test Specifications
-   11  Generating Test Specifications
+   3  Organzing Your Test Suites
+   4  Running Your Tests As A Stand-alone Application
+   5  Reports
+   6  Comparing Test Results
+   7  Test Specifications
+   8  Generating Test Specifications
 
 Quick Start
 ===========
