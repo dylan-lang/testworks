@@ -244,11 +244,17 @@ define method show-progress
  => ()
 end;
 
-// Suites are only displayed before being run.
 define method show-progress
-    (runner :: <test-runner>, suite :: <suite>, result == #f)
+    (runner :: <test-runner>, suite :: <suite>, result :: false-or(<result>))
  => ()
-  test-output("Running suite %s:\n", suite.component-name);
+  if (result)
+    test-output("Completed suite %s: %s in %ss\n",
+                suite.component-name,
+                result.result-status.status-name.as-uppercase,
+                result.result-time)
+  else
+    test-output("Running suite %s:\n", suite.component-name);
+  end;
 end method show-progress;
 
 // Tests are displayed before and after being run.
