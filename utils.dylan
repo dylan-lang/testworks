@@ -29,11 +29,67 @@ define method plural
 end;
 
 
-define constant $all-tags = #[#"all"];
+//// Tags
+
+define class <tag> (<object>)
+  constant slot tag-name :: <string>, init-keyword: name:;
+  constant slot tag-negated? :: <boolean>, init-keyword: negated?:;
+end;
+
+define method make-tag
+    (tag :: <tag>) => (tag :: <tag>)
+  tag
+end;
+
+define method make-tag
+    (spec :: <string>) => (tag :: <tag>)
+  let negated? = starts-with?(spec, "-");
+  let name = copy-sequence(spec, start: negated? & 1 | 0);
+  if (empty?(name))
+    error("Invalid tag: %=", spec);
+  end;
+  make(<tag>, name: name, negated?: negated?)
+end method make-tag;
+
+define method print-object
+    (tag :: <tag>, stream :: <stream>) => ()
+  format(stream, "#<tag %s%s>", tag.tag-negated? & "-" | "", tag.tag-name);
+end;
+
+define function parse-tags
+    (specs :: <sequence> /* of <string> */)
+ => (tags :: <sequence> /* of <tag> */)
+  map(make-tag, specs)
+end;
+
+define generic tags-match?
+    (requested-tags :: <sequence>, component :: <component>)
+ => (bool :: <boolean>);
 
 define method tags-match?
-    (run-tags :: <sequence>, object-tags :: <sequence>)
+    (requested-tags :: <sequence>, component :: <component>)
  => (bool :: <boolean>)
-  run-tags = $all-tags | ~empty?(intersection(run-tags, object-tags))
-end method tags-match?;
+  #t
+end;
 
+define method tags-match?
+    (requested-tags :: <sequence>, component :: <test>)
+ => (bool :: <boolean>)
+  let component-tags = component.test-tags;
+  block (return)
+    // Exclusion takes precedence over inclusion.
+    let positive-match? = empty?(requested-tags) | empty?(component-tags);
+    for (rtag in requested-tags)
+      for (ctag in component-tags)
+        if (rtag.tag-name = ctag.tag-name)
+          if (rtag.tag-negated?)
+            return(#f);
+          else
+            positive-match? := #t;
+          end;
+        end;
+      end;
+    end;
+    positive-match?
+  end block
+end method tags-match?;

@@ -337,10 +337,41 @@ end test test-assertion-failure-continue;
 
 // Have one test that does a lot of assertions, which can affect the
 // progress reports.
-define test test-many-assertions ()
+define test test-many-assertions (tags: #("verbose"))
   for (i from 1 to 1000)
     assert-true(#t);
   end;
+end;
+
+define test test-tags-match? ()
+  let test-tags = parse-tags(#("foo", "bar", "baz"));
+  let inputs = list(list(#t, #()),
+                    list(#t, list("foo")),
+                    list(#t, list("foo", "bar")),
+                    list(#f, list("quux")),
+                    list(#f, list("-foo")),
+                    list(#f, list("foo", "-bar")),
+                    list(#f, list("foo", "-bar", "baz")));
+  for (input in inputs)
+    let (match-expected?, input-strings) = apply(values, input);
+    let requested-tags = parse-tags(input-strings);
+    let test = make(<test>,
+                    tags: test-tags,
+                    name: "test",
+                    function: method () end);
+    assert-equal(match-expected?, tags-match?(requested-tags, test),
+                 format-to-string("Requested tags: %=", requested-tags));
+  end;
+end test test-tags-match?;
+
+// Negated tags shouldn't be allowed in test definitions.
+define test test-negative-tags-on-tests ()
+  assert-signals(<error>, make(<test>, name: "t", tags: #("-foo"), function: method() end));
+end;
+
+define test test-make-test-converts-strings-to-tags ()
+  let test = make(<test>, name: "t", tags: #("foo"), function: method() end);
+  assert-true(every?(rcurry(instance?, <tag>), test.test-tags));
 end;
 
 /// The top-level suite
@@ -352,4 +383,7 @@ define suite testworks-test-suite ()
   test test-with-test-unit;
   test test-assertion-failure-continue;
   test test-many-assertions;
+  test test-tags-match?;
+  test test-negative-tags-on-tests;
+  test test-make-test-converts-strings-to-tags;
 end suite testworks-test-suite;
