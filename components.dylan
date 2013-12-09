@@ -185,6 +185,8 @@ define method find-test-object
   element($test-objects-table, function, default: #f)
 end method find-test-object;
 
+// TODO(cgay): bind ?test-name to the <test> itself, and just store a thunk
+// in the test.
 //---*** We could use 'define function' but it doesn't debug as well right now
 define macro test-definer
   { define test ?test-name:name (?keyword-args:*) ?test-body:body end }
