@@ -13,11 +13,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define class <component> (<object>)
   constant slot component-name :: <string>,
     required-init-keyword: name:;
-
-  constant slot component-tags :: <sequence> = #[],
-    init-keyword: tags:;
 end class <component>;
-
 
 define class <suite> (<component>)
   // TODO(cgay): Why should this ever be anything but a sequence?
@@ -35,10 +31,23 @@ define class <test> (<component>)
     required-init-keyword: function:;
   constant slot test-allow-empty? :: <boolean>,
     init-value: #f, init-keyword: allow-empty:;
+  constant slot test-tags :: <sequence> /* of <tag> */ = #[],
+    init-keyword: tags:;
 end class <test>;
 
+define method make
+    (class :: subclass(<test>), #rest args, #key name, tags) => (test :: <test>)
+  let tags = map(make-tag, tags | #[]);
+  let negative = choose(tag-negated?, tags);
+  if (~empty?(negative))
+    error("Tags associated with tests may not be negated.  Test: %s, Tags: %s",
+          name, negative);
+  end;
+  apply(next-method, class, tags: tags, args)
+end method make;
+
 define class <test-unit> (<test>)
-end class <test-unit>;
+end;
 
 
 define generic component-type-name

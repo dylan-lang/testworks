@@ -31,7 +31,7 @@ define open class <test-runner> (<object>)
   // TODO(cgay): <report> = one-of(#"failures", #"crashes", #"none", ...)
   //constant slot runner-report :: <string> = "failures",
   //  init-keyword: report:;
-  constant slot runner-tags :: <sequence> = $all-tags,
+  constant slot runner-tags :: <sequence> = #[],
     init-keyword: tags:;
   constant slot runner-progress :: one-of(#f, $default, $verbose),
     init-keyword: progress:;
@@ -84,9 +84,8 @@ define open generic execute-component?
 define method execute-component?
     (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>)
-  tags-match?(runner.runner-tags, component.component-tags)
-  & ~member?(component, runner.runner-ignore)
-end method execute-component?;
+  ~member?(component, runner.runner-ignore) & tags-match?(runner.runner-tags, component)
+end;
 
 define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
@@ -98,7 +97,7 @@ define method maybe-execute-component
         end;
         execute-component(component, runner)
       else
-        values(#(), $skipped, 0, 0, 0)
+        values(#(), $skipped, #f, 0, 0, 0)
       end;
   let result = make(component-result-type(component),
                     name: component.component-name,
@@ -122,7 +121,7 @@ define method execute-component
   let seconds :: <integer> = 0;
   let microseconds :: <integer> = 0;
   let bytes :: <integer> = 0;
-  let (status, reason)
+  let status
     = block ()
         suite.suite-setup-function();
         for (component in suite.suite-components)
@@ -152,12 +151,12 @@ define method execute-component
                  subresults) =>
             $passed;
           otherwise =>
-            $failed
+            $failed;
         end case
       cleanup
         suite.suite-cleanup-function();
       end block;
-  values(subresults, status, reason, seconds, microseconds, bytes)
+  values(subresults, status, #f, seconds, microseconds, bytes)
 end method execute-component;
 
 define method execute-component
@@ -204,9 +203,9 @@ define method list-component
     (test :: <test>, runner :: <test-runner>)
  => (list :: <sequence>)
   if (execute-component?(test, runner))
-    vector(test);
+    vector(test)
   else
-    #[];
+    #[]
   end if
 end method list-component;
 

@@ -66,6 +66,11 @@ define function parse-args
              make(<flag-option>,
                   names: #("list-tests"),
                   help: "List the tests without running them."));
+  add-option(parser,
+             make(<repeated-parameter-option>,
+                  names: #("tags", "t"),
+                  help: "Only run tests matching these tags.  If a tag is prefixed "
+                    "with '-', the test will only run if it does NOT have that tag."));
   block ()
     parse-command-line(parser, args, description: "Run tests suites.");
   exception (ex :: <usage-error>)
@@ -140,7 +145,8 @@ define function make-runner-from-command-line
                     ignore: find-components(get-option-value(parser, "ignore-suite"),
                                             get-option-value(parser, "ignore-test")),
                     report: report,
-                    progress: if (sprogress = $none) #f else sprogress end);
+                    progress: if (sprogress = $none) #f else sprogress end,
+                    tags: parse-tags(get-option-value(parser, "tags")));
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
   let start-suite = select (components.size)
@@ -154,6 +160,7 @@ define function make-runner-from-command-line
                     end select;
   values(start-suite, runner, report-function)
 end function make-runner-from-command-line;
+
 
 // Run a test or suite.  Uses a test runner created based on
 // command-line arguments.  Use run-tests instead if you want to

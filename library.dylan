@@ -9,8 +9,8 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use command-line-parser;
   use common-dylan, import: { common-dylan, threads };
-  use io, import: { format, standard-io, streams };
-  use strings, import: { string-equal-ic };
+  use io, import: { format, print, standard-io, streams };
+  use strings;
   use system, import: { file-system };
 
   export
@@ -76,8 +76,10 @@ define module %testworks
   use common-dylan, exclude: { format-to-string };
   use file-system;
   use format;
+  use print, import: { print-object };
   use standard-io;
   use streams;
+  use strings, import: { char-compare-ic, starts-with? };
   use testworks;
   use threads,
     import: { dynamic-bind };
@@ -96,7 +98,6 @@ define module %testworks
     <component>,
     execute-component?,
     component-name,
-    component-tags,
     status-name;
 
   // Tests
@@ -107,6 +108,7 @@ define module %testworks
     find-test,
     find-test-object,
     test-function,
+    test-tags,
     find-test,
     find-test-object;
 
@@ -168,6 +170,12 @@ define module %testworks
     $test-log-footer,
     $xml-version-header,
     *check-recording-function*;
+
+  // Tags
+  export
+    <tag>,
+    parse-tags,
+    tags-match?;
 
   // Internals -- mostly due to macro hygiene failures
   export
