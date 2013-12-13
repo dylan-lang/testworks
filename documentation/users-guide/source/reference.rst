@@ -1,67 +1,95 @@
-Reference
-*********
+Testworks Reference
+*******************
 
 .. current-library:: testworks
 .. current-module:: testworks
 
+.. contents::  Contents
+   :local:
+
+.. 1  The Testworks Module
+     1.1  Suites and Tests
+     1.2  Assertions
+     1.3  Checks
+     1.4  Test Execution
+
+See also: :doc:`usage`
+
+
 The Testworks Module
 ====================
 
-Core Classes and Functions
---------------------------
+Suites and Tests
+----------------
 
-.. class:: <suite>
+.. macro:: suite-definer
 
+   Define a new test suite.
 
-.. function:: perform-suite
+   :signature: define suite *suite-name* (#key *setup-function cleanup-function description*) *body* end
+   :parameter suite-name: Name of the suite; a Dylan variable name.
+   :parameter setup-function: A function to perform setup before the suite starts.
+   :parameter cleanup-function: A function to perform teardown after the suite finishes.
+   :parameter description: A string describing the purpose of the suite.
 
-   Runs a test suite.
+   Suites provide a way to group tests and other suites into a single
+   executable unit.  Suites may be nested arbitrarily.
 
-   :signature: perform-suite *suite* #key debug?
+   *setup-function* is executed before any tests or sub-suites are
+   run.  If *setup-function* signals an error the entire suite is
+   skipped and marked as "crashed".
 
-   :parameter suite: An instance of :class:`<suite>`.
+   *cleanup-function* is executed after all sub-suites and tests have
+   completed, regardless of whether an error is signaled.
 
-   See also:
+.. macro:: test-definer
 
-   - :func:`perform-test`
+   Define a new test.
 
+   :signature: define test *test-name* (#key *description, tags*) *body* end
+   :parameter test-name: Name of the test; a Dylan variable name.
+   :parameter description: A string describing the purpose of the test.
+   :parameter tags: A list of strings to tag this test.
 
-.. class:: <test>
+   Tests may contain arbitrary code, plus any number of assertions.
+   If any assertion fails the test will fail, but any remaining
+   assertions in the test will still be executed.  If code outside of
+   an assertion signals an error, the test is marked as "crashed" and
+   remaining assertions are skipped.
 
-
-.. function:: perform-test
-
-   Runs a test.
-
-   See also:
-
-   - :func:`perform-suite`
-
-
-.. constant:: $all-tags
-
-   :type: <sequence>
-
-   :value: The value doesn't matter.  This is just a special value
-           used internally to determine whether all tags should be
-           matched.
-
+   *tags* provide a way to select or filter out specific tests during
+   a test run.  The Testworks command-line (provided by
+   :func:`run-test-application`) provides a ``--tag`` option for this
+   purpose.
 
 Assertions
 ----------
 
-There are two groups of assertion macros.  For those that start with
-"assert" the description of the check is optional and, if left out, is
-automatically generated from the text of the expression being
-evaluated.  The macros that start with "check" are older and require
-the description be provided as the first argument.
+Assertions are the smallest unit of verification in testworks.  They
+must appear within the body of a test.
+
+All assertion macros accept a description of what is being tested as
+an *optional* final argument.  The description should be stated in the
+positive sense.  For example::
+
+    assert-equal(2, 2, "2 equals 2")
+
+These are the available assertion macros:
+
+  * :macro:`assert-true`
+  * :macro:`assert-false`
+  * :macro:`assert-equal`
+  * :macro:`assert-not-equal`
+  * :macro:`assert-signals`
+  * :macro:`assert-no-errors`
 
 .. macro:: assert-true
 
    Assert that an expression evaluates to a true value.  Importantly,
-   this does not mean the expression is ``#t``, but rather that it is
-   *not* ``#f``.  If you want to explicitly test for equality to
-   ``#t`` use ``assert-equal(#t, ...)`` or ``assert-true(#t = ...)``.
+   this does not mean the expression is exactly ``#t``, but rather
+   that it is *not* ``#f``.  If you want to explicitly test for
+   equality to ``#t`` use ``assert-equal(#t, ...)`` or
+   ``assert-true(#t = ...)``.
 
    :signature: assert-true *expression* [ *description* ]
 
@@ -110,7 +138,7 @@ the description be provided as the first argument.
    :parameter expression2: any expression
    :parameter description: A description of what the assertion tests.
       This should be stated in positive form, such as "two equals
-      three".  If no description is supplied one will be automatically
+      two".  If no description is supplied one will be automatically
       generated based on the text of the two expressions.
 
    :example:
@@ -124,7 +152,8 @@ the description be provided as the first argument.
 
    Assert that two values are not equal using ``~=`` as the comparison
    function.  Using this macro is preferable to using ``assert-true(a
-   ~= b)`` because the failure messages can be better.
+   ~= b)`` or ``assert-false(a = b)`` because the generated failure
+   messages can be better.
 
    :signature: assert-not-equal *expression1* *expression2* [ *description* ]
 
@@ -182,6 +211,14 @@ the description be provided as the first argument.
    The assertion succeeds if no error is signaled by the evaluation of
    *expression*.
 
+   Use of this macro is preferable to simply executing *expression* as
+   part of the test body for two reasons.  First, it can clarify the
+   purpose of the test, by telling the reader "here's an expression
+   that is explicitly being tested, and not just part of the test
+   setup."  Second, if the assertion signals an error the test will
+   record that fact and continue, as opposed to taking a non-local
+   exit.  Third, it will show up in generated reports.
+
    :example:
 
       .. code-block:: dylan
@@ -190,7 +227,25 @@ the description be provided as the first argument.
          assert-no-errors(my-hairy-logic(),
                           "hairy logic completes without error")
 
-.. function:: check
+
+Checks
+------
+
+Checks are deprecated; use `Assertions`_ instead.  The main difference
+between checks and assertions is that the check macros require a
+description as their first argument, whereas assertions do not.
+
+These are the available checks:
+
+  * :macro:`check`
+  * :macro:`check-true`
+  * :macro:`check-false`
+  * :macro:`check-equal`
+  * :macro:`check-instance?`
+  * :macro:`check-condition`
+
+
+.. macro:: check
 
    Perform a check within a test.
 
@@ -207,7 +262,7 @@ the description be provided as the first argument.
        check("Test less than operator", \<, 2, 3)
 
 
-.. function:: check-condition
+.. macro:: check-condition
 
    Check that a given condition is signalled.
 
@@ -225,7 +280,7 @@ the description be provided as the first argument.
                        <error>, format-to-string("Hello %s"));
 
 
-.. function:: check-equal
+.. macro:: check-equal
 
    Check that 2 expressions are equal.
 
@@ -244,7 +299,7 @@ the description be provided as the first argument.
                    condition-to-string(make(<simple-error>, format-string: "Hello")));
 
 
-.. function:: check-false
+.. macro:: check-false
 
    Check that an expression has a result of ``#f``.
 
@@ -260,7 +315,7 @@ the description be provided as the first argument.
        check-false("unsupplied?(#f) == #f", unsupplied?(#f));
 
 
-.. function:: check-instance?
+.. macro:: check-instance?
 
    Check that the result of an expression is an instance of a given class.
 
@@ -278,7 +333,7 @@ the description be provided as the first argument.
                        <type>, subclass(<string>));
 
 
-.. function:: check-true
+.. macro:: check-true
 
    Check that the result of an expression is not ``#f``.
 
@@ -299,110 +354,22 @@ the description be provided as the first argument.
        check-true("unsupplied?($unsupplied)", unsupplied?($unsupplied));
 
 
-Stand-alone Executable Functions
---------------------------------
+Test Execution
+--------------
 
 .. function:: run-test-application
 
-   Runs a test suite or test as part of a stand-alone test executable.
+   Run a test suite or test as part of a stand-alone test executable.
 
-   :signature: run-test-application *suite-or-test* #key *command-name* *arguments*
-
+   :signature: run-test-application *suite-or-test* => ()
    :parameter suite-or-test: An instance of :class:`<suite>` or :class:`<test>`.
-   :parameter #key command-name: Defaults to ``application-name()``.
-   :parameter #key arguments: Defaults to ``application-arguments()``.
-   :parameter #key output-stream: Defaults to ``*test-output*``, which defaults
-      to ``*standard-output*``.
 
+   This is the main entry point to run a set of tests in Testworks.
+   It parses the command-line and based on the specified options
+   selects the set of suites or tests to run, runs them, and generates
+   a final report of the results.
 
-Report Functions
-----------------
-
-Report functions display a :class:`<result>` object and all of it's
-children.
-
-.. function:: summary-report-function
-
-   Prints out only a summary of how many checks, tests and suites
-   were executed, passed, failed or crashed.
-
-   :signature: summary-report-function *result*
-
-   :parameter result: An instance of :class:`<result>`.
-
-   See also:
-
-   - :func:`failures-report-function`
-   - :func:`full-report-function`
-   - :func:`null-report-function`
-
-
-.. function:: failures-report-function
-
-   Prints out only the list of failures and a summary.
-
-   :signature: failures-report-function *result*
-
-   :parameter result: An instance of :class:`<result>`.
-
-   See also:
-
-   - :func:`summary-report-function`
-   - :func:`full-report-function`
-   - :func:`null-report-function`
-
-
-.. function:: full-report-function
-
-   Prints the result of every single check - whether it passed, failed
-   or crashed and then a summary at the end.
-
-   :signature: full-report-function *result*
-
-   :parameter result: An instance of :class:`<result>`.
-
-   See also:
-
-   - :func:`summary-report-function`
-   - :func:`failures-report-function`
-   - :func:`null-report-function`
-
-
-.. function:: null-report-function
-
-   Prints nothing at all.
-
-   :signature: null-report-function *result*
-
-   :parameter result: An instance of :class:`<result>`.
-
-   See also:
-
-   - :func:`summary-report-function`
-   - :func:`failures-report-function`
-   - :func:`full-report-function`
-
-
-Progress Functions
-------------------
-
-Progress functions are used to display what's happening during a test
-run.
-
-.. function:: null-progress-function
-
-   Prints nothing.
-
-   See also:
-
-   - :func:`full-progress-function`
-
-
-.. function:: full-progress-function
-
-   Prints a line for each check executed.
-
-   See also:
-
-   - :func:`null-progress-function`
+   Internally, :func:`run-test-application` creates a
+   :class:`<test-runner>` based on the command-line options and then
+   calls :func:`run-tests` with the runner and *suite-or-test*.
 

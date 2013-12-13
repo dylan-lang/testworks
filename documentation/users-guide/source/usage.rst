@@ -1,8 +1,11 @@
-Usage
-*****
+Testworks Usage
+***************
 
 .. current-library:: testworks
 .. current-module:: testworks
+
+.. contents::  Contents
+   :local:
 
 .. 1  Quick Start
    2  Defining Tests
@@ -15,6 +18,8 @@ Usage
    6  Comparing Test Results
    7  Test Specifications
    8  Generating Test Specifications
+
+See also: :doc:`reference`
 
 Quick Start
 ===========
@@ -38,7 +43,7 @@ arbitrarily.  It is common to have a top-level suite named
      test fn2-test;
    end;
 
-Tests contain arbitrary code containing assertions:
+Tests contain arbitrary code plus assertions:
 
 .. code-block:: dylan
 
@@ -144,15 +149,7 @@ For example:
 *Note: if a test doesn't execute any assertions then it will be
 marked as "not implemented" in the test results.*
 
-Once a test has been defined, it can be executed using the function
-:func:`run-tests`. For example:
-
-.. code-block:: dylan
-
-    let runner = make(<test-runner>);
-    run-tests(runner, my-test);
-
-The result is output like this::
+The result looks like this::
 
     $ _build/bin/my-test 
     Running test my-test:
@@ -164,22 +161,19 @@ The result is output like this::
       Ran 1 test: 0 passed (0.0%), 1 failed, 0 skipped, 0 not implemented, 0 crashed
       Ran 3 checks: 2 passed (66.666672%), 1 failed, 0 skipped, 0 not implemented, 0 crashed
 
-Tests may be tagged with arbitrary keywords, providing a way to filter
-which tests are run:
+Tests may be tagged with arbitrary strings, providing a way to select
+or filter out tests to run:
 
 .. code-block:: dylan
 
-    define test my-test-2 (tags: #[huge:])
+    define test my-test-2 (tags: #["huge"])
       ...huge test that takes a long time...
     end test;
 
 Tags can then be passed on the Testworks command-line.  For example,
-this will skip all tests tagged ``huge:``::
+this will skip all tests tagged "huge"::
 
-    $ _build/bin/my-test-suite-app --tags="-huge",
-
-*Note: As of this writing the --tags command-line option hasn't
-been implemented, but is expected Real Soon Now.*
+    $ _build/bin/my-test-suite-app --tag=-huge --tag=-verbose
 
 Suites
 ------
@@ -222,11 +216,10 @@ A simple example of doing this can be seen in Koala, an HTTP server:
       suite http-client-test-suite;
     end suite koala-test-suite;
 
-Similar to tests, suites may also be run with :func:`run-tests`.
-Normally, however, :func:`run-test-application` is used.  It may be
-called as the main function in an executable and it will parse
-command-line args, generate reports, and more.  See the next section
-for details.
+Suites can be run via :func:`run-test-application`.  It should be
+called as the main function in an executable and will parse
+command-line args, execute the selected tests, and generate reports.
+See the next section for details.
 
 
 Organzing Your Test Suites
