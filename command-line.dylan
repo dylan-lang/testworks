@@ -34,30 +34,25 @@ define function parse-args
 
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
-  // to tests/suites specified as regular arguments plus --ignore.
+  // to tests/suites specified as regular arguments plus --skip.
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("suite"),
-                  help: "Run (or list) only these named suites.  "
-                    "May be used multiple times."));
+                  help: "Run (or list) only these named suites.  May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("test"),
-                  help: "Run (or list) only these named tests.  "
-                    "May be used multiple times."));
-  // TODO(cgay): Rename these options to --skip-*
+                  help: "Run (or list) only these named tests.  May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("ignore-suite"),
+                  names: #("skip-suite"),
                   variable: "SUITE",
-                  help: "Ignore these named suites.  May be "
-                    "used multiple times."));
+                  help: "Skip these named suites.  May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("ignore-test"),
+                  names: #("skip-test"),
                   variable: "TEST",
-                  help: "Ignore these named tests.  May be "
-                    "used multiple times."));
+                  help: "Skip these named tests.  May be repeated."));
   add-option(parser,
              make(<flag-option>,
                   names: #("list-suites"),
@@ -70,7 +65,8 @@ define function parse-args
              make(<repeated-parameter-option>,
                   names: #("tags", "t"),
                   help: "Only run tests matching these tags.  If a tag is prefixed "
-                    "with '-', the test will only run if it does NOT have that tag."));
+                    "with '-', the test will only run if it does NOT have that tag."
+                    " May be repeated."));
   block ()
     parse-command-line(parser, args, description: "Run tests suites.");
   exception (ex :: <usage-error>)
@@ -142,8 +138,8 @@ define function make-runner-from-command-line
                               otherwise =>
                                 usage-error("Invalid --debug option: %s", debug);
                             end select,
-                    ignore: find-components(get-option-value(parser, "ignore-suite"),
-                                            get-option-value(parser, "ignore-test")),
+                    skip: find-components(get-option-value(parser, "skip-suite"),
+                                          get-option-value(parser, "skip-test")),
                     report: report,
                     progress: if (sprogress = $none) #f else sprogress end,
                     tags: parse-tags(get-option-value(parser, "tags")));

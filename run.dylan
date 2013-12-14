@@ -37,8 +37,8 @@ define open class <test-runner> (<object>)
     init-keyword: progress:;
   constant slot debug-runner? = #f,
     init-keyword: debug?:;
-  constant slot runner-ignore :: <sequence> = #[],   // of components
-    init-keyword: ignore:;
+  constant slot runner-skip :: <sequence> = #[],   // of components
+    init-keyword: skip:;
 
   // The stream on which output is done.  Note that this may be bound
   // to different streams during the test run and when the report is
@@ -84,17 +84,17 @@ define open generic execute-component?
 define method execute-component?
     (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>)
-  ~member?(component, runner.runner-ignore) & tags-match?(runner.runner-tags, component)
+  ~member?(component, runner.runner-skip) & tags-match?(runner.runner-tags, component)
 end;
 
 define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
+  if (runner.runner-progress)
+    show-progress(runner, component, #f);
+  end;
   let (subresults, status, reason, seconds, microseconds, bytes)
     = if (execute-component?(component, runner))
-        if (runner.runner-progress)
-          show-progress(runner, component, #f);
-        end;
         execute-component(component, runner)
       else
         values(#(), $skipped, #f, 0, 0, 0)
