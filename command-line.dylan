@@ -15,16 +15,19 @@ define function parse-args
              make(<optional-parameter-option>,
                   names: #("debug"),
                   default: "no",
+                  variable: "WHAT",
                   help: "Enter the debugger on failure: NO|crashes|failures"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("progress", "p"),
                   default: "default",
+                  variable: "TYPE",
                   help: "Show output as the test run progresses: none|DEFAULT|verbose"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report"),
                   default: "summary",
+                  variable: "TYPE",
                   help: "Final report to generate: none|SUMMARY|log|xml|surefire"));
   add-option(parser,
              make(<parameter-option>,
@@ -38,21 +41,21 @@ define function parse-args
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("suite"),
-                  help: "Run (or list) only these named suites.  May be repeated."));
+                  help: "Run (or list) only these named suites. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("test"),
-                  help: "Run (or list) only these named tests.  May be repeated."));
+                  help: "Run (or list) only these named tests. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("skip-suite"),
                   variable: "SUITE",
-                  help: "Skip these named suites.  May be repeated."));
+                  help: "Skip these named suites. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("skip-test"),
                   variable: "TEST",
-                  help: "Skip these named tests.  May be repeated."));
+                  help: "Skip these named tests. May be repeated."));
   add-option(parser,
              make(<flag-option>,
                   names: #("list-suites"),
@@ -63,9 +66,9 @@ define function parse-args
                   help: "List the tests without running them."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("tags", "t"),
-                  help: "Only run tests matching these tags.  If a tag is prefixed "
-                    "with '-', the test will only run if it does NOT have that tag."
+                  names: #("tag", "t"),
+                  help: "Only run tests matching this tag. If tag is prefixed "
+                    "with '-', the test will only run if it does NOT have the tag."
                     " May be repeated."));
   block ()
     parse-command-line(parser, args, description: "Run tests suites.");
@@ -142,7 +145,7 @@ define function make-runner-from-command-line
                                           get-option-value(parser, "skip-test")),
                     report: report,
                     progress: if (sprogress = $none) #f else sprogress end,
-                    tags: parse-tags(get-option-value(parser, "tags")));
+                    tags: parse-tags(get-option-value(parser, "tag")));
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
   let start-suite = select (components.size)
