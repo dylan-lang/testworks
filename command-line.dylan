@@ -26,9 +26,9 @@ define function parse-args
   add-option(parser,
              make(<parameter-option>,
                   names: #("report"),
-                  default: "summary",
+                  default: "failures",
                   variable: "TYPE",
-                  help: "Final report to generate: none|SUMMARY|log|xml|surefire"));
+                  help: "Final report to generate: none|summary|FAILURES|log|xml|surefire"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report-file"),
@@ -87,6 +87,7 @@ define table $report-functions :: <string-table> = {
     "log"      => log-report-function,
     "none"     => null-report-function,
     "summary"  => summary-report-function,
+    "failures" => failures-report-function,
     "surefire" => surefire-report-function,
     "xml"      => xml-report-function
     };
