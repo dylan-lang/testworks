@@ -184,12 +184,18 @@ define method run-test-application
     let results = list-component(start-suite, runner);
     let final-results = choose(method (c :: <component>)
                                  (list-suites? & instance?(c, <suite>))
-                                     | (list-tests? & instance?(c, <test>))
+                                   | (list-tests? & instance?(c, <test>))
                                end,
                                results);
     for (component :: <component> in final-results)
-      format(*standard-output*, "%s %s\n",
-             component.component-type-name, component.component-name)
+      format(*standard-output*, "%s %s%s\n",
+             component.component-type-name, component.component-name,
+             if (instance?(component, <test>) & ~empty?(component.test-tags))
+               format-to-string(" (tags: %s)",
+                                join(component.test-tags, ", ", key: tag-name))
+             else
+               ""
+             end)
     end;
     #f
   else
