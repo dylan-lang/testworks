@@ -62,6 +62,7 @@ define function parse-tags
   map(make-tag, specs)
 end;
 
+// If tags match, run the test.
 define generic tags-match?
     (requested-tags :: <sequence>, component :: <component>)
  => (bool :: <boolean>);
@@ -73,23 +74,27 @@ define method tags-match?
 end;
 
 define method tags-match?
-    (requested-tags :: <sequence>, component :: <test>)
+    (requested-tags :: <sequence>, test :: <test>)
  => (bool :: <boolean>)
-  let component-tags = component.test-tags;
+  local method match (negated?)
+          block (return)
+            for (rtag in requested-tags)
+              if (rtag.tag-negated? = negated?)
+                for (ctag in test.test-tags)
+                  if (ctag.tag-name = rtag.tag-name)
+                    return(#t)
+                  end;
+                end;
+              end;
+            end;
+          end block
+        end method match;
+  let negative-rtags? = any?(tag-negated?, requested-tags);
+  let positive-rtags? = any?(complement(tag-negated?), requested-tags);
   block (return)
-    // Exclusion takes precedence over inclusion.
-    let positive-match? = empty?(requested-tags) | empty?(component-tags);
-    for (rtag in requested-tags)
-      for (ctag in component-tags)
-        if (rtag.tag-name = ctag.tag-name)
-          if (rtag.tag-negated?)
-            return(#f);
-          else
-            positive-match? := #t;
-          end;
-        end;
-      end;
-    end;
-    positive-match?
+    // Order matters here.  Negative tags take precedence.
+    negative-rtags? & match(#t) & return(#f);
+    positive-rtags? & return(match(#f));
+    #t
   end block
 end method tags-match?;

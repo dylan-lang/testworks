@@ -28,7 +28,7 @@ define module testworks
     run-tests,
     <test-runner>,
     runner-tags,
-    runner-ignore,
+    runner-skip,
     runner-output-stream,
     runner-progress,
     debug-runner?;

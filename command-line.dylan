@@ -15,17 +15,20 @@ define function parse-args
              make(<optional-parameter-option>,
                   names: #("debug"),
                   default: "no",
+                  variable: "WHAT",
                   help: "Enter the debugger on failure: NO|crashes|failures"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("progress", "p"),
                   default: "default",
+                  variable: "TYPE",
                   help: "Show output as the test run progresses: none|DEFAULT|verbose"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report"),
-                  default: "summary",
-                  help: "Final report to generate: none|SUMMARY|log|xml|surefire"));
+                  default: "failures",
+                  variable: "TYPE",
+                  help: "Final report to generate: none|summary|FAILURES|log|xml|surefire"));
   add-option(parser,
              make(<parameter-option>,
                   names: #("report-file"),
@@ -34,30 +37,25 @@ define function parse-args
 
   // TODO(cgay): Make test and suite names use one namespace or
   // a hierarchical naming scheme these four options are reduced
-  // to tests/suites specified as regular arguments plus --ignore.
+  // to tests/suites specified as regular arguments plus --skip.
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("suite"),
-                  help: "Run (or list) only these named suites.  "
-                    "May be used multiple times."));
+                  help: "Run (or list) only these named suites. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("test"),
-                  help: "Run (or list) only these named tests.  "
-                    "May be used multiple times."));
-  // TODO(cgay): Rename these options to --skip-*
+                  help: "Run (or list) only these named tests. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("ignore-suite"),
+                  names: #("skip-suite"),
                   variable: "SUITE",
-                  help: "Ignore these named suites.  May be "
-                    "used multiple times."));
+                  help: "Skip these named suites. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("ignore-test"),
+                  names: #("skip-test"),
                   variable: "TEST",
-                  help: "Ignore these named tests.  May be "
-                    "used multiple times."));
+                  help: "Skip these named tests. May be repeated."));
   add-option(parser,
              make(<flag-option>,
                   names: #("list-suites"),
@@ -68,9 +66,10 @@ define function parse-args
                   help: "List the tests without running them."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("tags", "t"),
-                  help: "Only run tests matching these tags.  If a tag is prefixed "
-                    "with '-', the test will only run if it does NOT have that tag."));
+                  names: #("tag", "t"),
+                  help: "Only run tests matching this tag. If tag is prefixed "
+                    "with '-', the test will only run if it does NOT have the tag."
+                    " May be repeated."));
   block ()
     parse-command-line(parser, args, description: "Run tests suites.");
   exception (ex :: <usage-error>)
@@ -88,6 +87,7 @@ define table $report-functions :: <string-table> = {
     "log"      => log-report-function,
     "none"     => null-report-function,
     "summary"  => summary-report-function,
+    "failures" => failures-report-function,
     "surefire" => surefire-report-function,
     "xml"      => xml-report-function
     };
@@ -142,11 +142,11 @@ define function make-runner-from-command-line
                               otherwise =>
                                 usage-error("Invalid --debug option: %s", debug);
                             end select,
-                    ignore: find-components(get-option-value(parser, "ignore-suite"),
-                                            get-option-value(parser, "ignore-test")),
+                    skip: find-components(get-option-value(parser, "skip-suite"),
+                                          get-option-value(parser, "skip-test")),
                     report: report,
                     progress: if (sprogress = $none) #f else sprogress end,
-                    tags: parse-tags(get-option-value(parser, "tags")));
+                    tags: parse-tags(get-option-value(parser, "tag")));
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
   let start-suite = select (components.size)
@@ -185,12 +185,18 @@ define method run-test-application
     let results = list-component(start-suite, runner);
     let final-results = choose(method (c :: <component>)
                                  (list-suites? & instance?(c, <suite>))
-                                     | (list-tests? & instance?(c, <test>))
+                                   | (list-tests? & instance?(c, <test>))
                                end,
                                results);
     for (component :: <component> in final-results)
-      format(*standard-output*, "%s %s\n",
-             component.component-type-name, component.component-name)
+      format(*standard-output*, "%s %s%s\n",
+             component.component-type-name, component.component-name,
+             if (instance?(component, <test>) & ~empty?(component.test-tags))
+               format-to-string(" (tags: %s)",
+                                join(component.test-tags, ", ", key: tag-name))
+             else
+               ""
+             end)
     end;
     #f
   else

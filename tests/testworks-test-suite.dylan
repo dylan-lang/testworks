@@ -347,7 +347,7 @@ define test test-tags-match? ()
   let test-tags = parse-tags(#("foo", "bar", "baz"));
   let inputs = list(list(#t, #()),
                     list(#t, list("foo")),
-                    list(#t, list("foo", "bar")),
+                    list(#t, list("bar", "foo")),
                     list(#f, list("quux")),
                     list(#f, list("-foo")),
                     list(#f, list("foo", "-bar")),
@@ -362,6 +362,12 @@ define test test-tags-match? ()
     assert-equal(match-expected?, tags-match?(requested-tags, test),
                  format-to-string("Requested tags: %=", requested-tags));
   end;
+  assert-true(tags-match?(parse-tags(#("-verbose")),
+                          make(<test>, tags: #(), name: "test", function: method() end)),
+              "Negative tags match tests with no tags.");
+  assert-false(tags-match?(parse-tags(#("verbose")),
+                           make(<test>, tags: #(), name: "test", function: method() end)),
+              "Positive tags do not match tests with no tags.");
 end test test-tags-match?;
 
 // Negated tags shouldn't be allowed in test definitions.
