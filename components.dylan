@@ -16,8 +16,7 @@ define class <component> (<object>)
 end class <component>;
 
 define class <suite> (<component>)
-  // TODO(cgay): Why should this ever be anything but a sequence?
-  constant slot %components :: false-or(type-union(<sequence>, <function>)) = #f,
+  constant slot suite-components :: <sequence> /* of <component> */ = #[],
     init-keyword: components:;
   constant slot suite-setup-function :: <function> = method () end,
     init-keyword: setup-function:;
@@ -102,41 +101,13 @@ end;
 
 /// Suites
 
-define variable *all-suites*
-  = make(<suite>,
-         name: "All Defined Suites",
-         components: make(<stretchy-vector>));
+define constant $root-suite = make(<suite>,
+                                   name: "All Defined Suites",
+                                   components: make(<stretchy-vector>));
 
 define method root-suite () => (suite :: <suite>)
-  *all-suites*
-end method root-suite;
-
-define method ensure-suite-components
-    (components :: <sequence>, suite :: <suite>)
- => (components :: <sequence>)
-  map(method (component)
-        select (component by instance?)
-          <component> =>
-            component;
-          <function>  =>
-            find-test-object(component)
-              | error("Non-test function %= in suite %s",
-                      component, component-name(suite));
-          otherwise   =>
-            error("Invalid object %= in suite %s", component, component-name(suite))
-        end
-      end,
-      components)
-end method ensure-suite-components;
-
-define method suite-components
-    (suite :: <suite>) => (components :: <sequence>)
-  let components = suite.%components;
-  select (components by instance?)
-    <sequence> => components;
-    <function> => ensure-suite-components(components(), suite)
-  end
-end method suite-components;
+  $root-suite
+end;
 
 define method make-suite
     (name :: <string>, components, #rest keyword-args)
@@ -159,45 +130,29 @@ define method make-suite
 end method make-suite;
 
 define macro suite-definer
-  { define suite ?suite-name:name (?keyword-args:*) ?components end } =>
-    {define variable ?suite-name
-       = make-suite(?"suite-name",
-                    method ()
-                      list(?components)
-                    end,
-                    ?keyword-args) }
-
-  components:
-    { } => { }
-    { test ?:name; ... }
-      => { ?name, ... }
-    { suite ?:name; ... }
-      => { ?name, ... }
+  { define suite ?suite-name:name (?keyword-args:*) ?components end
+  } => {
+    define constant ?suite-name
+      = make-suite(?"suite-name", list(?components), ?keyword-args)
+  }
+ components:
+  { } => { }
+  { test ?:name; ... } => { ?name, ... }
+  { suite ?:name; ... } => { ?name, ... }
 end macro suite-definer;
 
 
 /// Tests
 
-define constant $test-objects-table = make(<table>);
-
-define method find-test-object
-    (function :: <function>) => (test :: false-or(<test>))
-  element($test-objects-table, function, default: #f)
-end method find-test-object;
-
-// TODO(cgay): bind ?test-name to the <test> itself, and just store a thunk
-// in the test.
-//---*** We could use 'define function' but it doesn't debug as well right now
 define macro test-definer
-  { define test ?test-name:name (?keyword-args:*) ?test-body:body end }
-    => { define method ?test-name ()
-           ?test-body
-         end;
-         $test-objects-table[?test-name]
-           := make(<test>,
-                   name: ?"test-name",
-                   function: ?test-name,
-                   ?keyword-args); }
+  { define test ?test-name:name (?keyword-args:*) ?test-body:body end
+  } => {
+    define constant ?test-name :: <test>
+      = make(<test>,
+             name: ?"test-name",
+             function: method () ?test-body end,
+             ?keyword-args);
+  }
 end macro test-definer;
 
 // For backward compatibility.
@@ -220,7 +175,9 @@ define method find-suite
               for (object in suite-components(suite))
                 if (instance?(object, <suite>))
                   let subsuite = do-find-suite(object);
-                  if (subsuite) return(subsuite) end;
+                  if (subsuite)
+                    return(subsuite)
+                  end;
                 end
               end
             end
@@ -243,7 +200,9 @@ define method find-test
                   end if;
                 <suite> =>
                   let test = do-find-test(object);
-                  if (test) return(test) end;
+                  if (test)
+                    return(test)
+                  end;
               end
             end
           end
