@@ -280,9 +280,8 @@ end suite testworks-assertion-macros-suite;
 /// Verify the result objects
 
 define test test-run-tests/test ()
-  let test-to-check = find-test-object(testworks-check-test);
   let runner = make(<test-runner>, progress: #f);
-  let test-results = run-tests(runner, test-to-check);
+  let test-results = run-tests(runner, testworks-check-test);
   assert-true(instance?(test-results, <test-result>),
               "run-tests returns <test-result> when running a <test>");
   assert-equal($passed, test-results.result-status,

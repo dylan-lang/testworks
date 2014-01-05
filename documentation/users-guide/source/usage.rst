@@ -132,7 +132,7 @@ assertions. Each test is part of a suite.  Use the
 
 .. code-block:: dylan
 
-    define test NAME (#key DESCRIPTION)
+    define test NAME (#key DESCRIPTION, TAGS)
       BODY
     end;
 
@@ -170,10 +170,17 @@ or filter out tests to run:
       ...huge test that takes a long time...
     end test;
 
+    define test my-test-3 (tags: #["huge", "verbose"])
+      ...test with lots of output...
+    end test;
+
 Tags can then be passed on the Testworks command-line.  For example,
-this will skip all tests tagged "huge"::
+this will skip both of the above tests::
 
     $ _build/bin/my-test-suite-app --tag=-huge --tag=-verbose
+
+Negative tags take precedence, so ``--tag=huge --tag=-verbose`` will
+run ``my-test-2`` and skip ``my-test-3``.
 
 Suites
 ------

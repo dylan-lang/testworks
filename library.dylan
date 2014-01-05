@@ -106,11 +106,7 @@ define module %testworks
     <test-unit>,
     test-function,
     find-test,
-    find-test-object,
-    test-function,
-    test-tags,
-    find-test,
-    find-test-object;
+    test-tags;
 
   // Suites
   export
@@ -176,8 +172,4 @@ define module %testworks
     <tag>,
     parse-tags,
     tags-match?;
-
-  // Internals -- mostly due to macro hygiene failures
-  export
-    $test-objects-table;
 end module %testworks;
