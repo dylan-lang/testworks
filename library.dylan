@@ -122,6 +122,7 @@ define module %testworks
     <result>,
     result-name,
     result-type-name,
+    <result-status>,
     result-status,
       $passed, $failed, $skipped, $not-implemented, $crashed,
     result-seconds,

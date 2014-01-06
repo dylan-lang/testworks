@@ -9,3 +9,4 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 Files: testworks-test-suite-library
        test-command-line
        testworks-test-suite
+       specification
