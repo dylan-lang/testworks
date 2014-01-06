@@ -22,8 +22,11 @@ end;
 // or per test.  The Surefire report has a place for stdout, too.
 define method test-output
     (format-string :: <string>, #rest format-args) => ()
-  apply(format, runner-output-stream(*runner*), format-string, format-args);
-end;
+  let stream = runner-output-stream(*runner*);
+  with-stream-locked (stream)
+    apply(format, stream, format-string, format-args);
+  end;
+end method test-output;
 
 
 // A <test-runner> holds options for the test run and collects results.
