@@ -378,17 +378,3 @@ define test test-make-test-converts-strings-to-tags ()
   let test = make(<test>, name: "t", tags: #("foo"), function: method() end);
   assert-true(every?(rcurry(instance?, <tag>), test.test-tags));
 end;
-
-/// The top-level suite
-
-define suite testworks-test-suite ()
-  suite testworks-assertion-macros-suite;
-  suite testworks-results-suite;
-  suite command-line-test-suite;
-  test test-with-test-unit;
-  test test-assertion-failure-continue;
-  test test-many-assertions;
-  test test-tags-match?;
-  test test-negative-tags-on-tests;
-  test test-make-test-converts-strings-to-tags;
-end suite testworks-test-suite;
