@@ -77,7 +77,7 @@ define module %testworks
   use print, import: { print-object };
   use standard-io;
   use streams;
-  use strings, import: { char-compare-ic, starts-with? };
+  use strings, import: { char-compare-ic, starts-with?, string-equal? };
   use testworks;
   use threads,
     import: { dynamic-bind };
