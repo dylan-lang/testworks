@@ -54,13 +54,11 @@ define module testworks
     assert-true,
     assert-false;
 
-  // Suites
+  // Components
   create
-    suite-definer;
-
-  // Tests
-  create
+    suite-definer,
     test-definer,
+    benchmark-definer,
     with-test-unit;
 
   // Output
@@ -79,7 +77,7 @@ define module %testworks
   use print, import: { print-object };
   use standard-io;
   use streams;
-  use strings, import: { char-compare-ic, starts-with? };
+  use strings, import: { char-compare-ic, starts-with?, string-equal? };
   use testworks;
   use threads,
     import: { dynamic-bind };
@@ -100,12 +98,15 @@ define module %testworks
     component-name,
     status-name;
 
-  // Tests
+  // Tests and benchmarks
   export
+    <runnable>,
+    <benchmark>,
     <test>,
     <test-unit>,
+    find-runnable,
     test-function,
-    find-test,
+    test-requires-assertions?,
     test-tags;
 
   // Suites
@@ -134,6 +135,7 @@ define module %testworks
     result-subresults,
 
     <test-result>,
+    <benchmark-result>,
     <suite-result>,
     <unit-result>,
     result-reason,

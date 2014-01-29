@@ -10,7 +10,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 /// This is the class of objects that can be performed in a test
 /// suite.  Note that there are no <assertion> or <check> classes so
 /// they aren't considered "components".
-define class <component> (<object>)
+define abstract class <component> (<object>)
   constant slot component-name :: <string>,
     required-init-keyword: name:;
 end class <component>;
@@ -24,26 +24,46 @@ define class <suite> (<component>)
     init-keyword: cleanup-function:;
 end class <suite>;
 
-
-define class <test> (<component>)
+define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
     required-init-keyword: function:;
-  constant slot test-allow-empty? :: <boolean>,
-    init-value: #f, init-keyword: allow-empty:;
+  // Benchmarks don't require assertions.  Needs to be an instance
+  // variable, not a bare method, because testworks-specs
+  // auto-generated tests often don't get filled in.  I want to kill
+  // testworks-specs with fire.
+  constant slot test-requires-assertions? :: <boolean> = #t,
+    init-keyword: requires-assertions?:;
   constant slot test-tags :: <sequence> /* of <tag> */ = #[],
     init-keyword: tags:;
-end class <test>;
+end class <runnable>;
 
 define method make
-    (class :: subclass(<test>), #rest args, #key name, tags) => (test :: <test>)
+    (class :: subclass(<runnable>), #rest args, #key name, tags)
+ => (runnable :: <runnable>)
   let tags = map(make-tag, tags | #[]);
   let negative = choose(tag-negated?, tags);
   if (~empty?(negative))
-    error("Tags associated with tests may not be negated.  Test: %s, Tags: %s",
+    error("Tags associated with tests or benchmarks may not be negated.  Test: %s, Tags: %s",
           name, negative);
   end;
   apply(next-method, class, tags: tags, args)
 end method make;
+
+define class <test> (<runnable>)
+end;
+
+// Benchmarks don't require any assertions.
+// Benchmarks have the keyword "benchmark".
+define class <benchmark> (<runnable>)
+  inherited slot test-requires-assertions? = #f;
+end;
+
+define method make
+    (class :: subclass(<benchmark>), #rest args, #key tags)
+ => (test :: <benchmark>)
+  let new-tags = concatenate(#["benchmark"], tags | #[]);
+  apply(next-method, class, tags: new-tags, args)
+end;
 
 define class <test-unit> (<test>)
 end;
@@ -55,6 +75,11 @@ define generic component-type-name
 define method component-type-name
     (test :: <test>) => (type-name :: <string>)
   "test"
+end;
+
+define method component-type-name
+    (bench :: <benchmark>) => (type-name :: <string>)
+  "benchmark"
 end;
 
 define method component-type-name
@@ -86,6 +111,11 @@ end;
 define method component-result-type
     (component :: <test>) => (result-type :: subclass(<result>))
   <test-result>
+end;
+
+define method component-result-type
+    (component :: <benchmark>) => (result-type :: subclass(<result>))
+  <benchmark-result>
 end;
 
 define method component-result-type
@@ -138,6 +168,7 @@ define macro suite-definer
  components:
   { } => { }
   { test ?:name; ... } => { ?name, ... }
+  { benchmark ?:name; ... } => { ?name, ... }
   { suite ?:name; ... } => { ?name, ... }
 end macro suite-definer;
 
@@ -154,6 +185,17 @@ define macro test-definer
              ?keyword-args);
   }
 end macro test-definer;
+
+define macro benchmark-definer
+  { define benchmark ?test-name:name (?keyword-args:*) ?test-body:body end
+  } => {
+    define constant ?test-name :: <benchmark>
+      = make(<benchmark>,
+             name: ?"test-name",
+             function: method () ?test-body end,
+             ?keyword-args);
+  }
+end macro benchmark-definer;
 
 // For backward compatibility.
 define macro with-test-unit
@@ -186,11 +228,11 @@ define method find-suite
   do-find-suite(search-suite);
 end method find-suite;
 
-define method find-test
+define method find-runnable
     (name :: <string>, #key search-suite = root-suite())
- => (test :: false-or(<test>))
+ => (test :: false-or(<runnable>))
   let lowercase-name = as-lowercase(name);
-  local method do-find-test (suite :: <suite>)
+  local method do-find-runnable (suite :: <suite>)
           block (return)
             for (object in suite-components(suite))
               select (object by instance?)
@@ -199,7 +241,7 @@ define method find-test
                     return(object)
                   end if;
                 <suite> =>
-                  let test = do-find-test(object);
+                  let test = do-find-runnable(object);
                   if (test)
                     return(test)
                   end;
@@ -207,5 +249,5 @@ define method find-test
             end
           end
         end;
-  do-find-test(search-suite);
-end method find-test;
+  do-find-runnable(search-suite);
+end method find-runnable;

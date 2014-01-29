@@ -362,7 +362,7 @@ Test Execution
    Run a test suite or test as part of a stand-alone test executable.
 
    :signature: run-test-application *suite-or-test* => ()
-   :parameter suite-or-test: An instance of :class:`<suite>` or :class:`<test>`.
+   :parameter suite-or-test: An instance of :class:`<suite>` or :class:`<runnable>`.
 
    This is the main entry point to run a set of tests in Testworks.
    It parses the command-line and based on the specified options

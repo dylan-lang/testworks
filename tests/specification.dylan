@@ -35,7 +35,7 @@ define module-spec %testworks ()
   function show-progress (<test-runner>, false-or(<component>), false-or(<result>)) => ();
   function log-report-function (<result>, <stream>) => ();
   class <suite> (<component>);
-  function find-test (<string>, #"key", #"search-suite") => (false-or(<test>));
+  function find-runnable (<string>, #"key", #"search-suite") => (false-or(<runnable>));
   function null-report-function (<result>, <stream>) => ();
   function find-suite (<string>, #"key", #"search-suite") => (false-or(<suite>));
   class <component> (<object>);
@@ -62,8 +62,11 @@ define module-spec %testworks ()
   constant $test-log-footer :: <object>;
   function component-name (<component>) => (<string>);
   function do-results (<object>, <object>) => (#"rest");
-  class <test> (<component>);
-  function test-function (<test>) => (<function>);
+  abstract class <runnable> (<component>);
+  class <test> (<runnable>);
+  class <benchmark> (<runnable>);
+  function test-function (<runnable>) => (<function>);
+  function test-requires-assertions? (<runnable>) => (<boolean>);
   constant $failed :: <object>;
   function plural (<integer>) => (<string>);
   constant $default :: <object>;
@@ -72,7 +75,7 @@ define module-spec %testworks ()
   class <test-unit-result> (<test-result>, <unit-result>);
   instantiable class <tag> (<object>);
   class <result> (<object>);
-  function test-tags (<test>) => (<sequence>);
+  function test-tags (<runnable>) => (<sequence>);
   constant $test-log-header :: <object>;
   constant $verbose :: <object>;
   function result-reason (<result>) => (false-or(<string>));
@@ -200,9 +203,9 @@ define %testworks class-test <suite> ()
   //---*** Fill this in...
 end class-test <suite>;
 
-define %testworks function-test find-test ()
+define %testworks function-test find-runnable ()
   //---*** Fill this in...
-end function-test find-test;
+end function-test find-runnable;
 
 define %testworks function-test null-report-function ()
   //---*** Fill this in...
@@ -296,6 +299,14 @@ define %testworks class-test <test> ()
   //---*** Fill this in...
 end class-test <test>;
 
+define %testworks class-test <benchmark> ()
+  //---*** Fill this in...
+end class-test <benchmark>;
+
+define %testworks class-test <runnable> ()
+  //---*** Fill this in...
+end class-test <runnable>;
+
 define %testworks function-test test-function ()
   //---*** Fill this in...
 end function-test test-function;
@@ -351,6 +362,11 @@ end function-test result-reason;
 define %testworks function-test result-subresults ()
   //---*** Fill this in...
 end function-test result-subresults;
+
+define %testworks function-test test-requires-assertions? ()
+  //---*** Fill this in...
+end function-test test-requires-assertions?;
+
 
 // Module: testworks
 
@@ -462,6 +478,7 @@ define testworks macro-test check-equal-test ()
   //---*** Fill this in...
 end macro-test check-equal-test;
 
+
 define library-spec testworks ()
   module %testworks;
   module testworks;
@@ -469,6 +486,7 @@ define library-spec testworks ()
   suite testworks-assertion-macros-suite;
   suite testworks-results-suite;
   suite command-line-test-suite;
+  suite testworks-benchmarks-suite;
   test test-with-test-unit;
   test test-assertion-failure-continue;
   test test-many-assertions;

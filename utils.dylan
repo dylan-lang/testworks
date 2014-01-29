@@ -74,7 +74,7 @@ define method tags-match?
 end;
 
 define method tags-match?
-    (requested-tags :: <sequence>, test :: <test>)
+    (requested-tags :: <sequence>, test :: <runnable>)
  => (bool :: <boolean>)
   local method match (negated?)
           block (return)
