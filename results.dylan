@@ -60,6 +60,9 @@ end class <component-result>;
 define class <test-result> (<component-result>)
 end;
 
+define class <benchmark-result> (<test-result>)
+end;
+
 define class <suite-result> (<component-result>)
 end;
 

@@ -24,18 +24,18 @@ define class <suite> (<component>)
     init-keyword: cleanup-function:;
 end class <suite>;
 
-
 define class <test> (<component>)
   constant slot test-function :: <function>,
     required-init-keyword: function:;
-  constant slot test-allow-empty? :: <boolean>,
-    init-value: #f, init-keyword: allow-empty:;
+  constant slot test-allow-empty? :: <boolean> = #f,
+    init-keyword: allow-empty:;
   constant slot test-tags :: <sequence> /* of <tag> */ = #[],
     init-keyword: tags:;
 end class <test>;
 
 define method make
-    (class :: subclass(<test>), #rest args, #key name, tags) => (test :: <test>)
+    (class :: subclass(<test>), #rest args, #key name, tags)
+ => (test :: <test>)
   let tags = map(make-tag, tags | #[]);
   let negative = choose(tag-negated?, tags);
   if (~empty?(negative))
@@ -44,6 +44,18 @@ define method make
   end;
   apply(next-method, class, tags: tags, args)
 end method make;
+
+// Benchmarks are just tests that don't require any assertions.
+define class <benchmark> (<test>)
+  inherited slot test-allow-empty? = #t;
+end;
+
+define method make
+    (class :: subclass(<benchmark>), #rest args, #key tags)
+ => (test :: <benchmark>)
+  let new-tags = concatenate(#["benchmark"], tags | #[]);
+  apply(next-method, class, tags: new-tags, args)
+end;
 
 define class <test-unit> (<test>)
 end;
@@ -55,6 +67,11 @@ define generic component-type-name
 define method component-type-name
     (test :: <test>) => (type-name :: <string>)
   "test"
+end;
+
+define method component-type-name
+    (bench :: <benchmark>) => (type-name :: <string>)
+  "benchmark"
 end;
 
 define method component-type-name
@@ -86,6 +103,11 @@ end;
 define method component-result-type
     (component :: <test>) => (result-type :: subclass(<result>))
   <test-result>
+end;
+
+define method component-result-type
+    (component :: <benchmark>) => (result-type :: subclass(<result>))
+  <benchmark-result>
 end;
 
 define method component-result-type
@@ -138,6 +160,7 @@ define macro suite-definer
  components:
   { } => { }
   { test ?:name; ... } => { ?name, ... }
+  { benchmark ?:name; ... } => { ?name, ... }
   { suite ?:name; ... } => { ?name, ... }
 end macro suite-definer;
 
@@ -154,6 +177,17 @@ define macro test-definer
              ?keyword-args);
   }
 end macro test-definer;
+
+define macro benchmark-definer
+  { define benchmark ?test-name:name (?keyword-args:*) ?test-body:body end
+  } => {
+    define constant ?test-name :: <benchmark>
+      = make(<benchmark>,
+             name: ?"test-name",
+             function: method () ?test-body end,
+             ?keyword-args);
+  }
+end macro benchmark-definer;
 
 // For backward compatibility.
 define macro with-test-unit

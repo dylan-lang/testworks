@@ -378,3 +378,11 @@ define test test-make-test-converts-strings-to-tags ()
   let test = make(<test>, name: "t", tags: #("foo"), function: method() end);
   assert-true(every?(rcurry(instance?, <tag>), test.test-tags));
 end;
+
+define benchmark basic-benchmark ()
+  "just exercise basic benchmark functionality"
+end;
+
+define suite testworks-benchmarks-suite ()
+  benchmark basic-benchmark;
+end;

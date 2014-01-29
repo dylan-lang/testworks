@@ -54,13 +54,11 @@ define module testworks
     assert-true,
     assert-false;
 
-  // Suites
+  // Components
   create
-    suite-definer;
-
-  // Tests
-  create
+    suite-definer,
     test-definer,
+    benchmark-definer,
     with-test-unit;
 
   // Output
