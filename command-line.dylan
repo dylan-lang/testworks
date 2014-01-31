@@ -57,13 +57,11 @@ define function parse-args
                   variable: "TEST",
                   help: "Skip these named tests. May be repeated."));
   add-option(parser,
-             make(<flag-option>,
-                  names: #("list-suites"),
-                  help: "List the suites without running them."));
-  add-option(parser,
-             make(<flag-option>,
-                  names: #("list-tests"),
-                  help: "List the tests without running them."));
+             make(<parameter-option>,
+                  names: #("list", "l"),
+                  default: #f,
+                  variable: "WHAT",
+                  help: "List components: suites|tests|benchmarks"));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("tag", "t"),
@@ -179,25 +177,9 @@ define method run-test-application
         exit-application(2);
       end;
 
-  let list-suites? = get-option-value(parser, "list-suites");
-  let list-tests? = get-option-value(parser, "list-tests");
-  if (list-suites? | list-tests?)
-    let results = list-component(start-suite, runner);
-    let final-results = choose(method (c :: <component>)
-                                 (list-suites? & instance?(c, <suite>))
-                                   | (list-tests? & instance?(c, <test>))
-                               end,
-                               results);
-    for (component :: <component> in final-results)
-      format(*standard-output*, "%s %s%s\n",
-             component.component-type-name, component.component-name,
-             if (instance?(component, <test>) & ~empty?(component.test-tags))
-               format-to-string(" (tags: %s)",
-                                join(component.test-tags, ", ", key: tag-name))
-             else
-               ""
-             end)
-    end;
+  let list-opt = get-option-value(parser, "list");
+  if (list-opt)
+    list-components(runner, start-suite, list-opt);
     #f
   else
     // Run the appropriate test or suite
@@ -215,3 +197,32 @@ define method run-test-application
     result
   end if
 end method run-test-application;
+
+define function list-components
+    (runner :: <test-runner>, start-suite :: <component>, what :: <string>)
+  if (~member?(what, #["suites", "tests", "benchmarks"],
+               test: string-equal?))
+    format(*standard-error*,
+           "Invalid --list option, %=.  Value must be one of "
+               "'suites', 'tests', or 'benchmarks'.", what);
+    exit-application(2);
+  end;
+  let components = list-component(start-suite, runner);
+  for (component :: <component> in components)
+    if (select (component.object-class)
+          // order matters.  benchmarks are tests.
+          <suite> => what = "suites";
+          <benchmark> => what = "benchmarks";
+          <test> => what = "tests";
+        end)
+      format(*standard-output*, "%s %s%s\n",
+             component.component-type-name, component.component-name,
+             if (instance?(component, <test>) & ~empty?(component.test-tags))
+               format-to-string(" (tags: %s)",
+                                join(component.test-tags, ", ", key: tag-name))
+             else
+               ""
+             end)
+    end;
+  end;
+end function list-components;

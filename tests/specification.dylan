@@ -469,6 +469,7 @@ define library-spec testworks ()
   suite testworks-assertion-macros-suite;
   suite testworks-results-suite;
   suite command-line-test-suite;
+  suite testworks-benchmarks-suite;
   test test-with-test-unit;
   test test-assertion-failure-continue;
   test test-many-assertions;

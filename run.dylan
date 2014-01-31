@@ -272,8 +272,10 @@ define method show-progress
                 result.result-time);
     reason & test-output("    %s\n", reason);
   else
-    test-output("Running test %s:%s",
-                test.component-name, verbose? & "\n" | "");
+    test-output("Running %s %s:%s",
+                test.component-type-name,
+                test.component-name,
+                verbose? & "\n" | "");
   end;
 end method show-progress;
 
