@@ -148,8 +148,13 @@ define method summary-report-function
                                      end)
         end;
   print-class-summary(result, "suite", <suite-result>);
-  print-class-summary(result, "test",  <test-result>);
+  print-result-summary(result, "test", stream,
+                       test: method (res)
+                               instance?(res, <test-result>)
+                                   & ~instance?(res, <benchmark-result>)
+                             end);
   print-class-summary(result, "check", <check-result>);
+  print-class-summary(result, "benchmark", <benchmark-result>);
 end method summary-report-function;
 
 define method failures-report-function
