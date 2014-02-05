@@ -148,7 +148,8 @@ define method summary-report-function
                                      end)
         end;
   print-class-summary(result, "suite", <suite-result>);
-  print-class-summary(result, "test",  <test-result>);
+  print-class-summary(result, "test", <test-result>);
+  print-class-summary(result, "benchmark", <benchmark-result>);
   print-class-summary(result, "check", <check-result>);
 end method summary-report-function;
 

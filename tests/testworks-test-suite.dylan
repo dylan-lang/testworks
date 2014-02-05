@@ -276,6 +276,14 @@ define suite testworks-assertion-macros-suite ()
 end suite testworks-assertion-macros-suite;
 
 
+define benchmark basic-benchmark ()
+  "just exercise basic benchmark functionality"
+end;
+
+define suite testworks-benchmarks-suite ()
+  benchmark basic-benchmark;
+end;
+
 
 /// Verify the result objects
 
@@ -288,6 +296,10 @@ define test test-run-tests/test ()
                "run-tests returns $passed when passing");
   assert-true(instance?(test-results.result-subresults, <vector>),
               "run-tests sub-results are in a vector");
+
+  let bench-results = run-tests(runner, basic-benchmark);
+  assert-true(instance?(bench-results, <benchmark-result>),
+              "run-tests returns <benchmark-result> when running a <benchmark>");
 end test test-run-tests/test;
 
 define test test-run-tests/suite ()

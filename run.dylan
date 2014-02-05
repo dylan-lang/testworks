@@ -163,7 +163,7 @@ define method execute-component
 end method execute-component;
 
 define method execute-component
-    (test :: <test>, runner :: <test-runner>)
+    (test :: <runnable>, runner :: <test-runner>)
  => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
      seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
   let subresults = make(<stretchy-vector>);
@@ -188,7 +188,7 @@ define method execute-component
         case
           instance?(cond, <serious-condition>) =>
             values($crashed, format-to-string("%s", cond));
-          empty?(subresults) & ~test.test-allow-empty? =>
+          empty?(subresults) & test.test-requires-assertions? =>
             $not-implemented;
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
                    result.result-status == $passed
@@ -203,7 +203,7 @@ define method execute-component
 end method execute-component;
 
 define method list-component
-    (test :: <test>, runner :: <test-runner>)
+    (test :: <runnable>, runner :: <test-runner>)
  => (list :: <sequence>)
   if (execute-component?(test, runner))
     vector(test)
@@ -259,9 +259,9 @@ define method show-progress
   end;
 end method show-progress;
 
-// Tests are displayed before and after being run.
+// Tests and benchmarks are displayed before and after being run.
 define method show-progress
-    (runner :: <test-runner>, test :: <test>, result :: false-or(<result>))
+    (runner :: <test-runner>, test :: <runnable>, result :: false-or(<result>))
  => ()
   let verbose? = runner.runner-progress = $verbose;
   if (result)
@@ -272,8 +272,10 @@ define method show-progress
                 result.result-time);
     reason & test-output("    %s\n", reason);
   else
-    test-output("Running test %s:%s",
-                test.component-name, verbose? & "\n" | "");
+    test-output("Running %s %s:%s",
+                test.component-type-name,
+                test.component-name,
+                verbose? & "\n" | "");
   end;
 end method show-progress;
 

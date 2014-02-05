@@ -6,6 +6,9 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
+
+define constant $list-option-values = #["all", "suites", "tests", "benchmarks"];
+
 define function parse-args
     (args :: <sequence>) => (parser :: <command-line-parser>)
   let parser = make(<command-line-parser>);
@@ -57,13 +60,12 @@ define function parse-args
                   variable: "TEST",
                   help: "Skip these named tests. May be repeated."));
   add-option(parser,
-             make(<flag-option>,
-                  names: #("list-suites"),
-                  help: "List the suites without running them."));
-  add-option(parser,
-             make(<flag-option>,
-                  names: #("list-tests"),
-                  help: "List the tests without running them."));
+             make(<parameter-option>,
+                  names: #("list", "l"),
+                  default: #f,
+                  variable: "WHAT",
+                  help: format-to-string("List components: %s",
+                                         join($list-option-values, "|"))));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("tag", "t"),
@@ -100,8 +102,8 @@ define method find-component
                   | usage-error("Suite not found: %s", suite-name);
               end;
   let test = if (test-name)
-               find-test(test-name, search-suite: suite | root-suite())
-                 | usage-error("Test not found: %s", test-name);
+               find-runnable(test-name, search-suite: suite | root-suite())
+                 | usage-error("Test/benchmark not found: %s", test-name);
              end;
   test | suite
 end method find-component;
@@ -179,25 +181,9 @@ define method run-test-application
         exit-application(2);
       end;
 
-  let list-suites? = get-option-value(parser, "list-suites");
-  let list-tests? = get-option-value(parser, "list-tests");
-  if (list-suites? | list-tests?)
-    let results = list-component(start-suite, runner);
-    let final-results = choose(method (c :: <component>)
-                                 (list-suites? & instance?(c, <suite>))
-                                   | (list-tests? & instance?(c, <test>))
-                               end,
-                               results);
-    for (component :: <component> in final-results)
-      format(*standard-output*, "%s %s%s\n",
-             component.component-type-name, component.component-name,
-             if (instance?(component, <test>) & ~empty?(component.test-tags))
-               format-to-string(" (tags: %s)",
-                                join(component.test-tags, ", ", key: tag-name))
-             else
-               ""
-             end)
-    end;
+  let list-opt = get-option-value(parser, "list");
+  if (list-opt)
+    list-components(runner, start-suite, list-opt.as-lowercase);
     #f
   else
     // Run the appropriate test or suite
@@ -215,3 +201,30 @@ define method run-test-application
     result
   end if
 end method run-test-application;
+
+define function list-components
+    (runner :: <test-runner>, start-suite :: <component>, what :: <string>)
+  if (~member?(what, $list-option-values, test: \=))
+    format(*standard-error*,
+           "Invalid --list option, %=.  Value must be one of %s.\n",
+           what, join($list-option-values, ", ", conjunction: ", or "));
+    exit-application(2);
+  end;
+  let components = list-component(start-suite, runner);
+  for (component :: <component> in components)
+    if (what = "all" | select (component.object-class)
+                         <suite> => what = "suites";
+                         <test> => what = "tests";
+                         <benchmark> => what = "benchmarks";
+                       end)
+      format(*standard-output*, "%s %s%s\n",
+             component.component-type-name, component.component-name,
+             if (instance?(component, <runnable>) & ~empty?(component.test-tags))
+               format-to-string(" (tags: %s)",
+                                join(component.test-tags, ", ", key: tag-name))
+             else
+               ""
+             end)
+    end;
+  end;
+end function list-components;
