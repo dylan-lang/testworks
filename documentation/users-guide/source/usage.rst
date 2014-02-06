@@ -19,6 +19,8 @@ Testworks Usage
    7  Test Specifications
    8  Generating Test Specifications
 
+Testworks is the Dylan unit testing harness.
+
 See also: :doc:`reference`
 
 Quick Start
@@ -41,6 +43,7 @@ arbitrarily.  It is common to have a top-level suite named
      suite module2-test-suite;
      test fn1-test;
      test fn2-test;
+     benchmark fn1-benchmark;
    end;
 
 Tests contain arbitrary code plus assertions:
@@ -52,6 +55,16 @@ Tests contain arbitrary code plus assertions:
      let v = do-something();
      assert-equal(fn1(v), "expected-value");
      assert-equal(fn1(v, key: 7), "seven", "regression test for bug/12345");
+   end;
+
+Benchmarks do not require any assertions and are automatically given
+the "benchmark" tag:
+
+.. code-block:: dylan
+
+   // Benchmark fn1
+   define benchmark fn1-benchmark ()
+     fn1()
    end;
 
 See also: :func:`assert-true`, :func:`assert-false`,
@@ -159,6 +172,7 @@ The result looks like this::
     my-test FAILED in 0.000256 seconds:
       Ran 0 suites: 0 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
       Ran 1 test: 0 passed (0.0%), 1 failed, 0 skipped, 0 not implemented, 0 crashed
+      Ran 0 benchmarks: 0 passed (0.0%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
       Ran 3 checks: 2 passed (66.666672%), 1 failed, 0 skipped, 0 not implemented, 0 crashed
 
 Tests may be tagged with arbitrary strings, providing a way to select
@@ -182,16 +196,59 @@ this will skip both of the above tests::
 Negative tags take precedence, so ``--tag=huge --tag=-verbose`` will
 run ``my-test-2`` and skip ``my-test-3``.
 
+Benchmarks
+----------
+
+Benchmarks are like tests except for:
+
+* They do not require any assertions
+* They are automatically assigned the "benchmark" tag.
+
+The :macro:`benchmark-definer` macro is like :macro:`test-definer`:
+
+.. code-block:: dylan
+
+   define benchmark my-benchmark ()
+     ...body...
+   end;
+
+Benchmarks may be added to suites:
+
+.. code-block:: dylan
+
+   define suite my-benchmarks-suite ()
+     benchmark my-benchmark;
+   end;
+
+Benchmarks and tests may be combined in the same suite.  If you do
+that, tags may be used to run only the benchmarks (with
+``--tag=benchmark``) or only the tests (with ``--tag=-benchmark``).
+This may be sufficient for small projects with a single test suite
+application.  A better option for large projects (e.g., those that
+combine test suites from various libraries) is to have separate suites
+for benchmarks and tests.  Example:
+
+.. code-block:: dylan
+
+   define suite strings-tests () ...only tests... end;
+   define suite strings-benchmarks () ...only benchmarks... end;
+   define suite strings-test-suite ()
+     suite strings-tests;
+     suite strings-benchmarks;
+   end;
+
+
 Suites
 ------
 
-Suites contain tests and other suites. A suite may be defined with the
-:macro:`suite-definer` macro.  The format is:
+Suites contain tests, benchmarks, and other suites. A suite may be
+defined with the :macro:`suite-definer` macro.  The format is:
 
 .. code-block:: dylan
 
     define suite NAME (#key description, setup-function, cleanup-function)
         test TEST-NAME;
+        benchmark BENCHMARK-NAME;
         suite SUITE-NAME;
     end;
 
@@ -203,6 +260,7 @@ For example:
       test my-test;
       test example-test;
       test my-test-2;
+      benchmark my-benchmark;
     end;
     define suite second-suite ()
       suite first-suite;
@@ -214,32 +272,34 @@ arguments ``setup-function`` and ``cleanup-function``. These can be
 used for things like establishing database connections, initializing
 sockets and so on.
 
-A simple example of doing this can be seen in Koala, an HTTP server:
+A simple example of doing this can be seen in the http-server test
+suite:
 
 .. code-block:: dylan
 
     define suite http-test-suite (setup-function: start-sockets)
       suite http-server-test-suite;
       suite http-client-test-suite;
-    end suite koala-test-suite;
+    end;
 
 Suites can be run via :func:`run-test-application`.  It should be
 called as the main function in an executable and will parse
-command-line args, execute the selected tests, and generate reports.
+command-line args, execute tests and benchmarks, and generate reports.
 See the next section for details.
 
 
 Organzing Your Test Suites
 ==========================
 
-Tests are used to combine related assertions into a unit and suites
+Tests are used to combine related assertions into a unit, and suites
 further organize related tests.  Suites may also contain other suites.
 
 It is common for the test suite for library xxx to export a single
 test suite named xxx-test-suite, which is further subdivided into
-sub-suites and tests as appropriate for that library.  The test suite
-is exported so that it can be included as a component suite in
-combined test suites that cover multiple related libraries.
+sub-suites, tests, and benchmarks as appropriate for that library.
+The main test suite is exported so that it can be included as a
+component suite in combined test suites that cover multiple related
+libraries.
 
 The overall structure of a test library may look something like this:
 
@@ -263,6 +323,7 @@ The overall structure of a test library may look something like this:
     // --- main.dylan ---
     define suite xxx-test-suite ()
       test my-awesome-test;
+      benchmark my-awesome-benchmark;
       suite my-awesome-other-suite;
       ...
     end;
@@ -271,6 +332,10 @@ The overall structure of a test library may look something like this:
       assert-true(...);
       assert-equal(...);
       ...
+    end;
+
+    define benchmark my-awesome-benchmark ()
+      awesomely-slow-function();
     end;
 
     run-test-application(my-test-suite);

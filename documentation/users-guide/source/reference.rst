@@ -8,7 +8,7 @@ Testworks Reference
    :local:
 
 .. 1  The Testworks Module
-     1.1  Suites and Tests
+     1.1  Suites, Tests, and Benchmarks
      1.2  Assertions
      1.3  Checks
      1.4  Test Execution
@@ -19,8 +19,8 @@ See also: :doc:`usage`
 The Testworks Module
 ====================
 
-Suites and Tests
-----------------
+Suites, Tests, and Benchmarks
+-----------------------------
 
 .. macro:: suite-definer
 
@@ -56,6 +56,24 @@ Suites and Tests
    assertions in the test will still be executed.  If code outside of
    an assertion signals an error, the test is marked as "crashed" and
    remaining assertions are skipped.
+
+   *tags* provide a way to select or filter out specific tests during
+   a test run.  The Testworks command-line (provided by
+   :func:`run-test-application`) provides a ``--tag`` option for this
+   purpose.
+
+.. macro:: benchmark-definer
+
+   Define a new benchmark.
+
+   :signature: define benchmark *name* (#key *description, tags*) *body* end
+   :parameter name: Name of the benchmark; a Dylan variable name.
+   :parameter description: A string describing the purpose of the benchmark.
+   :parameter tags: A list of strings to tag this benchmark.
+
+   Benchmarks may contain arbitrary code and may use assertions,
+   although that isn't required.  If the benchmark signals an error it
+   is marked as "crashed".
 
    *tags* provide a way to select or filter out specific tests during
    a test run.  The Testworks command-line (provided by
@@ -373,3 +391,5 @@ Test Execution
    :class:`<test-runner>` based on the command-line options and then
    calls :func:`run-tests` with the runner and *suite-or-test*.
 
+
+.. TODO(cgay): document the remaining exported names.
