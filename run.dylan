@@ -267,7 +267,11 @@ define method show-progress
   if (result)
     let reason = result.result-reason;
     test-output("%s%s in %ss and %s\n",
-                verbose? & "  test " | " ",
+                if (verbose?)
+                  format-to-string("  %s ", test.component-type-name)
+                else
+                  " "
+                end,
                 result.result-status.status-name.as-uppercase,
                 result.result-time,
                 format-bytes(result.result-bytes));
