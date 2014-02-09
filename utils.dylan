@@ -98,3 +98,19 @@ define method tags-match?
     #t
   end block
 end method tags-match?;
+
+
+// Might want to put an extended version of this in the io:format module.
+define function format-bytes
+    (bytes :: <integer>) => (string :: <string>)
+  let (divisor, units) = case
+                           bytes <= 1024 =>
+                             values(1, "B");
+                           bytes <= ash(1, 20) =>
+                             values(1024, "KiB");
+                           otherwise =>
+                             values(ash(1, 20), "MiB");
+                           // Need more bits in our integers...
+                         end;
+  concatenate(integer-to-string(round/(bytes, divisor)), units)
+end function format-bytes;

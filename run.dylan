@@ -266,10 +266,11 @@ define method show-progress
   let verbose? = runner.runner-progress = $verbose;
   if (result)
     let reason = result.result-reason;
-    test-output("%s%s in %ss\n",
+    test-output("%s%s in %ss and %s\n",
                 verbose? & "  test " | " ",
                 result.result-status.status-name.as-uppercase,
-                result.result-time);
+                result.result-time,
+                format-bytes(result.result-bytes));
     reason & test-output("    %s\n", reason);
   else
     test-output("Running %s %s:%s",
