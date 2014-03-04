@@ -236,7 +236,7 @@ define method find-runnable
           block (return)
             for (object in suite-components(suite))
               select (object by instance?)
-                <test> =>
+                <runnable> =>
                   if (as-lowercase(component-name(object)) = lowercase-name)
                     return(object)
                   end if;
