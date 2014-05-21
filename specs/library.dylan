@@ -8,6 +8,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks-specs
   use common-dylan;
+  use io;
   use testworks;
 
   export testworks-specs;
@@ -15,6 +16,7 @@ end library testworks-specs;
 
 define module testworks-specs
   use common-dylan;
+  use format;
   use testworks;
 
   // The macros

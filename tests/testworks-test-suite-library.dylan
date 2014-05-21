@@ -20,6 +20,7 @@ end library testworks-test-suite;
 define module testworks-test-suite
   use command-line-parser;
   use common-dylan;
+  use format;
   use strings;
   use testworks;
   use testworks-specs;
