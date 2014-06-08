@@ -352,8 +352,7 @@ define function do-check-condition
           end method;
     name := get-name();
     phase := "evaluating assertion expression";
-    let (condition-class :: subclass(<condition>),
-         thunk :: <function>, expr :: <string>) = get-arguments();
+    let (condition-class, thunk :: <function>, expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= signals a condition of class %s",
                               expr, condition-class);
     let (status, reason)
