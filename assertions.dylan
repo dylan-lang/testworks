@@ -128,7 +128,7 @@ end;
 define method check-equal-failure-detail
     (coll1 :: <collection>, coll2 :: <collection>) => (detail :: false-or(<string>))
   if (coll1.size ~= coll2.size)
-    format-to-string("sizes differ (%d and %d)", coll2.size, coll1.size)
+    format-to-string("sizes differ (%d and %d)", coll1.size, coll2.size)
   end
 end method check-equal-failure-detail;
 
