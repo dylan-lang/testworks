@@ -231,6 +231,7 @@ define function do-check-true
               return($crashed);
             end;
           end method;
+4174 0000 D080 0200 8007 2AF9
     name := get-name();
     phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
@@ -365,8 +366,9 @@ define function do-check-condition
         // <condition>, but leaving it this way for compat with old code.
         exception (ex :: <serious-condition>)
           values($failed, format-to-string("condition of class %s signaled; "
-                                             "expected a condition of class %s",
-                                           ex.object-class, condition-class))
+                                             "expected a condition of class %s. "
+                                             "The error was: %s",
+                                           ex.object-class, condition-class, ex))
         end;
     record-check(name, status, reason);
     status
