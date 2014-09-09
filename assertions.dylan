@@ -231,7 +231,6 @@ define function do-check-true
               return($crashed);
             end;
           end method;
-4174 0000 D080 0200 8007 2AF9
     name := get-name();
     phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
