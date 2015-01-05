@@ -58,7 +58,7 @@ end macro class-test-definer;
 
 /// Class checking
 
-define method class-instantiable?
+define method class-spec-instantiable?
     (class-spec :: <class-spec>) => (instantiable? :: <boolean>)
   member?(#"instantiable", class-spec-modifiers(class-spec))
 // I deleted the following because it causes tests that initially fail
@@ -68,7 +68,13 @@ define method class-instantiable?
 //        let info = protocol-class-bindings(spec);
 //        ~member?(class, protocol-uninstantiable-classes(info))
 //      end
-end method class-instantiable?;
+end method class-spec-instantiable?;
+
+define method class-spec-abstract?
+    (class-spec :: <class-spec>)
+ => (abstract? :: <boolean>)
+  member?(#"abstract", class-spec-modifiers(class-spec))
+end method class-spec-abstract?;
 
 define method check-class-specification
     (class-spec :: <class-spec>)
@@ -80,6 +86,7 @@ define method check-class-specification
   check-true(format-to-string("Variable %s has the correct superclasses", title),
              class-has-correct-superclasses?(class-spec));
   check-class-instantiation(class-spec);
+  check-class-test-function(class-spec);
 end method check-class-specification;
 
 define method class-has-correct-superclasses?
@@ -110,7 +117,7 @@ define method check-class-instantiation
  => ()
   let class = class-spec-class(class-spec);
   let title = spec-title(class-spec);
-  if (class-instantiable?(class-spec))
+  if (class-spec-instantiable?(class-spec))
     let instance = #f;
     check-instance?(format-to-string("make %s with required arguments", title),
                     class,
@@ -128,3 +135,18 @@ define method check-class-instantiation
        end)
   end
 end method check-class-instantiation;
+
+define method check-class-test-function
+    (class-spec :: <class-spec>)
+ => ()
+  let class = class-spec-class(class-spec);
+  let test-function = class-test-function(class);
+  if (test-function)
+    let instantiable? = class-spec-instantiable?(class-spec);
+    let abstract? = class-spec-abstract?(class-spec);
+    test-function(class,
+                  name: spec-title(class-spec),
+                  abstract?: abstract?,
+                  instantiable?: instantiable?);
+  end
+end method check-class-test-function;
