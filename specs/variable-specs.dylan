@@ -41,69 +41,27 @@ define macro constant-test-definer
 end macro constant-test-definer;
 
 
-/// Variable spec modeling
-
-define method register-variable
-    (spec :: <protocol-spec>, name :: <symbol>, type :: <type>,
-     variable-getter :: <function>, variable-setter :: <function>)
- => ()
-  register-definition(spec, name,
-                      make(<variable-spec>,
-                           name: name,
-                           type: type,
-                           getter: variable-getter,
-                           setter: variable-setter))
-end method register-variable;
-
-define method register-constant
-    (spec :: <protocol-spec>, name :: <symbol>, type :: <type>,
-     constant-getter :: <function>)
- => ()
-  register-definition(spec, name,
-                      make(<constant-spec>,
-                           name: name,
-                           type: type,
-                           getter: constant-getter))
-end method register-constant;
-
-
 /// Variable testing
 
-define function check-protocol-variable
-    (protocol-spec :: <protocol-spec>, variable-spec :: <variable-spec>) => ()
+define function check-variable-specification
+    (variable-spec :: <variable-spec>)
+ => ()
   let title = spec-title(variable-spec);
-  with-test-unit (format-to-string("%s specification", title))
-    check-instance?(format-to-string("Variable %s has the correct type", title),
-                    variable-spec-type(variable-spec),
-                    variable-spec-getter(variable-spec)());
-    check-true(format-to-string("Variable %s can be set to itself", title),
-               begin
-                 let value = variable-spec-getter(variable-spec)();
-                 variable-spec-setter(variable-spec)(value) = value
-               end);
-  end;
-end function check-protocol-variable;
+  check-instance?(format-to-string("Variable %s has the correct type", title),
+                  variable-spec-type(variable-spec),
+                  variable-spec-getter(variable-spec)());
+  check-true(format-to-string("Variable %s can be set to itself", title),
+             begin
+               let value = variable-spec-getter(variable-spec)();
+               variable-spec-setter(variable-spec)(value) = value
+             end);
+end function check-variable-specification;
 
-define function check-protocol-variables
-    (protocol-spec :: <protocol-spec>) => ()
-  do-protocol-definitions
-    (curry(check-protocol-variable, protocol-spec),
-     protocol-spec, <variable-spec>)
-end function check-protocol-variables;
-
-define function check-protocol-constant
-    (protocol-spec :: <protocol-spec>, constant :: <constant-spec>) => ()
-  let title = spec-title(constant);
-  with-test-unit (format-to-string("%s specification", title))
-    check-instance?(format-to-string("Constant %s has the correct type", title),
-                    variable-spec-type(constant),
-                    variable-spec-getter(constant)());
-  end;
-end function check-protocol-constant;
-
-define function check-protocol-constants
-    (protocol-spec :: <protocol-spec>) => ()
-  do-protocol-definitions
-    (curry(check-protocol-constant, protocol-spec),
-     protocol-spec, <constant-spec>)
-end function check-protocol-constants;
+define function check-constant-specification
+    (constant-spec :: <constant-spec>)
+ => ()
+  let title = spec-title(constant-spec);
+  check-instance?(format-to-string("Constant %s has the correct type", title),
+                  variable-spec-type(constant-spec),
+                  variable-spec-getter(constant-spec)());
+end function check-constant-specification;

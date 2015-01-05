@@ -37,39 +37,25 @@ define module testworks-specs
          <constant-spec>,
          <variable-spec>,
          <class-spec>,
-         <function-spec>,
-         <macro-spec>;
+         <function-spec>;
 
   // Useful accessors
   export spec-name,
-         spec-title,
-         protocol-definition-spec;
+         spec-title;
 
   // The test functions
   export make-test-instance,
          destroy-test-instance,
-         class-test-function,
-         do-protocol-classes,
-         check-protocol-constants,
-         check-protocol-variables,
-         check-protocol-classes,
-         check-protocol-functions,
-         check-protocol-macros;
-
-  // Class handling functions
-  export do-protocol-classes,
-         protocol-class-abstract?,
-         protocol-class-instantiable?;
+         class-test-function;
 
   //---*** Hygiene glitches
   export \protocol-spec-constant-definer,
          \protocol-spec-bindings-definer,
-         \protocol-spec-suite-definer,
          \module-spec-protocol-definer,
-         \module-spec-suite-definer,
-         register-constant,
-         register-variable,
-         register-class,
-         register-function,
-         register-macro;
+         \module-spec-suite-definer
+         check-class-specification,
+         check-function-specification,
+         check-variable-specification,
+         check-constant-specification,
+         check-macro-specification;
 end module testworks-specs;
