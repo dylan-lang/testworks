@@ -12,5 +12,7 @@ define macro macro-test-definer
   { define ?protocol-name:name macro-test ?macro-name:name ()
       ?body:body
     end }
-    => { define ?protocol-name definition-test ?macro-name () ?body end }
+    => { define test "test-macro-" ## ?macro-name (requires-assertions?: #f)
+           ?body
+         end }
 end macro macro-test-definer;

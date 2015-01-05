@@ -26,7 +26,9 @@ define macro function-test-definer
   { define ?protocol-name:name function-test ?function-name:name ()
       ?body:body
     end }
-    => { define ?protocol-name definition-test ?function-name () ?body end }
+    => { define test "test-function-" ## ?function-name (requires-assertions?: #f)
+           ?body
+         end }
 end macro function-test-definer;
 
 

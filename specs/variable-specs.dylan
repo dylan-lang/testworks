@@ -30,14 +30,18 @@ define macro variable-test-definer
   { define ?protocol-name:name variable-test ?variable-name:name ()
       ?body:body
     end }
-    => { define ?protocol-name definition-test ?variable-name () ?body end }
+    => { define test "test-variable-" ## ?variable-name (requires-assertions?: #f)
+           ?body
+         end }
 end macro variable-test-definer;
 
 define macro constant-test-definer
   { define ?protocol-name:name constant-test ?constant-name:name ()
       ?body:body
     end }
-    => { define ?protocol-name definition-test ?constant-name () ?body end }
+    => { define test "test-constant-" ## ?constant-name (requires-assertions?: #f)
+           ?body
+         end }
 end macro constant-test-definer;
 
 
