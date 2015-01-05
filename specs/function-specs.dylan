@@ -13,9 +13,9 @@ define class <function-spec> (<definition-spec>)
     required-init-keyword: function:;
   constant slot function-spec-modifiers :: <sequence> = #[],
     init-keyword: modifiers:;
-  constant slot function-spec-parameters :: <sequence> = #[],
+  constant slot %function-spec-parameters :: <sequence> = #[],
     init-keyword: parameters:;
-  constant slot function-spec-results :: <sequence> = #[],
+  constant slot %function-spec-results :: <sequence> = #[],
     init-keyword: results:;
 end class <function-spec>;
 
@@ -32,41 +32,11 @@ end macro function-test-definer;
 
 /// Function spec modeling
 
-define method register-function
-    (spec :: <protocol-spec>, name :: <symbol>, binding-function :: <function>)
- => ()
-  register-binding(protocol-function-bindings(spec), name, binding-function)
-end method register-function;
-
-define method protocol-functions
-    (spec :: <protocol-spec>) => (classes :: <table>)
-  protocol-bindings(protocol-function-bindings(spec))
-end method protocol-functions;
-
-define method protocol-unbound-functions
-    (spec :: <protocol-spec>) => (functions :: <sequence>)
-  protocol-unbound-bindings(protocol-function-bindings(spec))
-end method protocol-unbound-functions;
-
-define method protocol-definition-spec
-    (protocol-spec :: <protocol-spec>, function :: <function>)
- => (function-spec :: false-or(<function-spec>))
-  element(protocol-functions(protocol-spec), function, default: #f)
-end method protocol-definition-spec;
-
-define method protocol-function-modifiers
-    (spec :: <protocol-spec>, function :: <function>)
- => (modifiers :: <sequence>)
-  let function-spec = protocol-definition-spec(spec, function);
-  function-spec-modifiers(function-spec)
-end method protocol-function-modifiers;
-
-define method protocol-function-parameters
-    (spec :: <protocol-spec>, function :: <function>)
+define method function-spec-parameters
+    (function-spec :: <function-spec>)
  => (required :: <sequence>, rest? :: <boolean>,
      keys :: <sequence>, all-keys? :: <boolean>);
-  let function-spec = protocol-definition-spec(spec, function);
-  let spec-parameters = function-spec-parameters(function-spec);
+  let spec-parameters = %function-spec-parameters(function-spec);
   local
     method identify-required
         (index :: <integer>)
@@ -132,13 +102,12 @@ define method protocol-function-parameters
       end if
     end method;
   identify-required(0)
-end method protocol-function-parameters;
+end method function-spec-parameters;
 
-define method protocol-function-results
-    (spec :: <protocol-spec>, function :: <function>)
+define method function-spec-results
+    (function-spec :: <function-spec>)
  => (required :: <sequence>, rest? :: <boolean>);
-  let function-spec = protocol-definition-spec(spec, function);
-  let spec-results = function-spec-results(function-spec);
+  let spec-results = %function-spec-results(function-spec);
   local
     method identify-required
         (index :: <integer>)
@@ -161,37 +130,38 @@ define method protocol-function-results
       end if
     end method;
   identify-required(0)
-end method protocol-function-results;
+end method function-spec-results;
 
-define method protocol-function-generic?
-    (spec :: <protocol-spec>, function :: <function>)
+define method function-spec-generic?
+    (function-spec :: <function-spec>)
  => (generic? :: <boolean>)
-  member?(#"generic", protocol-function-modifiers(spec, function))
-end method protocol-function-generic?;
+  member?(#"generic", function-spec-modifiers(function-spec))
+end method function-spec-generic?;
 
-define function protocol-function-type
-    (protocol-spec :: <protocol-spec>, function :: <function>)
+define function function-spec-type
+    (function-spec :: <function-spec>)
  => (type :: <type>, type-name :: <string>)
-  if (protocol-function-generic?(protocol-spec, function))
+  if (function-spec-generic?(function-spec))
     values(<generic-function>, "generic-function")
   else
     values(<function>, "function")
   end
-end function protocol-function-type;
+end function function-spec-type;
 
-define function protocol-function-check-name
+define function function-spec-check-name
     (function-name :: <string>, type-name :: <string>)
  => (check-name :: <string>)
   format-to-string("Variable %s is a %s and all of its specializer types"
                      " are bound", function-name, type-name)
-end function protocol-function-check-name;
+end function function-spec-check-name;
 
-define function check-protocol-function-parameters
-    (spec :: <protocol-spec>, title :: <string>, function :: <function>)
+define function check-function-specification-parameters
+    (title :: <string>, function-spec :: <function-spec>)
  => ();
+  let function = function-spec-function(function-spec);
   let (required :: <sequence>, rest? :: <boolean>,
        keys :: <sequence>, all-keys? :: <boolean>)
-    = protocol-function-parameters(spec, function);
+    = function-spec-parameters(function-spec);
   let actual-specializers
     = function-specializers(function);
   let (actual-required-number, actual-rest?, actual-keys)
@@ -226,11 +196,12 @@ define function check-protocol-function-parameters
   end if;
 end function;
 
-define function check-protocol-function-results
-    (spec :: <protocol-spec>, title :: <string>, function :: <function>)
+define function check-function-specification-results
+    (title :: <string>, function-spec :: <function-spec>)
  => ();
+  let function = function-spec-function(function-spec);
   let (required :: <sequence>, rest? :: <boolean>)
-    = protocol-function-results(spec, function);
+    = function-spec-results(function-spec);
   let (actual-return-types, actual-rest?) = function-return-values(function);
   check-true(format-to-string("function %s can return the minimum number"
                                 " of specified return values", title),
@@ -248,30 +219,14 @@ define function check-protocol-function-results
   end for;
 end function;
 
-define function check-protocol-function
-    (protocol-spec :: <protocol-spec>, function-spec :: <function-spec>)
+define function check-function-specification
+    (function-spec :: <function-spec>)
  => ()
   let title = spec-title(function-spec);
   let function = function-spec-function(function-spec);
-  with-test-unit (format-to-string("%s specification", title))
-    let (type, type-name) = protocol-function-type(protocol-spec, function);
-    check-instance?(protocol-function-check-name(title, type-name),
-                    type, function);
-    check-protocol-function-parameters(protocol-spec, title, function);
-    check-protocol-function-results(protocol-spec, title, function);
-  end;
-end function check-protocol-function;
-
-define function check-protocol-functions
-    (protocol-spec :: <protocol-spec>) => ()
-  do-protocol-definitions
-    (curry(check-protocol-function, protocol-spec),
-     protocol-spec, <function-spec>);
-  do(method (function-name)
-       // This function is unbound; its type can't be determined so
-       // just say it's a "function".
-       let name = protocol-function-check-name(function-name, "function");
-       check-true(name, #f)
-     end,
-     protocol-unbound-functions(protocol-spec))
-end function check-protocol-functions;
+  let (type, type-name) = function-spec-type(function-spec);
+  check-instance?(function-spec-check-name(title, type-name),
+                  type, function);
+  check-function-specification-parameters(title, function-spec);
+  check-function-specification-results(title, function-spec);
+end function check-function-specification;
