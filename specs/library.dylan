@@ -48,7 +48,6 @@ define module testworks-specs
   // The test functions
   export make-test-instance,
          destroy-test-instance,
-         test-protocol-definition,
          class-test-function,
          do-protocol-classes,
          check-protocol-constants,
