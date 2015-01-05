@@ -126,7 +126,7 @@ define macro definition-test-definer
   { define ?protocol-name:name definition-test ?definition-name:name ()
       ?body:body
     end }
-    => { define test "test-" ## ?definition-name ## "-specification" ()
+    => { define test "test-" ## ?definition-name ## "-specification" (requires-assertions?: #f)
            ?body
          end }
 end macro definition-test-definer;
