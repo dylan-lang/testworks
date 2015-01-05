@@ -134,12 +134,8 @@ define method check-protocol-class
                     <class>, class);
     check-true(format-to-string("Variable %s has the correct superclasses", title),
                protocol-class-has-correct-superclasses?(protocol-spec, class));
-  end;
-  with-test-unit (format-to-string("class-test %s", title))
     check-protocol-class-instantiation(protocol-spec, class-spec);
-    test-protocol-definition
-      (protocol-spec, spec-name(protocol-spec), spec-name(class-spec))
-  end
+  end;
 end method check-protocol-class;
 
 define function check-protocol-classes
