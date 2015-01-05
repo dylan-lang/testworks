@@ -6,36 +6,22 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-define class <protocol-spec> (<spec>)
-end class <protocol-spec>;
-
-
 /// A useful macro to define protocol specs
 
 define macro protocol-spec-definer
   { define protocol-spec ?protocol-name:name (?options:*)
       ?specs:*
     end}
-    => { define protocol-spec-constant ?protocol-name (?options)
-         end;
-         define protocol-spec-bindings "$" ## ?protocol-name ## "-protocol-spec" (?options)
+    => { define protocol-spec-bindings ?protocol-name (?options)
            ?specs
          end; }
 end macro protocol-spec-definer;
 
-define macro protocol-spec-constant-definer
-  { define protocol-spec-constant ?protocol-name:name (?options:*) end}
-    => { define constant "$" ## ?protocol-name ## "-protocol-spec"
-           = make(<protocol-spec>,
-                  name: ?#"protocol-name",
-                  ?options) }
-end macro protocol-spec-constant-definer;
-
 define macro protocol-spec-bindings-definer
-  { define protocol-spec-bindings ?protocol-constant:name (?options:*)
+  { define protocol-spec-bindings ?protocol-name:name (?options:*)
     end }
     => { }
-  { define protocol-spec-bindings ?protocol-constant:name (?options:*)
+  { define protocol-spec-bindings ?protocol-name:name (?options:*)
       ?modifiers:* class ?class-name:name (?superclasses:*);
       ?more-specs:*
     end }
@@ -47,10 +33,10 @@ define macro protocol-spec-bindings-definer
                                  modifiers: vector(?modifiers));
            check-class-specification(class-spec);
          end;
-         define protocol-spec-bindings ?protocol-constant (?options)
+         define protocol-spec-bindings ?protocol-name (?options)
            ?more-specs
          end; }
-  { define protocol-spec-bindings ?protocol-constant:name (?options:*)
+  { define protocol-spec-bindings ?protocol-name:name (?options:*)
       ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*);
       ?more-specs:*
     end }
@@ -64,10 +50,10 @@ define macro protocol-spec-bindings-definer
                     modifiers: vector(?modifiers));
            check-function-specification(function-spec);
          end;
-         define protocol-spec-bindings ?protocol-constant (?options)
+         define protocol-spec-bindings ?protocol-name (?options)
            ?more-specs
          end; }
-  { define protocol-spec-bindings ?protocol-constant:name (?options:*)
+  { define protocol-spec-bindings ?protocol-name:name (?options:*)
       ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*);
       ?more-specs:*
     end }
@@ -81,10 +67,10 @@ define macro protocol-spec-bindings-definer
                     modifiers: vector(#"generic", ?modifiers));
            check-function-specification(function-spec);
          end;
-         define protocol-spec-bindings ?protocol-constant (?options)
+         define protocol-spec-bindings ?protocol-name (?options)
            ?more-specs
          end; }
-  { define protocol-spec-bindings ?protocol-constant:name (?options:*)
+  { define protocol-spec-bindings ?protocol-name:name (?options:*)
       ?modifiers:* variable ?variable-name:name :: ?type:expression;
       ?more-specs:*
     end }
@@ -101,10 +87,10 @@ define macro protocol-spec-bindings-definer
                             end);
            check-variable-specification(variable-spec);
          end;
-         define protocol-spec-bindings ?protocol-constant (?options)
+         define protocol-spec-bindings ?protocol-name (?options)
            ?more-specs
          end; }
-  { define protocol-spec-bindings ?protocol-constant:name (?options:*)
+  { define protocol-spec-bindings ?protocol-name:name (?options:*)
       ?modifiers:* constant ?constant-name:name :: ?type:expression;
       ?more-specs:*
     end }
@@ -116,14 +102,14 @@ define macro protocol-spec-bindings-definer
                     getter: method () ?constant-name end);
            check-constant-specification(constant-spec);
          end;
-         define protocol-spec-bindings ?protocol-constant (?options)
+         define protocol-spec-bindings ?protocol-name (?options)
            ?more-specs
          end; }
-  { define protocol-spec-bindings ?protocol-constant:name (?options:*)
+  { define protocol-spec-bindings ?protocol-name:name (?options:*)
       ?modifiers:* macro-test ?macro-name:name;
       ?more-specs:*
     end }
-    => { define protocol-spec-bindings ?protocol-constant (?options)
+    => { define protocol-spec-bindings ?protocol-name (?options)
            ?more-specs
          end; }
  modifiers:
