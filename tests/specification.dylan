@@ -5,109 +5,6 @@ Module: testworks-test-suite
 // in" below.  There are some notes on how these specs were originally
 // generated.  They required some by-hand editing.
 
-// Many of the methods below are specialized on <object> rather than
-// the actual type because the associated generic functions are
-// implicitly defined. I (cgay) don't plan to add explicit generics
-// because I don't think the test suite should dictate the style in
-// which we write code; it should only help with correctness.
-
-define module-spec %testworks ()
-  constant $skipped :: <object>;
-  function result-microseconds (<object>) => (false-or(<integer>));
-  class <test-result> (<component-result>);
-  open generic-function execute-component? (<component>, <test-runner>) => (<boolean>);
-  function result-time (<metered-result>, #"key", #"pad-seconds-to") => (<string>);
-  function parse-tags (<sequence>) => (<sequence>);
-  function summary-report-function (<result>, <stream>) => ();
-  function debug? () => (<boolean>);
-  function suite-cleanup-function (<object>) => (<function>);
-  class <unit-result> (<result>);
-  function result-seconds (<object>) => (false-or(<integer>));
-  constant $xml-version-header :: <object>;
-  function status-name (<object>) => (<string>);
-  variable *check-recording-function* :: <object>;
-  function make-suite (<string>, <object>, #"rest") => (<suite>);
-  open generic-function result-type-name (<result>) => (<string>);
-  class <check-result> (<unit-result>);
-  class <test-unit> (<test>);
-  function show-progress (<test-runner>, false-or(<component>), false-or(<result>)) => ();
-  function log-report-function (<result>, <stream>) => ();
-  class <suite> (<component>);
-  function null-report-function (<result>, <stream>) => ();
-  class <component> (<object>);
-  function failures-report-function (<result>, <stream>) => ();
-  function xml-report-function (<result>, <stream>) => ();
-  class <component-result> (<result>);
-  constant $not-implemented :: <object>;
-  function debug-failures? () => (<boolean>);
-  function make-runner-from-command-line (<component>, <command-line-parser>) => (<component>, <test-runner>, <function>);
-  function result-name (<object>) => (<string>);
-  function tags-match? (<sequence>, <component>) => (<boolean>);
-  constant $passed :: <object>;
-  function surefire-report-function (<result>, <stream>) => ();
-  function suite-setup-function (<object>) => (<function>);
-  function result-status (<object>) => (<result-status>);
-  function result-bytes (<object>) => (false-or(<integer>));
-  class <suite-result> (<component-result>);
-  constant $crashed :: <object>;
-  function full-report-function (<result>, <stream>) => ();
-  constant $test-log-footer :: <object>;
-  function component-name (<object>) => (<string>);
-  function do-results (<object>, <object>) => (#"rest");
-  abstract class <runnable> (<component>);
-  class <test> (<runnable>);
-  class <benchmark> (<runnable>);
-  function test-function (<object>) => (<function>);
-  function test-requires-assertions? (<object>) => (<boolean>);
-  constant $failed :: <object>;
-  function plural (<integer>) => (<string>);
-  constant $default :: <object>;
-  function suite-components (<object>) => (<sequence>);
-  function parse-args (<sequence>) => (<command-line-parser>);
-  class <test-unit-result> (<test-result>, <unit-result>);
-  instantiable class <tag> (<object>);
-  class <result> (<object>);
-  function test-tags (<object>) => (<sequence>);
-  constant $test-log-header :: <object>;
-  constant $verbose :: <object>;
-  function result-reason (<object>) => (false-or(<string>));
-  function result-subresults (<object>) => (<sequence>);
-end module-spec %testworks;
-
-define module-spec testworks ()
-  macro-test assert-instance?-test;
-  macro-test check-instance?-test;
-  macro-test assert-not-instance?-test;
-  macro-test check-no-condition-test;
-  macro-test assert-equal-test;
-  macro-test check-no-errors-test;
-  function run-test-application (#"rest") => (false-or(<result>));
-  macro-test assert-not-equal-test;
-  // generated without "instantiable"
-  open instantiable class <test-runner> (<object>);
-  open generic-function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
-  function run-tests (<test-runner>, <component>) => (false-or(<component-result>));
-  macro-test assert-false-test;
-  macro-test assert-signals-test;
-  macro-test check-condition-test;
-  macro-test check-test;
-  macro-test suite-definer-test;
-  function runner-skip (<object>) => (<sequence>);
-  function test-output (<string>, #"rest") => ();
-  function test-option (<string>, #"key", #"default") => (<string>);
-  macro-test with-test-unit-test;
-  macro-test test-definer-test;
-  function debug-runner? (<object>) => (<object>);
-  function runner-output-stream (<object>) => (<stream>);
-  macro-test check-false-test;
-  macro-test assert-no-errors-test;
-  macro-test assert-true-test;
-  function runner-tags (<object>) => (<sequence>);
-  macro-test check-true-test;
-  function runner-progress (<object>) => (one-of(#f, $default, $verbose));
-  macro-test check-equal-test;
-end module-spec testworks;
-
 // Module: %testworks
 
 define %testworks constant-test $skipped ()
@@ -154,10 +51,6 @@ define %testworks function-test result-seconds ()
   //---*** Fill this in...
 end function-test result-seconds;
 
-define %testworks function-test root-suite ()
-  //---*** Fill this in...
-end function-test root-suite;
-
 define %testworks constant-test $xml-version-header ()
   //---*** Fill this in...
 end constant-test $xml-version-header;
@@ -201,10 +94,6 @@ end class-test <suite>;
 define %testworks function-test null-report-function ()
   //---*** Fill this in...
 end function-test null-report-function;
-
-define %testworks function-test find-suite ()
-  //---*** Fill this in...
-end function-test find-suite;
 
 define %testworks class-test <component> ()
   //---*** Fill this in...
@@ -484,6 +373,113 @@ define testworks macro-test check-equal-test ()
   //---*** Fill this in...
 end macro-test check-equal-test;
 
+define module-spec %testworks ()
+  constant $skipped :: <object>;
+  // as generated:
+  // function result-microseconds ({<component-result> in %testworks}) => (false-or(<integer>));
+  function result-microseconds (<component-result>) => (false-or(<integer>));
+
+  class <test-result> (<component-result>);
+  open generic-function execute-component? (<component>, <test-runner>) => (<boolean>);
+  function result-time (<component-result>, #"key", #"pad-seconds-to") => (<string>);
+  function parse-tags (<sequence>) => (<sequence>);
+  function summary-report-function (<result>, <stream>) => ();
+  function debug? () => (<boolean>);
+  // as generated:
+  // function suite-cleanup-function ({<suite> in %testworks}) => (<function>);
+  function suite-cleanup-function (<suite>) => (<function>);
+  class <unit-result> (<result>);
+  // as generated:
+  // function result-seconds ({<component-result> in %testworks}) => (false-or(<integer>));
+  function result-seconds (<component-result>) => (false-or(<integer>));
+  constant $xml-version-header :: <object>;
+  function status-name (<result-status>) => (<string>);
+  variable *check-recording-function* :: <object>;
+  function make-suite (<string>, <object>, #"rest") => (<suite>);
+  open generic-function result-type-name (<result>) => (<string>);
+  class <check-result> (<unit-result>);
+  class <test-unit> (<test>);
+  function show-progress (<test-runner>, false-or(<component>), false-or(<result>)) => ();
+  function log-report-function (<result>, <stream>) => ();
+  class <suite> (<component>);
+  function null-report-function (<result>, <stream>) => ();
+  class <component> (<object>);
+  function failures-report-function (<result>, <stream>) => ();
+  function xml-report-function (<result>, <stream>) => ();
+  class <component-result> (<result>);
+  constant $not-implemented :: <object>;
+  function debug-failures? () => (<boolean>);
+  function make-runner-from-command-line (<component>, <command-line-parser>) => (<component>, <test-runner>, <function>);
+  // as generated:
+  // function result-name ({<result> in %testworks}) => (<string>);
+  function result-name (<result>) => (<string>);
+  function tags-match? (<sequence>, <component>) => (<boolean>);
+  constant $passed :: <object>;
+  function surefire-report-function (<result>, <stream>) => ();
+  // as generated:
+  // function suite-setup-function ({<suite> in %testworks}) => (<function>);
+  function suite-setup-function (<suite>) => (<function>);
+  function result-status (<result>) => (<result-status>);
+  function result-bytes (<component-result>) => (false-or(<integer>));
+  class <suite-result> (<component-result>);
+  constant $crashed :: <object>;
+  function full-report-function (<result>, <stream>) => ();
+  constant $test-log-footer :: <object>;
+  function component-name (<component>) => (<string>);
+  function do-results (<object>, <object>) => (#"rest");
+  abstract class <runnable> (<component>);
+  class <test> (<runnable>);
+  class <benchmark> (<runnable>);
+  function test-function (<runnable>) => (<function>);
+  function test-requires-assertions? (<runnable>) => (<boolean>);
+  constant $failed :: <object>;
+  function plural (<integer>) => (<string>);
+  constant $default :: <object>;
+  function suite-components (<suite>) => (<sequence>);
+  function parse-args (<sequence>) => (<command-line-parser>);
+  class <test-unit-result> (<test-result>, <unit-result>);
+  instantiable class <tag> (<object>);
+  class <result> (<object>);
+  function test-tags (<runnable>) => (<sequence>);
+  constant $test-log-header :: <object>;
+  constant $verbose :: <object>;
+  function result-reason (<result>) => (false-or(<string>));
+  function result-subresults (<component-result>) => (<sequence>);
+end module-spec %testworks;
+
+define module-spec testworks ()
+  macro-test assert-instance?-test;
+  macro-test check-instance?-test;
+  macro-test assert-not-instance?-test;
+  macro-test check-no-condition-test;
+  macro-test assert-equal-test;
+  macro-test check-no-errors-test;
+  function run-test-application (<component>) => (false-or(<result>));
+  macro-test assert-not-equal-test;
+  // generated without "instantiable"
+  open instantiable class <test-runner> (<object>);
+  open generic-function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
+  function run-tests (<test-runner>, <component>) => (<component-result>);
+  macro-test assert-false-test;
+  macro-test assert-signals-test;
+  macro-test check-condition-test;
+  macro-test check-test;
+  macro-test suite-definer-test;
+  function runner-skip (<test-runner>) => (<sequence>);
+  function test-output (<string>, #"rest") => ();
+  function test-option (<string>, #"key", #"default") => (<string>);
+  macro-test with-test-unit-test;
+  macro-test test-definer-test;
+  function debug-runner? (<test-runner>) => (<object>);
+  function runner-output-stream (<test-runner>) => (<stream>);
+  macro-test check-false-test;
+  macro-test assert-no-errors-test;
+  macro-test assert-true-test;
+  function runner-tags (<test-runner>) => (<sequence>);
+  macro-test check-true-test;
+  function runner-progress (<test-runner>) => (one-of(#f, $default, $verbose));
+  macro-test check-equal-test;
+end module-spec testworks;
 
 define library-spec testworks ()
   module %testworks;
