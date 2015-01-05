@@ -6,130 +6,8 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-/// Protocol bindings modeling
-
-define class <protocol-bindings-info> (<object>)
-  constant slot names = make(<stretchy-vector>);
-  constant slot protocol-binding-functions = make(<stretchy-vector>);
-  slot %unbound-bindings :: false-or(<sequence>) = #f;
-  slot %definitions :: false-or(<table>) = #f;
-end class <protocol-bindings-info>;
-
-define class <protocol-class-bindings-info> (<protocol-bindings-info>)
-  constant slot protocol-uninstantiable-classes = make(<stretchy-vector>);
-end class <protocol-class-bindings-info>;
-
-define method evaluate-bindings
-    (info :: <protocol-bindings-info>)
- => (bindings :: <table>, unbound-bindings :: <sequence>)
-  let table = make(<table>);
-  let unbound-bindings = make(<stretchy-vector>);
-  for (name in info.names, function in info.protocol-binding-functions)
-    let (value, spec)
-      = block ()
-          function();
-        exception (<error>)
-          add!(unbound-bindings, as-lowercase(as(<byte-string>, name)));
-          #f
-        end;
-    if (value)
-      table[value] := spec;
-    end
-  end;
-  values(table, unbound-bindings)
-end method evaluate-bindings;
-
-define method update-bindings
-    (info :: <protocol-bindings-info>) => ()
-  let (bindings, unbound-bindings) = evaluate-bindings(info);
-  info.%unbound-bindings := unbound-bindings;
-  info.%definitions := bindings
-end method update-bindings;
-
-define method protocol-bindings
-    (info :: <protocol-bindings-info>) => (bindings :: <table>)
-  info.%definitions
-    | begin
-        update-bindings(info);
-        info.%definitions
-      end
-end method protocol-bindings;
-
-define method protocol-unbound-bindings
-    (info :: <protocol-bindings-info>) => (bindings :: <sequence>)
-  info.%unbound-bindings
-    | begin
-        update-bindings(info);
-        info.%unbound-bindings
-      end
-end method protocol-unbound-bindings;
-
-define method register-binding
-    (info :: <protocol-bindings-info>, name :: <symbol>,
-     binding-function :: <function>)
- => ()
-  add!(info.names, name);
-  add!(info.protocol-binding-functions, binding-function);
-  // Clear the caches so that they get recomputed
-  info.%unbound-bindings := #f;
-  info.%definitions := #f;
-end method register-binding;
-
-
-/// Protocol specs modeling
-
 define class <protocol-spec> (<spec>)
-  constant slot protocol-class-bindings = make(<protocol-class-bindings-info>);
-  constant slot protocol-function-bindings = make(<protocol-bindings-info>);
-  constant slot %definitions :: <table> = make(<table>);
 end class <protocol-spec>;
-
-define function protocol-definitions
-    (spec :: <protocol-spec>) => (definitions :: <table>)
-  let definitions = spec.%definitions;
-  let class-bindings = protocol-class-bindings(spec);
-  unless (class-bindings.%definitions)
-    let class-definitions = protocol-bindings(class-bindings);
-    do(method (definition-spec)
-         definitions[spec-name(definition-spec)] := definition-spec
-       end,
-       class-definitions)
-  end;
-  let function-bindings = protocol-function-bindings(spec);
-  unless (function-bindings.%definitions)
-    let function-definitions = protocol-bindings(function-bindings);
-    do(method (definition-spec)
-         definitions[spec-name(definition-spec)] := definition-spec
-       end,
-       function-definitions)
-  end;
-  definitions
-end function protocol-definitions;
-
-define method protocol-definition-spec
-    (protocol-spec :: <protocol-spec>, name :: <symbol>)
- => (definition :: false-or(<definition-spec>))
-  let definitions = protocol-definitions(protocol-spec);
-  element(definitions, name, default: #f)
-end method protocol-definition-spec;
-
-define function do-protocol-definitions
-    (function :: <function>, spec :: <protocol-spec>, type :: <type>) => ()
-  do(method (binding)
-       when (instance?(binding, type))
-         function(binding)
-       end
-     end,
-     protocol-definitions(spec))
-end function do-protocol-definitions;
-
-define method register-definition
-    (spec :: <protocol-spec>, name :: <symbol>,
-     definition :: <definition-spec>)
- => ()
-  let table = spec.%definitions;
-  table[name] := definition
-end method register-definition;
 
 
 /// A useful macro to define protocol specs
@@ -142,9 +20,7 @@ define macro protocol-spec-definer
          end;
          define protocol-spec-bindings "$" ## ?protocol-name ## "-protocol-spec" (?options)
            ?specs
-         end;
-         define protocol-spec-suite ?protocol-name => "$" ## ?protocol-name ## "-protocol-spec" end;
-         }
+         end; }
 end macro protocol-spec-definer;
 
 define macro protocol-spec-constant-definer
@@ -163,17 +39,14 @@ define macro protocol-spec-bindings-definer
       ?modifiers:* class ?class-name:name (?superclasses:*);
       ?more-specs:*
     end }
-    => { register-class
-          (?protocol-constant,
-           ?#"class-name",
-           method ()
-             values(?class-name,
-                    make(<class-spec>,
-                         name: ?#"class-name",
-                         class: ?class-name,
-                         superclasses: vector(?superclasses),
-                         modifiers: vector(?modifiers)))
-           end);
+    => { define test "check-class-specification-" ## ?class-name ()
+           let class-spec = make(<class-spec>,
+                                 name: ?#"class-name",
+                                 class: ?class-name,
+                                 superclasses: vector(?superclasses),
+                                 modifiers: vector(?modifiers));
+           check-class-specification(class-spec);
+         end;
          define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
@@ -181,18 +54,16 @@ define macro protocol-spec-bindings-definer
       ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*);
       ?more-specs:*
     end }
-    => { register-function
-          (?protocol-constant,
-           ?#"function-name",
-           method ()
-             values(?function-name,
-                    make(<function-spec>,
-                         name: ?#"function-name",
-                         function: ?function-name,
-                         parameters: vector(?parameters),
-                         results:    vector(?results),
-                         modifiers: vector(?modifiers)))
-           end);
+    => { define test "check-function-specification-" ## ?function-name ()
+           let function-spec
+             = make(<function-spec>,
+                    name: ?#"function-name",
+                    function: ?function-name,
+                    parameters: vector(?parameters),
+                    results:    vector(?results),
+                    modifiers: vector(?modifiers));
+           check-function-specification(function-spec);
+         end;
          define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
@@ -200,18 +71,16 @@ define macro protocol-spec-bindings-definer
       ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*);
       ?more-specs:*
     end }
-    => { register-function
-          (?protocol-constant,
-           ?#"function-name",
-           method ()
-             values(?function-name,
-                    make(<function-spec>,
-                         name: ?#"function-name",
-                         function: ?function-name,
-                         parameters: vector(?parameters),
-                         results:    vector(?results),
-                         modifiers: vector(#"generic", ?modifiers)))
-           end);
+    => { define test "check-function-specification-" ## ?function-name ()
+           let function-spec
+             = make(<function-spec>,
+                    name: ?#"function-name",
+                    function: ?function-name,
+                    parameters: vector(?parameters),
+                    results:    vector(?results),
+                    modifiers: vector(#"generic", ?modifiers));
+           check-function-specification(function-spec);
+         end;
          define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
@@ -219,16 +88,19 @@ define macro protocol-spec-bindings-definer
       ?modifiers:* variable ?variable-name:name :: ?type:expression;
       ?more-specs:*
     end }
-    => { register-variable
-           (?protocol-constant,
-            ?#"variable-name",
-            ?type,
-            method () => (value :: ?type)
-              ?variable-name
-            end,
-            method (value :: ?type) => (value :: ?type)
-              ?variable-name := value
-            end);
+    => { define test "check-variable-specification-" ## ?variable-name ()
+           let variable-spec
+             = make(<variable-spec>,
+                    name: ?#"variable-name",
+                    type: ?type,
+                    getter: method () => (value :: ?type)
+                              ?variable-name
+                            end,
+                    setter: method (value :: ?type) => (value :: ?type)
+                              ?variable-name := value
+                            end);
+           check-variable-specification(variable-spec);
+         end;
          define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
@@ -236,11 +108,14 @@ define macro protocol-spec-bindings-definer
       ?modifiers:* constant ?constant-name:name :: ?type:expression;
       ?more-specs:*
     end }
-    => { register-constant
-           (?protocol-constant,
-            ?#"constant-name",
-            ?type,
-            method () ?constant-name end);
+    => { define test "check-constant-specification-" ## ?constant-name ()
+           let constant-spec
+             = make(<constant-spec>,
+                    name: ?#"constant-name",
+                    type: ?type,
+                    getter: method () ?constant-name end);
+           check-constant-specification(constant-spec);
+         end;
          define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
@@ -248,8 +123,7 @@ define macro protocol-spec-bindings-definer
       ?modifiers:* macro-test ?macro-name:name;
       ?more-specs:*
     end }
-    => { register-macro(?protocol-constant, ?#"macro-name");
-         define protocol-spec-bindings ?protocol-constant (?options)
+    => { define protocol-spec-bindings ?protocol-constant (?options)
            ?more-specs
          end; }
  modifiers:
@@ -258,32 +132,6 @@ define macro protocol-spec-bindings-definer
   { ?modifier:name ... }
     => { ?#"modifier", ... }
 end macro protocol-spec-bindings-definer;
-
-define macro protocol-spec-suite-definer
-  { define protocol-spec-suite ?protocol-name:name => ?spec:name end }
-    => { define test ?protocol-name ## "-protocol-classes-test" (requires-assertions?: #f)
-           check-protocol-classes(?spec)
-         end;
-         define test ?protocol-name ## "-protocol-functions-test" (requires-assertions?: #f)
-           check-protocol-functions(?spec)
-         end;
-         define test ?protocol-name ## "-protocol-variables-test" (requires-assertions?: #f)
-           check-protocol-variables(?spec)
-         end;
-         define test ?protocol-name ## "-protocol-constants-test" (requires-assertions?: #f)
-           check-protocol-constants(?spec)
-         end;
-         define test ?protocol-name ## "-protocol-macros-test" (requires-assertions?: #f)
-           check-protocol-macros(?spec)
-         end;
-         define suite ?protocol-name ## "-protocol-test-suite" ()
-           test ?protocol-name ## "-protocol-constants-test";
-           test ?protocol-name ## "-protocol-variables-test";
-           test ?protocol-name ## "-protocol-classes-test";
-           test ?protocol-name ## "-protocol-functions-test";
-           test ?protocol-name ## "-protocol-macros-test";
-         end }
-end macro protocol-spec-suite-definer;
 
 
 /// A useful macro to define a definition's test function

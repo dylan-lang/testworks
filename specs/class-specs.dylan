@@ -54,45 +54,11 @@ define macro class-test-definer
 end macro class-test-definer;
 
 
-/// Class spec modeling
+/// Class checking
 
-define method register-class
-    (spec :: <protocol-spec>, name :: <symbol>, binding-function :: <function>)
- => ()
-  register-binding(protocol-class-bindings(spec), name, binding-function)
-end method register-class;
-
-define method protocol-classes
-    (spec :: <protocol-spec>) => (classes :: <table>)
-  protocol-bindings(protocol-class-bindings(spec))
-end method protocol-classes;
-
-define method protocol-unbound-classes
-    (spec :: <protocol-spec>) => (classes :: <sequence>)
-  protocol-unbound-bindings(protocol-class-bindings(spec))
-end method protocol-unbound-classes;
-
-define method protocol-definition-spec
-    (protocol-spec :: <protocol-spec>, class :: <class>)
- => (class-spec :: false-or(<class-spec>))
-  element(protocol-classes(protocol-spec), class, default: #f)
-end method protocol-definition-spec;
-
-define method protocol-class-superclasses
-    (spec :: <protocol-spec>, class :: <class>) => (superclasses :: <sequence>)
-  let class-spec = protocol-definition-spec(spec, class);
-  class-spec-superclasses(class-spec)
-end method protocol-class-superclasses;
-
-define method protocol-class-modifiers
-    (spec :: <protocol-spec>, class :: <class>) => (modifiers :: <sequence>)
-  let class-spec = protocol-definition-spec(spec, class);
-  class-spec-modifiers(class-spec)
-end method protocol-class-modifiers;
-
-define method protocol-class-instantiable?
-    (spec :: <protocol-spec>, class :: <class>) => (instantiable? :: <boolean>)
-  member?(#"instantiable", protocol-class-modifiers(spec, class))
+define method class-instantiable?
+    (class-spec :: <class-spec>) => (instantiable? :: <boolean>)
+  member?(#"instantiable", class-spec-modifiers(class-spec))
 // I deleted the following because it causes tests that initially fail
 // because the programmer failed to provide a make-test-instance method
 // to pass on subsequent test runs.  -- carlg
@@ -100,62 +66,29 @@ define method protocol-class-instantiable?
 //        let info = protocol-class-bindings(spec);
 //        ~member?(class, protocol-uninstantiable-classes(info))
 //      end
-end method protocol-class-instantiable?;
+end method class-instantiable?;
 
-define method protocol-class-abstract?
-    (spec :: <protocol-spec>, class :: <class>)
- => (abstract? :: <boolean>)
-  member?(#"abstract", protocol-class-modifiers(spec, class))
-end method protocol-class-abstract?;
-
-define method do-protocol-classes
-    (function :: <function>, spec :: <protocol-spec>,
-     #key superclass :: <class> = <object>)
+define method check-class-specification
+    (class-spec :: <class-spec>)
  => ()
-  do-protocol-definitions
-    (method (class-spec :: <class-spec>) => ()
-       let class = class-spec-class(class-spec);
-       if (subtype?(class, superclass))
-         function(class)
-       end
-     end,
-     spec, <class-spec>)
-end method do-protocol-classes;
-
-
-/// Class checking
-
-define method check-protocol-class
-    (protocol-spec :: <protocol-spec>, class-spec :: <class-spec>) => ()
   let title = spec-title(class-spec);
   let class = class-spec-class(class-spec);
-  with-test-unit (format-to-string("class %s specification", title))
-    check-instance?(format-to-string("Variable %s is a class", title),
-                    <class>, class);
-    check-true(format-to-string("Variable %s has the correct superclasses", title),
-               protocol-class-has-correct-superclasses?(protocol-spec, class));
-    check-protocol-class-instantiation(protocol-spec, class-spec);
-  end;
-end method check-protocol-class;
+  check-instance?(format-to-string("Variable %s is a class", title),
+                  <class>, class);
+  check-true(format-to-string("Variable %s has the correct superclasses", title),
+             class-has-correct-superclasses?(class-spec));
+  check-class-instantiation(class-spec);
+end method check-class-specification;
 
-define function check-protocol-classes
-    (protocol-spec :: <protocol-spec>) => ()
-  do-protocol-definitions
-    (curry(check-protocol-class, protocol-spec),
-     protocol-spec, <class-spec>);
-  do(method (class-name :: <string>) => ()
-       check-true(format-to-string("The variable %s is a class", class-name), #f)
-     end,
-     protocol-unbound-classes(protocol-spec));
-end function check-protocol-classes;
-
-define method protocol-class-has-correct-superclasses?
-    (spec :: <protocol-spec>, class :: <class>) => (correct? :: <boolean>)
+define method class-has-correct-superclasses?
+    (class-spec :: <class-spec>)
+ => (correct? :: <boolean>)
+  let class = class-spec-class(class-spec);
   every?(method (superclass :: <class>) => (subtype? :: <boolean>)
            subtype?(class, superclass)
          end,
-         protocol-class-superclasses(spec, class))
-end method protocol-class-has-correct-superclasses?;
+         class-spec-superclasses(class-spec))
+end method class-has-correct-superclasses?;
 
 
 /// Class instantiation checks
@@ -170,20 +103,18 @@ define method destroy-test-instance
   #f
 end method destroy-test-instance;
 
-define method check-protocol-class-instantiation
-    (spec :: <protocol-spec>, class-spec :: <class-spec>) => ()
+define method check-class-instantiation
+    (class-spec :: <class-spec>)
+ => ()
   let class = class-spec-class(class-spec);
   let title = spec-title(class-spec);
-  if (protocol-class-instantiable?(spec, class))
+  if (class-instantiable?(class-spec))
     let instance = #f;
     check-instance?(format-to-string("make %s with required arguments", title),
                     class,
                     instance := make-test-instance(class));
     if (instance)
       destroy-test-instance(class, instance)
-    else
-      let info = protocol-class-bindings(spec);
-      add!(protocol-uninstantiable-classes(info), class)
     end
   else
     check-condition
@@ -194,4 +125,4 @@ define method check-protocol-class-instantiation
          destroy-test-instance(class, instance)
        end)
   end
-end method check-protocol-class-instantiation;
+end method check-class-instantiation;

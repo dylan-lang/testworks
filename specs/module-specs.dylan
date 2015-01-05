@@ -43,25 +43,27 @@ define macro module-spec-suite-definer
       ?specs:*
     end }
     => { define suite ?module-name ## "-module-test-suite" (?options)
-           suite ?module-name ## "-protocol-test-suite";
            ?specs
          end }
  specs:
   { } => { }
   { ?spec:*; ... } => { ?spec ... }
  spec:
-  { protocol ?protocol-name:name }
-    => { suite ?protocol-name ## "-protocol-test-suite"; }
   { ?modifiers:* class ?class-name:name (?superclasses:*); }
-    => { test "test-" ## ?class-name ## "-specification"; }
+    => { test "check-class-specification-" ## ?class-name;
+         test "test-" ## ?class-name ## "-specification"; }
   { ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*); }
-    => { test "test-" ## ?function-name ## "-specification"; }
+    => { test "check-function-specification-" ## ?function-name;
+         test "test-" ## ?function-name ## "-specification"; }
   { ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*); }
-    => { test "test-" ## ?function-name ## "-specification"; }
+    => { test "check-function-specification-" ## ?function-name;
+         test "test-" ## ?function-name ## "-specification"; }
   { ?modifiers:* variable ?variable-name:name :: ?type:expression; }
-    => { test "test-" ## ?variable-name ## "-specification"; }
+    => { test "check-variable-specification-" ## ?variable-name;
+         test "test-" ## ?variable-name ## "-specification"; }
   { ?modifiers:* constant ?constant-name:name :: ?type:expression; }
-    => { test "test-" ## ?constant-name ## "-specification"; }
+    => { test "check-constant-specification-" ## ?constant-name;
+         test "test-" ## ?constant-name ## "-specification"; }
   { ?modifiers:* macro-test ?macro-name:name; }
     => { test "test-" ## ?macro-name ## "-specification"; }
   { ?definition:* }
