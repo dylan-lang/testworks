@@ -51,21 +51,21 @@ define macro module-spec-suite-definer
  spec:
   { ?modifiers:* class ?class-name:name (?superclasses:*); }
     => { test "check-class-specification-" ## ?class-name;
-         test "test-" ## ?class-name ## "-specification"; }
+         test "test-class-" ## ?class-name; }
   { ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*); }
     => { test "check-function-specification-" ## ?function-name;
-         test "test-" ## ?function-name ## "-specification"; }
+         test "test-function-" ## ?function-name; }
   { ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*); }
     => { test "check-function-specification-" ## ?function-name;
-         test "test-" ## ?function-name ## "-specification"; }
+         test "test-function-" ## ?function-name; }
   { ?modifiers:* variable ?variable-name:name :: ?type:expression; }
     => { test "check-variable-specification-" ## ?variable-name;
-         test "test-" ## ?variable-name ## "-specification"; }
+         test "test-variable-" ## ?variable-name; }
   { ?modifiers:* constant ?constant-name:name :: ?type:expression; }
     => { test "check-constant-specification-" ## ?constant-name;
-         test "test-" ## ?constant-name ## "-specification"; }
+         test "test-constant-" ## ?constant-name; }
   { ?modifiers:* macro-test ?macro-name:name; }
-    => { test "test-" ## ?macro-name ## "-specification"; }
+    => { test "test-macro-" ## ?macro-name; }
   { ?definition:* }
     => { }
 end macro module-spec-suite-definer;

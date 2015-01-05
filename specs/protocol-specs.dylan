@@ -118,15 +118,3 @@ define macro protocol-spec-bindings-definer
   { ?modifier:name ... }
     => { ?#"modifier", ... }
 end macro protocol-spec-bindings-definer;
-
-
-/// A useful macro to define a definition's test function
-
-define macro definition-test-definer
-  { define ?protocol-name:name definition-test ?definition-name:name ()
-      ?body:body
-    end }
-    => { define test "test-" ## ?definition-name ## "-specification" (requires-assertions?: #f)
-           ?body
-         end }
-end macro definition-test-definer;
