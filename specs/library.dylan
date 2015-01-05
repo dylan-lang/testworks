@@ -23,7 +23,6 @@ define module testworks-specs
   export \library-spec-definer,
          \module-spec-definer,
          \protocol-spec-definer,
-         \definition-test-definer,
          \constant-test-definer,
          \variable-test-definer,
          \class-test-definer,

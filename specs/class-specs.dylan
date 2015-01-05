@@ -50,7 +50,9 @@ define macro class-test-definer
   { define ?protocol-name:name class-test ?class-name:name ()
       ?body:body
     end }
-    => { define ?protocol-name definition-test ?class-name () ?body end }
+    => { define test "test-class-" ## ?class-name (requires-assertions?: #f)
+           ?body
+         end }
 end macro class-test-definer;
 
 
