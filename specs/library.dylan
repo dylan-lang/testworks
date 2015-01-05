@@ -32,7 +32,6 @@ define module testworks-specs
 
   // The classes
   export <spec>,
-         <protocol-spec>,
          <definition-spec>,
          <constant-spec>,
          <variable-spec>,
