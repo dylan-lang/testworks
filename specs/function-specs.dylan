@@ -271,10 +271,6 @@ define function check-protocol-function
     check-protocol-function-parameters(protocol-spec, title, function);
     check-protocol-function-results(protocol-spec, title, function);
   end;
-  with-test-unit (format-to-string("function-test %s", title))
-    test-protocol-definition
-      (protocol-spec, spec-name(protocol-spec), spec-name(function-spec))
-  end
 end function check-protocol-function;
 
 define function check-protocol-functions

@@ -288,50 +288,11 @@ end macro protocol-spec-suite-definer;
 
 /// A useful macro to define a definition's test function
 
-define open generic test-protocol-definition
-    (protocol :: <protocol-spec>, protocol-name :: <symbol>,
-     definition-name :: <symbol>)
- => ();
-
-define method test-protocol-definition
-    (spec :: <protocol-spec>, protocol-name :: <symbol>,
-     definition-name :: <symbol>)
- => ()
-  ignore(protocol-name);
-  let definition-spec = protocol-definition-spec(spec, definition-name);
-  assert(definition-spec,
-         "Attempting to test definition %s which is not part of protocol %s",
-         definition-name, protocol-name);
-  let tested?
-    = if (instance?(definition-spec, <class-spec>))
-        let class = class-spec-class(definition-spec);
-        let test-function = class-test-function(class);
-        if (test-function)
-          let instantiable? = protocol-class-instantiable?(spec, class);
-          let abstract? = protocol-class-abstract?(spec, class);
-          test-function(class,
-                        name: spec-title(definition-spec),
-                        abstract?: abstract?,
-                        instantiable?: instantiable?);
-          #t
-        end
-      end;
-  unless (tested?)
-    cerror("Continue past this testing unit",
-           "No test function provided for definition %s",
-          spec-title(definition-spec))
-  end
-end method test-protocol-definition;
-
 define macro definition-test-definer
   { define ?protocol-name:name definition-test ?definition-name:name ()
       ?body:body
     end }
-    => { define sideways method test-protocol-definition
-             (protocol :: <protocol-spec>,
-              protocol-name == ?#"protocol-name",
-              definition    == ?#"definition-name")
-          => ()
+    => { define test "test-" ## ?definition-name ## "-specification" ()
            ?body
-         end method test-protocol-definition }
+         end }
 end macro definition-test-definer;

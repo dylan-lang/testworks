@@ -82,10 +82,6 @@ define function check-protocol-variable
                  variable-spec-setter(variable-spec)(value) = value
                end);
   end;
-  with-test-unit (format-to-string("variable-test %s", title))
-    test-protocol-definition
-      (protocol-spec, spec-name(protocol-spec), spec-name(variable-spec))
-  end
 end function check-protocol-variable;
 
 define function check-protocol-variables
@@ -103,10 +99,6 @@ define function check-protocol-constant
                     variable-spec-type(constant),
                     variable-spec-getter(constant)());
   end;
-  with-test-unit (format-to-string("constant-test %s", title))
-    test-protocol-definition
-      (protocol-spec, spec-name(protocol-spec), spec-name(constant))
-  end
 end function check-protocol-constant;
 
 define function check-protocol-constants
