@@ -7,114 +7,19 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// A useful macro to define protocol specs
-
+///
+/// A protocol spec is a list of binding specifications that
+/// is smaller than a module. It is used to more tightly associate
+/// a set of bindings rather than having them all within a single
+/// module spec.
 define macro protocol-spec-definer
   { define protocol-spec ?protocol-name:name (?options:*)
       ?specs:*
     end}
-    => { define protocol-spec-bindings ?protocol-name (?options)
+    => { define binding-specs ?protocol-name (?options)
            ?specs
-         end; }
+         end;
+         define binding-spec-suite ?protocol-name ## "-protocol-test-suite" (?options)
+           ?specs
+         end }
 end macro protocol-spec-definer;
-
-define macro protocol-spec-bindings-definer
-  { define protocol-spec-bindings ?protocol-name:name (?options:*)
-    end }
-    => { }
-  { define protocol-spec-bindings ?protocol-name:name (?options:*)
-      ?modifiers:* class ?class-name:name (?superclasses:*);
-      ?more-specs:*
-    end }
-    => { define test "check-class-specification-" ## ?class-name ()
-           let class-spec = make(<class-spec>,
-                                 name: ?#"class-name",
-                                 class: ?class-name,
-                                 superclasses: vector(?superclasses),
-                                 modifiers: vector(?modifiers));
-           check-class-specification(class-spec);
-         end;
-         define protocol-spec-bindings ?protocol-name (?options)
-           ?more-specs
-         end; }
-  { define protocol-spec-bindings ?protocol-name:name (?options:*)
-      ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*);
-      ?more-specs:*
-    end }
-    => { define test "check-function-specification-" ## ?function-name ()
-           let function-spec
-             = make(<function-spec>,
-                    name: ?#"function-name",
-                    function: ?function-name,
-                    parameters: vector(?parameters),
-                    results:    vector(?results),
-                    modifiers: vector(?modifiers));
-           check-function-specification(function-spec);
-         end;
-         define protocol-spec-bindings ?protocol-name (?options)
-           ?more-specs
-         end; }
-  { define protocol-spec-bindings ?protocol-name:name (?options:*)
-      ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*);
-      ?more-specs:*
-    end }
-    => { define test "check-function-specification-" ## ?function-name ()
-           let function-spec
-             = make(<function-spec>,
-                    name: ?#"function-name",
-                    function: ?function-name,
-                    parameters: vector(?parameters),
-                    results:    vector(?results),
-                    modifiers: vector(#"generic", ?modifiers));
-           check-function-specification(function-spec);
-         end;
-         define protocol-spec-bindings ?protocol-name (?options)
-           ?more-specs
-         end; }
-  { define protocol-spec-bindings ?protocol-name:name (?options:*)
-      ?modifiers:* variable ?variable-name:name :: ?type:expression;
-      ?more-specs:*
-    end }
-    => { define test "check-variable-specification-" ## ?variable-name ()
-           let variable-spec
-             = make(<variable-spec>,
-                    name: ?#"variable-name",
-                    type: ?type,
-                    getter: method () => (value :: ?type)
-                              ?variable-name
-                            end,
-                    setter: method (value :: ?type) => (value :: ?type)
-                              ?variable-name := value
-                            end);
-           check-variable-specification(variable-spec);
-         end;
-         define protocol-spec-bindings ?protocol-name (?options)
-           ?more-specs
-         end; }
-  { define protocol-spec-bindings ?protocol-name:name (?options:*)
-      ?modifiers:* constant ?constant-name:name :: ?type:expression;
-      ?more-specs:*
-    end }
-    => { define test "check-constant-specification-" ## ?constant-name ()
-           let constant-spec
-             = make(<constant-spec>,
-                    name: ?#"constant-name",
-                    type: ?type,
-                    getter: method () ?constant-name end);
-           check-constant-specification(constant-spec);
-         end;
-         define protocol-spec-bindings ?protocol-name (?options)
-           ?more-specs
-         end; }
-  { define protocol-spec-bindings ?protocol-name:name (?options:*)
-      ?modifiers:* macro-test ?macro-name:name;
-      ?more-specs:*
-    end }
-    => { define protocol-spec-bindings ?protocol-name (?options)
-           ?more-specs
-         end; }
- modifiers:
-  { }
-    => { }
-  { ?modifier:name ... }
-    => { ?#"modifier", ... }
-end macro protocol-spec-bindings-definer;
