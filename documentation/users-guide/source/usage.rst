@@ -507,8 +507,134 @@ Comparing Test Results
 Test Specifications
 ===================
 
+Test specifications are written using the ``testworks-specs`` library
+along side the usual ``testworks`` library.
+
+While tests are normally structured as a hierarchy of test suites
+containing tests, specifications follow a structure more like Dylan
+code:
+
+* Library specifications.
+* Module specifications.
+* Class, function, constant, variable and macro specifications.
+
+Library and module specifications are typically placed in a file
+named ``specification.dylan`` which is listed last in the associated
+LID file.
+
+These specifications consist of two sorts of checks:
+
+* An automated validation that the interface in the specification
+  matches what the library actually provides.
+* The usual tests, provided by the programmer.
+
+Library Specifications
+----------------------
+
+A library specification lists the modules that the library contains
+as well as additional tests and suites which should be run when the
+library specification is checked.
+
+.. code-block:: dylan
+
+   define library-spec io ()
+     module streams;
+     modules pprint;
+
+     suite format-test-suite;
+   end library-spec io;
+
+Due to implementation issues, the *library-spec* must be parsed by the
+Dylan compiler **after** the module specifications that are listed as
+well as after any of the additional suites or tests.
+
+Module Specifications
+---------------------
+
+A module specification lists the bindings that are exported by the
+module. These bindings are expressed in a format similar to the usual
+definitions.
+
+A simple module specification might look like:
+
+.. code-block:: dylan
+
+   define module-spec pprint ()
+     variable *print-miser-width*   :: false-or(<integer>);
+     variable *default-line-length* :: <integer>;
+
+     sealed instantiable class <pretty-stream> (<stream>);
+
+     function pprint-logical-block (<stream>) => ();
+     function pprint-newline (one-of(#"linear", #"fill", #"miser", #"mandatory"), <stream>) => ();
+     function pprint-indent (one-of(#"block", #"current"), <integer>, <stream>) => ();
+     function pprint-tab (one-of(#"line", #"line-relative", #"section", #"section-relative"), <integer>, <integer>, <stream>) => ();
+
+     macro-test printing-logical-block-test;
+   end module-spec pprint;
+
+   define module-spec print ()
+     ...
+     open generic-function print-object (<object>, <stream>) => ();
+     ...
+   end module-spec print;
+
+There are a couple of things to note here:
+
+* Macros are mentioned as ``macro-test`` and their test names have ``-test``
+  appended to the macro name already.
+* Generic functions are listed as ``generic-function``.
+* Generic functions, regular functions and classes can have adjectives listed.
+
+Actual Tests
+------------
+
+Once your library and module specifications have been written, you can provide
+actual test implementations for each of your specified bindings. In fact, you
+must provide at least an empty test for each binding listed in your module
+specifications.
+
+These are done using the ``class-test``, ``function-test``, ``variable-test``,
+``constant-test`` and ``macro-test`` definer macros.
+
+These all follow the same pattern, demonstrated here for a function test:
+
+.. code-block:: dylan
+
+   define pprint function-test pprint-newline ()
+     //---*** Fill this in...
+   end function-test pprint-newline;
+
+You can see that the *module name* is given as an adjective between ``define``
+and ``function-test``.
+
+Within the test implementation, you can use all of the usual ``testworks``
+checks and assertions. Unlike tests defined via ``define test``, tests
+defined using ``testworks-specs`` default to not failing when they are
+not yet implemented.
+
+Multiple Tests
+--------------
+
+In many situations, multiple tests for a single binding are required. The way
+that this should be done using ``testworks-specs`` is currently evolving.
+
 *** To be filled in ***
 
+Examples
+--------
+
+There are many examples of tests using ``testworks-specs`` in the Open Dylan
+code base:
+
+* ``sources/collections/tests/``
+* ``sources/common-dylan/tests/``
+* ``sources/duim/tests/``
+* ``sources/dylan/tests/``
+* ``sources/io/tests/``
+* ``sources/lib/jam/tests/``
+* ``sources/lib/llvm/tests/``
+* ``sources/system/tests/``
 
 Generating Test Specifications
 ==============================
