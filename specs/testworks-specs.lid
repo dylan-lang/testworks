@@ -4,6 +4,9 @@ Author:       Andy Armstrong
 Target-Type:  dll
 Files: library
        specs
+       binding-spec-suite
+       binding-specs
+       library-specs
        protocol-specs
        module-specs
        variable-specs

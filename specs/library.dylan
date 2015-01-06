@@ -47,10 +47,9 @@ define module testworks-specs
          class-test-function;
 
   //---*** Hygiene glitches
-  export \protocol-spec-constant-definer,
-         \protocol-spec-bindings-definer,
-         \module-spec-protocol-definer,
-         \module-spec-suite-definer
+  export \binding-specs-definer,
+         \binding-spec-suite-definer
+         \module-binding-specs-definer,
          check-class-specification,
          check-function-specification,
          check-variable-specification,
