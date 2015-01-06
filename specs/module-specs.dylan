@@ -8,24 +8,28 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// A useful macro to define module specs
 
+// This expands a list of binding specifications into a test for each of those
+// specifications, as well as a suite that will run both those specification tests
+// and the separate test function for each binding.
 define macro module-spec-definer
   { define module-spec ?module-name:name (?options:*)
       ?specs:*
     end}
-    => { define module-spec-protocol ?module-name ()
+    => { define module-binding-specs ?module-name ()
            ?specs
          end;
-         define module-spec-suite ?module-name (?options)
+         define binding-spec-suite ?module-name ## "-module-test-suite" (?options)
            ?specs
-         end;
-         }
+         end }
 end macro module-spec-definer;
 
-define macro module-spec-protocol-definer
-  { define module-spec-protocol ?module-name:name (?options:*)
+// This just dispatches to binding-specs, but drops protocol references first.
+// protocol references are used to tie a protocol-spec into a module-spec.
+define macro module-binding-specs-definer
+  { define module-binding-specs ?module-name:name (?options:*)
       ?specs:*
     end }
-    => { define protocol-spec ?module-name (?options)
+    => { define binding-specs ?module-name (?options)
            ?specs
          end }
  specs:
@@ -36,59 +40,4 @@ define macro module-spec-protocol-definer
     => { }
   { ?definition:* }
     => { ?definition; }
-end macro module-spec-protocol-definer;
-
-define macro module-spec-suite-definer
-  { define module-spec-suite ?module-name:name (?options:*)
-      ?specs:*
-    end }
-    => { define suite ?module-name ## "-module-test-suite" (?options)
-           ?specs
-         end }
- specs:
-  { } => { }
-  { ?spec:*; ... } => { ?spec ... }
- spec:
-  { ?modifiers:* class ?class-name:name (?superclasses:*); }
-    => { test "check-class-specification-" ## ?class-name;
-         test "test-class-" ## ?class-name; }
-  { ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*); }
-    => { test "check-function-specification-" ## ?function-name;
-         test "test-function-" ## ?function-name; }
-  { ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*); }
-    => { test "check-function-specification-" ## ?function-name;
-         test "test-function-" ## ?function-name; }
-  { ?modifiers:* variable ?variable-name:name :: ?type:expression; }
-    => { test "check-variable-specification-" ## ?variable-name;
-         test "test-variable-" ## ?variable-name; }
-  { ?modifiers:* constant ?constant-name:name :: ?type:expression; }
-    => { test "check-constant-specification-" ## ?constant-name;
-         test "test-constant-" ## ?constant-name; }
-  { ?modifiers:* macro-test ?macro-name:name; }
-    => { test "test-macro-" ## ?macro-name; }
-  { ?definition:* }
-    => { }
-end macro module-spec-suite-definer;
-
-
-/// Library specs
-
-// Like the "define suite" macro, but allows clauses like "module foo;"
-// in its body which expand to "suite foo-module-test-suite".
-define macro library-spec-definer
-  { define library-spec ?library-name:name (?options:*)
-      ?subsuites:*
-    end}
-    => { define suite ?library-name ## "-test-suite" (?options)
-           ?subsuites
-         end
-         }
- subsuites:
-  { } => { }
-  { ?thing; ... } => { ?thing; ... }
- thing:
-  { module ?module-name:name }
-    => { suite ?module-name ## "-module-test-suite" }
-  { ?x:* } => { ?x }
-end macro library-spec-definer;
-
+end macro module-binding-specs-definer;
