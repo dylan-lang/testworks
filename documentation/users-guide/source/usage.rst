@@ -613,6 +613,31 @@ checks and assertions. Unlike tests defined via ``define test``, tests
 defined using ``testworks-specs`` default to not failing when they are
 not yet implemented.
 
+Testing Classes
+---------------
+
+When testing classes, there are a couple of additional things to be aware
+of. If your class is ``instantiable``, as indicated by using the adjective
+``instantiable`` on your class binding in the module specification, then
+``testworks-specs`` will attempt to instantiate your class to be sure that
+it can do so without errors. If your class requires parameters or anything
+special, then you will need to provide a specialization of the generic function
+``make-test-instance``:
+
+.. code-block:: dylan
+
+   define sideways method make-test-instance
+       (class == <machine-word>)
+    => (instance :: <machine-word>);
+     make(<machine-word>, value: 1729)
+   end method make-test-instance;
+
+Additionally, you may optionally provide a specialization of the generic
+function ``class-test-function`` which will be automatically run by
+``testworks-specs`` and should return a function which will then be run
+by ``testworks-specs`` to perform additional tests for the class. An example
+of this can be found in ``sources/dylan/tests/numbers.dylan``.
+
 Multiple Tests
 --------------
 
