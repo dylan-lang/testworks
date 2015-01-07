@@ -571,7 +571,6 @@ Examples
 There are many examples of tests using ``testworks-specs`` in the Open Dylan
 code base:
 
-* ``sources/collections/tests/``
 * ``sources/common-dylan/tests/``
 * ``sources/duim/tests/``
 * ``sources/dylan/tests/``
