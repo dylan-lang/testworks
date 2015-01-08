@@ -539,7 +539,7 @@ library specification is checked.
 
    define library-spec io ()
      module streams;
-     modules pprint;
+     module pprint;
 
      suite format-test-suite;
    end library-spec io;
@@ -628,7 +628,7 @@ special, then you will need to provide a specialization of the generic function
 
    define sideways method make-test-instance
        (class == <machine-word>)
-    => (instance :: <machine-word>);
+    => (instance :: <machine-word>)
      make(<machine-word>, value: 1729)
    end method make-test-instance;
 
