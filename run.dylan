@@ -25,6 +25,7 @@ define method test-output
   let stream = runner-output-stream(*runner*);
   with-stream-locked (stream)
     apply(format, stream, format-string, format-args);
+    force-output(stream);
   end;
 end method test-output;
 
