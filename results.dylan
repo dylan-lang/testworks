@@ -100,6 +100,11 @@ define method result-type-name
 end;
 
 define method result-type-name
+    (result :: <benchmark-result>) => (name :: <string>)
+  "Benchmark"
+end;
+
+define method result-type-name
     (result :: <check-result>) => (name :: <string>)
   "Check"
 end;
