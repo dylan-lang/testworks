@@ -9,26 +9,44 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define constant $list-option-values = #["all", "suites", "tests", "benchmarks"];
 
+// types of progress to display
+define constant $none = #"none";
+define constant $default = #"default";
+define constant $verbose = #"verbose";
+
+define table $report-functions :: <string-table> = {
+    "log"      => log-report-function,
+    "none"     => null-report-function,
+    "summary"  => summary-report-function,
+    "failures" => failures-report-function,
+    "surefire" => surefire-report-function,
+    "xml"      => xml-report-function
+};
+
 define function parse-args
     (args :: <sequence>) => (parser :: <command-line-parser>)
   let parser = make(<command-line-parser>);
-  // TODO(cgay): <choice-option> = never|crashes|failures|none|#f
-  // where #f means --debug was used with no option value.
   add-option(parser,
-             make(<optional-parameter-option>,
+             // TODO: When <choice-option> supports having an optional
+             // value then this can be made optional where no value
+             // means "failures".
+             make(<choice-option>,
                   names: #("debug"),
+                  choices: #("no", "crashes", "failures"),
                   default: "no",
                   variable: "WHAT",
                   help: "Enter the debugger on failure: NO|crashes|failures"));
   add-option(parser,
-             make(<parameter-option>,
+             make(<choice-option>,
                   names: #("progress", "p"),
+                  choices: #("none", "default", "verbose"),
                   default: "default",
                   variable: "TYPE",
                   help: "Show output as the test run progresses: none|DEFAULT|verbose"));
   add-option(parser,
-             make(<parameter-option>,
+             make(<choice-option>,
                   names: #("report"),
+                  choices: key-sequence($report-functions),
                   default: "failures",
                   variable: "TYPE",
                   help: "Final report to generate: none|summary|FAILURES|log|xml|surefire"));
@@ -60,8 +78,9 @@ define function parse-args
                   variable: "TEST",
                   help: "Skip these named tests. May be repeated."));
   add-option(parser,
-             make(<parameter-option>,
+             make(<choice-option>,
                   names: #("list", "l"),
+                  choices: $list-option-values,
                   default: #f,
                   variable: "WHAT",
                   help: format-to-string("List components: %s",
@@ -79,20 +98,6 @@ define function parse-args
   end;
   parser
 end function parse-args;
-
-// types of progress to display
-define constant $none = #"none";
-define constant $default = #"default";
-define constant $verbose = #"verbose";
-
-define table $report-functions :: <string-table> = {
-    "log"      => log-report-function,
-    "none"     => null-report-function,
-    "summary"  => summary-report-function,
-    "failures" => failures-report-function,
-    "surefire" => surefire-report-function,
-    "xml"      => xml-report-function
-    };
 
 define method find-component
     (suite-name :: false-or(<string>), test-name :: false-or(<string>))
@@ -129,25 +134,18 @@ define function make-runner-from-command-line
   // immutable.
   let debug = get-option-value(parser, "debug");
   let report = get-option-value(parser, "report");
-  let progress = get-option-value(parser, "progress");
-  let sprogress = as(<symbol>, progress);
-  let report-function = element($report-functions, report, default: #f)
-    | usage-error("Invalid --report option: %s", report);
-  if (~member?(sprogress, list($none, $default, $verbose)))
-    usage-error("Invalid --progress option: %s", progress);
-  end;
+  let progress = as(<symbol>, get-option-value(parser, "progress"));
+  let report-function = element($report-functions, report);
   let runner = make(<test-runner>,
                     debug?: select (debug by \=)
-                              #f, "no" => #f;
+                              "no" => #f;
                               "crashes" => #"crashes";
-                              #t, "failures" => #t;
-                              otherwise =>
-                                usage-error("Invalid --debug option: %s", debug);
+                              "failures" => #t;
                             end select,
                     skip: find-components(get-option-value(parser, "skip-suite"),
                                           get-option-value(parser, "skip-test")),
                     report: report,
-                    progress: if (sprogress = $none) #f else sprogress end,
+                    progress: if (progress = $none) #f else progress end,
                     tags: parse-tags(get-option-value(parser, "tag")));
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
