@@ -4,8 +4,7 @@ Synopsis: Tests for command-line.dylan
 
 // Verify that command-line options create a <test-runner> correctly.
 define test test-make-runner-from-command-line ()
-  let args = list(list("--debug", debug-runner?, #t),
-                  list("--debug=no", debug-runner?, #f),
+  let args = list(list("--debug=no", debug-runner?, #f),
                   list("--debug=crashes", debug-runner?, #"crashes"),
                   list("--debug=failures", debug-runner?, #t));
   let dummy-component = make(<suite>,
