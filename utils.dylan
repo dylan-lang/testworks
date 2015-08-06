@@ -6,10 +6,6 @@ License: See License.txt in this distribution for details.
 Warranty: Distributed WITHOUT WARRANTY OF ANY KIND
 
 
-// The active test run object.
-define thread variable *runner* :: false-or(<test-runner>) = #f;
-
-
 define function add-times
     (sec1 :: <integer>, usec1 :: <integer>, sec2 :: <integer>, usec2 :: <integer>)
  => (sec :: <integer>, usec :: <integer>)

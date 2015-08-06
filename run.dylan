@@ -53,6 +53,10 @@ define open class <test-runner> (<object>)
 end class <test-runner>;
 
 
+// The active test run object.
+define thread variable *runner* :: false-or(<test-runner>) = #f;
+
+
 ///*** Generic Classes, Helper Functions, and Helper Macros ***///
 
 // TODO(cgay): Use let handler instead.

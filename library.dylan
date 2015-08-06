@@ -26,6 +26,7 @@ define module testworks
   create
     run-test-application,
     run-tests,
+    *runner*,
     <test-runner>,
     runner-tags,
     runner-skip,
