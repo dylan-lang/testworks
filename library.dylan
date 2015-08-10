@@ -10,6 +10,7 @@ define library testworks
   use command-line-parser;
   use common-dylan, import: { common-dylan, threads };
   use io, import: { format, print, standard-io, streams };
+  use coloring-stream;
   use strings;
   use system, import: { file-system };
 
@@ -78,6 +79,7 @@ define module %testworks
   use print, import: { print-object };
   use standard-io;
   use streams;
+  use coloring-stream;
   use strings, import: { char-compare-ic, starts-with?, string-equal? };
   use testworks;
   use threads,

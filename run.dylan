@@ -47,7 +47,8 @@ define open class <test-runner> (<object>)
   // The stream on which output is done.  Note that this may be bound
   // to different streams during the test run and when the report is
   // generated.  e.g., to output the report to a file.
-  constant slot runner-output-stream :: <stream> = *standard-output*,
+  constant slot runner-output-stream :: <stream>
+      = colorize-stream(*standard-output*),
     init-keyword: output-stream:;
 
 end class <test-runner>;
@@ -255,12 +256,20 @@ define method show-progress
     (runner :: <test-runner>, suite :: <suite>, result :: false-or(<result>))
  => ()
   if (result)
-    test-output("Completed suite %s: %s in %ss\n",
+    let result-status = result.result-status;
+    test-output("Completed suite %=%s%=: %=%s%= in %ss\n",
+                $component-name-attributes,
                 suite.component-name,
-                result.result-status.status-name.as-uppercase,
+                $reset-attributes,
+                result-status-to-attributes(result-status),
+                result-status.status-name.as-uppercase,
+                $reset-attributes,
                 result.result-time)
   else
-    test-output("Running suite %s:\n", suite.component-name);
+    test-output("Running suite %=%s%=:\n",
+                $component-name-attributes,
+                suite.component-name,
+                $reset-attributes);
   end;
 end method show-progress;
 
@@ -271,20 +280,25 @@ define method show-progress
   let verbose? = runner.runner-progress = $verbose;
   if (result)
     let reason = result.result-reason;
-    test-output("%s%s in %ss and %s\n",
+    let result-status = result.result-status;
+    test-output("%s%=%s%= in %ss and %s\n",
                 if (verbose?)
                   format-to-string("  %s ", test.component-type-name)
                 else
                   " "
                 end,
-                result.result-status.status-name.as-uppercase,
+                result-status-to-attributes(result-status),
+                result-status.status-name.as-uppercase,
+                $reset-attributes,
                 result.result-time,
                 format-bytes(result.result-bytes));
     reason & test-output("    %s\n", reason);
   else
-    test-output("Running %s %s:%s",
+    test-output("Running %s %=%s%=:%s",
                 test.component-type-name,
+                $component-name-attributes,
                 test.component-name,
+                $reset-attributes,
                 verbose? & "\n" | "");
   end;
 end method show-progress;
@@ -297,8 +311,10 @@ define method show-progress
   let status = result.result-status;
   let reason = result.result-reason;
   if (runner.runner-progress = $verbose)
-    test-output("  %s: %s%s\n",
+    test-output("  %=%s%=: %s%s\n",
+                result-status-to-attributes(status),
                 status.status-name.as-uppercase,
+                $reset-attributes,
                 result.result-name,
                 reason & concatenate(" [", reason, "]") | "");
   elseif (reason)
