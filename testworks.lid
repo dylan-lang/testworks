@@ -10,6 +10,7 @@ Files:  library
         reports
         run
         command-line
+        coloring
 Major-Version: 2
 Minor-Version: 1
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.

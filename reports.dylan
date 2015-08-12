@@ -73,15 +73,39 @@ define method print-result-summary
                         else
                           as(<float>, passes) / total
                         end;
+  local method count-to-attributes (value :: <integer>,
+                                    desired :: <text-attributes>)
+         => (attr :: <text-attributes>)
+          if (value > 0)
+            desired
+          else
+            $count-attributes
+          end if
+        end;
   format(stream,
-         "  Ran %d %s%s: %d passed (%s%%), %d failed, %d skipped, "
-           "%d not implemented, %d crashed\n",
+         "  Ran %=%s%= %s%s: %=%s%= passed (%s%%), %=%s%= failed, %=%s%= skipped, "
+           "%=%s%= not implemented, %=%s%= crashed\n",
+         $total-attributes,
          total,
+         $reset-attributes,
          name,
          if (total == 1) "" else "s" end,
+         $count-attributes,
          passes,
+         $reset-attributes,
          percent,
-         failures, not-executed, not-implemented, crashes);
+         count-to-attributes(failures, $failed-attributes),
+         failures,
+         $reset-attributes,
+         count-to-attributes(not-executed, $skipped-attributes),
+         not-executed,
+         $reset-attributes,
+         count-to-attributes(not-implemented, $not-implemented-attributes),
+         not-implemented,
+         $reset-attributes,
+         count-to-attributes(crashes, $crashed-attributes),
+         crashes,
+         $reset-attributes);
 end method print-result-summary;
 
 define method print-result-info
@@ -137,9 +161,13 @@ end;
 
 define method summary-report-function
     (result :: <result>, stream :: <stream>) => ()
-  format(stream, "\n%s %s in %s seconds:\n",
+  let stream = colorize-stream(stream);
+  let result-status = result.result-status;
+  format(stream, "\n%s %=%s%= in %s seconds:\n",
          result.result-name,
-         result.result-status.status-name.as-uppercase,
+         result-status-to-attributes(result-status),
+         result-status.status-name.as-uppercase,
+         $reset-attributes,
          result.result-time);
   local method print-class-summary (result, name, class) => ()
           print-result-summary(result, name, stream,
