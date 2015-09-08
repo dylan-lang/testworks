@@ -51,6 +51,8 @@ define open class <test-runner> (<object>)
       = colorize-stream(*standard-output*),
     init-keyword: output-stream:;
 
+  constant slot runner-options :: <string-table> = make(<string-table>),
+    init-keyword: options:;
 end class <test-runner>;
 
 
@@ -321,3 +323,19 @@ define method show-progress
     test-output("\n  %s: [%s]\n  ", result.result-name, reason);
   end;
 end method show-progress;
+
+/// Test options
+
+define function test-option
+    (name :: <string>, #key default = unsupplied())
+ => (option-value :: <string>);
+  let option-value
+    = element(*runner*.runner-options, name, default: unfound());
+  if (found?(option-value))
+    option-value
+  elseif (supplied?(default))
+    default
+  else
+    error("No value for test option %s was supplied", name)
+  end if
+end function;

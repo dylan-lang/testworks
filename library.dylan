@@ -67,6 +67,9 @@ define module testworks
   create
     test-output;
 
+  // Options
+  create
+    test-option;
 end module testworks;
 
 
