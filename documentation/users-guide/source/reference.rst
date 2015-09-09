@@ -391,5 +391,25 @@ Test Execution
    :class:`<test-runner>` based on the command-line options and then
    calls :func:`run-tests` with the runner and *suite-or-test*.
 
+.. function:: test-option
+
+   Return an option value passed on the test-application command line.
+
+   :signature: test-option *name* #key *default* => *value*
+   :parameter name: An instance of type :drm:`<string>`.
+   :parameter #key default: An instance of type :drm:`<string>`.
+   :value value: An instance of type :drm:`<string>`.
+
+   :description:
+
+   Returns an option value passed to the test on the test application
+   command line, in the form ``*name*=*value*``. If no option value
+   was given, the *default* value is returned if one was supplied,
+   otherwise an error is signalled.
+
+   This feature allows information about external resources, such as
+   path names of reference data files, or the hostname of a test
+   database server, to be supplied on the command line of the test
+   application and retrieved by the test.
 
 .. TODO(cgay): document the remaining exported names.

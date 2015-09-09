@@ -100,6 +100,7 @@ define module-spec testworks ()
   macro-test suite-definer-test;
   function runner-skip (<test-runner>) => (<sequence>);
   function test-output (<string>, #"rest") => ();
+  function test-option (<string>, #"key", #"default") => (<string>);
   macro-test with-test-unit-test;
   macro-test test-definer-test;
   function debug-runner? (<test-runner>) => (<object>);
@@ -433,6 +434,13 @@ end function-test runner-skip;
 define testworks function-test test-output ()
   //---*** Fill this in...
 end function-test test-output;
+
+define testworks function-test test-option ()
+  //---*** Fill this in...
+  check-instance?("test-option returns a <string>",
+                  <string>,
+                  test-option("foo", default: "bleah"));
+end function-test test-option;
 
 define testworks macro-test with-test-unit-test ()
   //---*** Fill this in...

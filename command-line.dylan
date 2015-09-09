@@ -147,6 +147,16 @@ define function make-runner-from-command-line
                     report: report,
                     progress: if (progress = $none) #f else progress end,
                     tags: parse-tags(get-option-value(parser, "tag")));
+
+  for (option in parser.positional-options)
+    let split = find-key(option, curry(\==, '='));
+    if (split)
+      let key = copy-sequence(option, end: split);
+      let value = copy-sequence(option, start: split + 1);
+      runner.runner-options[key] := value;
+    end if;
+  end for;
+
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
   let start-suite = select (components.size)
