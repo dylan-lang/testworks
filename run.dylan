@@ -185,14 +185,14 @@ define method execute-component
                         end;
                         result
                       end)
-        let cond = #f;
-        profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
-          cond := maybe-trap-errors(test.test-function());
-        results
-          seconds := cpu-time-seconds;
-          microseconds := cpu-time-microseconds;
-          bytes := allocation;
-        end profiling;
+        let cond
+          = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
+              maybe-trap-errors(test.test-function());
+            results
+              seconds := cpu-time-seconds;
+              microseconds := cpu-time-microseconds;
+              bytes := allocation;
+            end profiling;
         case
           instance?(cond, <serious-condition>) =>
             values($crashed, format-to-string("%s", cond));
