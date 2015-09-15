@@ -156,7 +156,7 @@ For example:
     define test my-test (description: "A sample test")
       assert-equal(2, 3);
       assert-equal(#f, #f);
-      assert-true(identity(#t), "Check indentity function");
+      assert-true(identity(#t), "Check identity function");
     end test my-test;
 
 *Note: if a test doesn't execute any assertions then it will be
