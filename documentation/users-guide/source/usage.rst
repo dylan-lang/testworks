@@ -12,7 +12,7 @@ Testworks Usage
      2.1  Assertions
      2.2  Tests
      2.3  Suites
-   3  Organzing Your Test Suites
+   3  Organizing Your Test Suites
    4  Running Your Tests As A Stand-alone Application
    5  Reports
    6  Comparing Test Results
@@ -288,8 +288,8 @@ command-line args, execute tests and benchmarks, and generate reports.
 See the next section for details.
 
 
-Organzing Your Test Suites
-==========================
+Organizing Your Test Suites
+===========================
 
 Tests are used to combine related assertions into a unit, and suites
 further organize related tests.  Suites may also contain other suites.
