@@ -28,9 +28,9 @@ Suites, Tests, and Benchmarks
 
    :signature: define suite *suite-name* (#key *setup-function cleanup-function description*) *body* end
    :parameter suite-name: Name of the suite; a Dylan variable name.
-   :parameter setup-function: A function to perform setup before the suite starts.
-   :parameter cleanup-function: A function to perform teardown after the suite finishes.
-   :parameter description: A string describing the purpose of the suite.
+   :parameter #key setup-function: A function to perform setup before the suite starts.
+   :parameter #key cleanup-function: A function to perform teardown after the suite finishes.
+   :parameter #key description: A string describing the purpose of the suite.
 
    Suites provide a way to group tests and other suites into a single
    executable unit.  Suites may be nested arbitrarily.
@@ -48,8 +48,8 @@ Suites, Tests, and Benchmarks
 
    :signature: define test *test-name* (#key *description, tags*) *body* end
    :parameter test-name: Name of the test; a Dylan variable name.
-   :parameter description: A string describing the purpose of the test.
-   :parameter tags: A list of strings to tag this test.
+   :parameter #key description: A string describing the purpose of the test.
+   :parameter #key tags: A list of strings to tag this test.
 
    Tests may contain arbitrary code, plus any number of assertions.
    If any assertion fails the test will fail, but any remaining
@@ -68,8 +68,8 @@ Suites, Tests, and Benchmarks
 
    :signature: define benchmark *name* (#key *description, tags*) *body* end
    :parameter name: Name of the benchmark; a Dylan variable name.
-   :parameter description: A string describing the purpose of the benchmark.
-   :parameter tags: A list of strings to tag this benchmark.
+   :parameter #key description: A string describing the purpose of the benchmark.
+   :parameter #key tags: A list of strings to tag this benchmark.
 
    Benchmarks may contain arbitrary code and may use assertions,
    although that isn't required.  If the benchmark signals an error it
