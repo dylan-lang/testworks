@@ -157,7 +157,7 @@ define method execute-component
             $not-implemented;
           every?(method (subresult)
                    let status = subresult.result-status;
-                   status = $passed | status = $skipped
+                   status = $passed | status = $skipped | status = $expected-failure
                  end,
                  subresults) =>
             $passed;
@@ -202,9 +202,17 @@ define method execute-component
                    result.result-status == $passed
                  end,
                  subresults) =>
-            $passed;
+            if (test.expected-failure?)
+              $unexpected-success
+            else
+              $passed
+            end if;
           otherwise =>
-            $failed;
+            if (test.expected-failure?)
+              $expected-failure
+            else
+              $failed
+            end if;
         end
       end;
   values(subresults, status, reason, seconds, microseconds, bytes)

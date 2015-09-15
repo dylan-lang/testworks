@@ -326,9 +326,58 @@ define test test-with-test-unit ()
   end;
 end test test-with-test-unit;
 
+define test test-expected-failure-always(expected-failure?: #t)
+  assert-true(#f);
+end test;
+
+define test test-expected-failure-maybe(expected-failure?: method () #t end)
+  assert-true(#f);
+end test;
+
+define test test-unexpected-success(expected-failure?: #t)
+  assert-true(#t);
+end test;
+
+define suite expected-failure-suite ()
+  test test-expected-failure-always;
+  test test-expected-failure-maybe;
+end suite;
+
+define suite unexpected-success-suite ()
+  test test-unexpected-success;
+end suite;
+
+define test test-run-tests-expect-failure/suite ()
+  let suite-to-check = expected-failure-suite;
+  let runner = make(<test-runner>, progress: #f);
+  let suite-results = run-tests(runner, suite-to-check);
+  assert-equal($passed, suite-results.result-status);
+
+  let suite-to-check = unexpected-success-suite;
+  let suite-results = run-tests(runner, suite-to-check);
+  assert-equal($failed, suite-results.result-status);
+end test test-run-tests-expect-failure/suite;
+
+define test test-run-tests-expect-failure/test ()
+  let test-to-check = test-expected-failure-always;
+  let runner = make(<test-runner>, progress: #f);
+  let test-results = run-tests(runner, test-to-check);
+  assert-equal($expected-failure, test-results.result-status);
+
+  let test-to-check = test-expected-failure-maybe;
+  let test-results = run-tests(runner, test-to-check);
+  assert-equal($expected-failure, test-results.result-status);
+
+  let test-to-check = test-unexpected-success;
+  let test-results = run-tests(runner, test-to-check);
+  assert-equal($unexpected-success, test-results.result-status);
+end test test-run-tests-expect-failure/test;
+
 define suite testworks-results-suite ()
   test test-run-tests/suite;
   test test-run-tests/test;
+  test test-run-tests-expect-failure/suite;
+  test test-run-tests-expect-failure/test;
 end;
 
 // Make sure that if one assertion fails the remaining assertions

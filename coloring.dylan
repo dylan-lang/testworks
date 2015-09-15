@@ -16,6 +16,10 @@ define constant $failed-attributes
   = text-attributes(foreground: $color-red);
 define constant $crashed-attributes
   = text-attributes(foreground: $color-red);
+define constant $expected-failure-attributes
+  = text-attributes(foreground: $color-cyan);
+define constant $unexpected-success-attributes
+  = text-attributes(foreground: $color-red);
 define constant $component-name-attributes
   = text-attributes(intensity: $bright-intensity);
 define constant $total-attributes
@@ -31,6 +35,8 @@ define function result-status-to-attributes
     $failed => $failed-attributes;
     $crashed => $crashed-attributes;
     $skipped => $skipped-attributes;
+    $expected-failure => $expected-failure-attributes;
+    $unexpected-success => $unexpected-success-attributes;
     $not-implemented => $not-implemented-attributes;
     otherwise =>
       error("Unrecognized test result status: %=.  This is a testworks bug.",

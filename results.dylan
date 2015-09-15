@@ -10,10 +10,14 @@ define constant $passed = #"passed";
 define constant $failed = #"failed";
 define constant $crashed = #"crashed";
 define constant $skipped = #"skipped";
+define constant $expected-failure = #"expected-failure";
+define constant $unexpected-success = #"unexpected-success";
 define constant $not-implemented  = #"nyi";
 
 define constant <result-status>
-  = one-of($passed, $failed, $crashed, $skipped, $not-implemented);
+  = one-of($passed, $failed, $crashed, $skipped,
+           $expected-failure, $unexpected-success,
+           $not-implemented);
 
 // It looks like this and testworks-reports:parse-status are meant to
 // be inverses.
@@ -24,6 +28,8 @@ define method status-name
     $failed => "failed";
     $crashed => "crashed";
     $skipped => "skipped";
+    $expected-failure => "failed as expected";
+    $unexpected-success => "unexpectedly succeeded";
     $not-implemented => "not implemented";
     otherwise =>
       error("Unrecognized test result status: %=.  This is a testworks bug.",

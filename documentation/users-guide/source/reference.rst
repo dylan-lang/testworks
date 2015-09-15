@@ -46,9 +46,12 @@ Suites, Tests, and Benchmarks
 
    Define a new test.
 
-   :signature: define test *test-name* (#key *description, tags*) *body* end
+   :signature: define test *test-name* (#key *description, expected-failure?, tags*) *body* end
    :parameter test-name: Name of the test; a Dylan variable name.
    :parameter #key description: A string describing the purpose of the test.
+   :parameter #key expected-failure?: An instance of either :drm:`<boolean>` or
+      :drm:`<function>`. This indicates whether or not the test is expected to
+      fail.
    :parameter #key tags: A list of strings to tag this test.
 
    Tests may contain arbitrary code, plus any number of assertions.
@@ -56,6 +59,12 @@ Suites, Tests, and Benchmarks
    assertions in the test will still be executed.  If code outside of
    an assertion signals an error, the test is marked as "crashed" and
    remaining assertions are skipped.
+
+   If *expected-failure?* is set to ``#t`` or a function that when executed
+   returns ``#t``, then the test will be expected to fail. Such a failure
+   will be treated as a successful test run. If the test passes rather than
+   failing, then that will be considered a test failure. This option has
+   no effect on tests which are *not implemented* or which have *crashed*.
 
    *tags* provide a way to select or filter out specific tests during
    a test run.  The Testworks command-line (provided by
@@ -66,14 +75,23 @@ Suites, Tests, and Benchmarks
 
    Define a new benchmark.
 
-   :signature: define benchmark *name* (#key *description, tags*) *body* end
+   :signature: define benchmark *name* (#key *description, expected-failure?, tags*) *body* end
    :parameter name: Name of the benchmark; a Dylan variable name.
    :parameter #key description: A string describing the purpose of the benchmark.
+   :parameter #key expected-failure?: An instance of either :drm:`<boolean>` or
+      :drm:`<function>`. This indicates whether or not the test is expected to
+      fail.
    :parameter #key tags: A list of strings to tag this benchmark.
 
    Benchmarks may contain arbitrary code and may use assertions,
    although that isn't required.  If the benchmark signals an error it
    is marked as "crashed".
+
+   If *expected-failure?* is set to ``#t`` or a function that when executed
+   returns ``#t``, then the test will be expected to fail. Such a failure
+   will be treated as a successful test run. If the test passes rather than
+   failing, then that will be considered a test failure. This option has
+   no effect on tests which are *not implemented* or which have *crashed*.
 
    *tags* provide a way to select or filter out specific tests during
    a test run.  The Testworks command-line (provided by
