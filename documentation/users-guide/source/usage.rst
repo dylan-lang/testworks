@@ -117,6 +117,8 @@ assertion macros:
   * :func:`assert-not-equal`
   * :func:`assert-signals`
   * :func:`assert-no-errors`
+  * :func:`assert-instance?`
+  * :func:`assert-not-instance?`
 
 Each of these takes an optional description string, after the required
 arguments, which will be displayed if the assertion fails.  If the

@@ -53,6 +53,8 @@ define module testworks
     assert-not-equal,
     assert-signals,
     assert-no-errors,
+    assert-instance?,
+    assert-not-instance?,
     assert-true,
     assert-false;
 

@@ -118,6 +118,8 @@ These are the available assertion macros:
   * :macro:`assert-not-equal`
   * :macro:`assert-signals`
   * :macro:`assert-no-errors`
+  * :macro:`assert-instance?`
+  * :macro:`assert-not-instance?`
 
 .. macro:: assert-true
 
@@ -264,6 +266,52 @@ These are the available assertion macros:
                           "hairy logic completes without error")
 
 
+.. macro:: assert-instance?
+
+   Assert that the result of an expression is an instance of a given type.
+
+   :signature: assert-instance? *type* *expression* [ *description* ]
+
+   :parameter type: The expected type.
+   :parameter expression: An expression.
+   :parameter description: A description of what the assertion tests.
+      This should be stated in positive form, such as "two is less
+      than three".  If no description is supplied one will be
+      automatically generated based on the text of the expression.
+
+   :example:
+
+     .. code-block:: dylan
+
+       assert-instance?(<type>, subclass(<string>));
+
+       assert-instance?(<type>, subclass(<string>),
+                        "subclass returns type");
+
+
+.. macro:: assert-not-instance?
+
+   Assert that the result of an expression is **not** an instance of a given class.
+
+   :signature: assert-not-instance? *type* *expression* [ *description* ]
+
+   :parameter type: The type.
+   :parameter expression: An expression.
+   :parameter description: A description of what the assertion tests.
+      This should be stated in positive form, such as "two is less
+      than three".  If no description is supplied one will be
+      automatically generated based on the text of the expression.
+
+   :example:
+
+     .. code-block:: dylan
+
+       assert-not-instance?(limited(<integer>, min: 0), -1);
+
+       assert-not-instance?(limited(<integer>, min: 0), -1,
+                            "values below lower bound are not instances");
+
+
 Checks
 ------
 
@@ -353,12 +401,12 @@ These are the available checks:
 
 .. macro:: check-instance?
 
-   Check that the result of an expression is an instance of a given class.
+   Check that the result of an expression is an instance of a given type.
 
    :signature: check-instance? *name* *type* *expression*
 
    :parameter name: An instance of ``<string>``.
-   :parameter type: The expected class.
+   :parameter type: The expected type.
    :parameter expression: An expression.
 
    :example:

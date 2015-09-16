@@ -83,7 +83,9 @@ define module-spec %testworks ()
 end module-spec %testworks;
 
 define module-spec testworks ()
+  macro-test assert-instance?-test;
   macro-test check-instance?-test;
+  macro-test assert-not-instance?-test;
   macro-test check-no-condition-test;
   macro-test assert-equal-test;
   macro-test check-no-errors-test;
@@ -371,9 +373,17 @@ end function-test test-requires-assertions?;
 
 // Module: testworks
 
+define testworks macro-test assert-instance?-test ()
+  //---*** Fill this in...
+end macro-test assert-instance?-test;
+
 define testworks macro-test check-instance?-test ()
   //---*** Fill this in...
 end macro-test check-instance?-test;
+
+define testworks macro-test assert-not-instance?-test ()
+  //---*** Fill this in...
+end macro-test assert-not-instance?-test;
 
 define testworks macro-test check-no-condition-test ()
   //---*** Fill this in...
