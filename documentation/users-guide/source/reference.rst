@@ -61,7 +61,7 @@ Suites, Tests, and Benchmarks
    remaining assertions are skipped.
 
    If *expected-failure?* is set to ``#t`` or a function that when executed
-   returns ``#t``, then the test will be expected to fail. Such a failure
+   returns a true value, then the test will be expected to fail. Such a failure
    will be treated as a successful test run. If the test passes rather than
    failing, then that will be considered a test failure. This option has
    no effect on tests which are *not implemented* or which have *crashed*.
@@ -88,7 +88,7 @@ Suites, Tests, and Benchmarks
    is marked as "crashed".
 
    If *expected-failure?* is set to ``#t`` or a function that when executed
-   returns ``#t``, then the test will be expected to fail. Such a failure
+   returns a true value, then the test will be expected to fail. Such a failure
    will be treated as a successful test run. If the test passes rather than
    failing, then that will be considered a test failure. This option has
    no effect on tests which are *not implemented* or which have *crashed*.
