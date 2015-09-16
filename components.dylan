@@ -27,6 +27,8 @@ end class <suite>;
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
     required-init-keyword: function:;
+  constant slot %expected-failure? :: type-union(<boolean>, <function>) = #f,
+    init-keyword: expected-failure?:;
   // Benchmarks don't require assertions.  Needs to be an instance
   // variable, not a bare method, because testworks-specs
   // auto-generated tests often don't get filled in.  I want to kill
@@ -48,6 +50,13 @@ define method make
   end;
   apply(next-method, class, tags: tags, args)
 end method make;
+
+define method expected-failure? (r :: <runnable>)
+  select (r.%expected-failure? by instance?)
+    <boolean> => r.%expected-failure?;
+    <function> => r.%expected-failure?();
+  end select
+end method expected-failure?;
 
 define class <test> (<runnable>)
 end;

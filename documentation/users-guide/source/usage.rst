@@ -145,7 +145,7 @@ assertions. Each test is part of a suite.  Use the
 
 .. code-block:: dylan
 
-    define test NAME (#key DESCRIPTION, TAGS)
+    define test NAME (#key DESCRIPTION, EXPECTED-FAILURE?, TAGS)
       BODY
     end;
 
@@ -195,6 +195,28 @@ this will skip both of the above tests::
 
 Negative tags take precedence, so ``--tag=huge --tag=-verbose`` will
 run ``my-test-2`` and skip ``my-test-3``.
+
+If the test is expected to fail, or fails under some conditions, Testworks
+can be made aware of this:
+
+.. code-block:: dylan
+
+    define test failing-test (expected-failure?: #t)
+      assert-true(#f);
+    end test;
+
+    define test fails-on-windows
+        (expected-failure?: method () $os-name = #"win32" end)
+      if ($os-name = #"win32")
+        assert-false(#t);
+      else
+        assert-true(#t);
+      end if;
+    end test;
+
+A test that is expected to fail and then fails will be considered to
+be a passing test. If the test succeeds unexpectedly, it will be considered
+a failing test.
 
 Benchmarks
 ----------
