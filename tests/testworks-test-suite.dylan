@@ -160,18 +160,54 @@ define test testworks-check-instance?-test ()
                  check-instance?($internal-check-name, <integer>, 1)
                end,
                $passed,
-               "check-instance?(1, <integer>) passes");
+               "check-instance?(<integer>, 1) passes");
   assert-equal(without-recording ()
                  check-instance?($internal-check-name, <string>, 1)
                end,
                $failed,
-               "check-instance?(1, <string>) fails");
+               "check-instance?(<string>, 1) fails");
   assert-equal(without-recording ()
                  check-instance?($internal-check-name, <integer>, test-error())
                end,
                $crashed,
                "check-instance? of error crashes");
 end test testworks-check-instance?-test;
+
+define test testworks-assert-instance?-test ()
+  assert-equal(without-recording ()
+                 assert-instance?(<integer>, 1)
+               end,
+               $passed,
+               "assert-instance?(<integer>, 1) passes");
+  assert-equal(without-recording ()
+                 assert-instance?(<string>, 1)
+               end,
+               $failed,
+               "assert-instance?(<string>, 1) fails");
+  assert-equal(without-recording ()
+                 assert-instance?(<integer>, test-error())
+               end,
+               $crashed,
+               "assert-instance? of error crashes");
+end test testworks-assert-instance?-test;
+
+define test testworks-assert-not-instance?-test ()
+  assert-equal(without-recording ()
+                 assert-not-instance?(<string>, 1)
+               end,
+               $passed,
+               "assert-not-instance?(<string>, 1) passes");
+  assert-equal(without-recording ()
+                 assert-not-instance?(<integer>, 1)
+               end,
+               $failed,
+               "assert-not-instance?(<integer>, 1) fails");
+  assert-equal(without-recording ()
+                 assert-not-instance?(<integer>, test-error())
+               end,
+               $crashed,
+               "assert-not-instance? of error crashes");
+end test testworks-assert-not-instance?-test;
 
 define test testworks-check-condition-test ()
   begin
@@ -271,6 +307,8 @@ define suite testworks-assertion-macros-suite ()
   test testworks-assert-equal-test;
   test testworks-assert-equal-failure-detail;
   test testworks-assert-not-equal-test;
+  test testworks-assert-instance?-test;
+  test testworks-assert-not-instance?-test;
   test testworks-assert-signals-test;
   test testworks-assert-no-errors-test;
 end suite testworks-assertion-macros-suite;

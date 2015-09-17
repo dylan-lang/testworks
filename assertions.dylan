@@ -152,12 +152,43 @@ define macro check-instance?
     do-check-instance?(method () ?check-name end,
                        method ()
                          values(?type, ?value, ?"value")
-                       end)
+                       end,
+                       #f)
   }
 end macro check-instance?;
 
+define macro assert-instance?
+  { assert-instance? (?type:expression, ?value:expression)
+  } => {
+    assert-instance? (?type, ?value, "instance?(" ?"type" ", " ?"value" ")")
+  }
+  { assert-instance? (?type:expression, ?value:expression, ?description:expression)
+  } => {
+    do-check-instance?(method () ?description end,
+                       method ()
+                         values(?type, ?value, ?"value")
+                       end,
+                       #f)
+  }
+end macro assert-instance?;
+
+define macro assert-not-instance?
+  { assert-not-instance? (?type:expression, ?value:expression)
+  } => {
+    assert-not-instance? (?type, ?value, "instance?(" ?"type" ", " ?"value" ")")
+  }
+  { assert-not-instance? (?type:expression, ?value:expression, ?description:expression)
+  } => {
+    do-check-instance?(method () ?description end,
+                       method ()
+                         values(?type, ?value, ?"value")
+                       end,
+                       #t)
+  }
+end macro assert-not-instance?;
+
 define function do-check-instance?
-    (get-name :: <function>, get-arguments :: <function>)
+    (get-name :: <function>, get-arguments :: <function>, negate? :: <boolean>)
  => (status :: <result-status>)
   let phase = "evaluating check name";
   let name = #f;
@@ -176,10 +207,10 @@ define function do-check-instance?
     name := get-name();
     phase := "evaluating check arguments";
     let (type :: <type>, value, value-expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if %= is an instance of %s",
-                              value-expr, type);
+    phase := format-to-string("checking if %= is %=an instance of %s",
+                              value-expr, if (negate?) "not " else "" end, type);
     let (status, reason)
-      = if (instance?(value, type))
+      = if (instance?(value, type) ~= negate?)
           $passed
         else
           values($failed,
