@@ -270,10 +270,10 @@ These are the available assertion macros:
 
    Assert that the result of an expression is an instance of a given type.
 
-   :signature: assert-instance? *type* *expression* [ *description* ]
+   :signature: assert-instance? *expression* *type* [ *description* ]
 
-   :parameter type: The expected type.
    :parameter expression: An expression.
+   :parameter type: The expected type.
    :parameter description: A description of what the assertion tests.
       This should be stated in positive form, such as "two is less
       than three".  If no description is supplied one will be
@@ -283,9 +283,9 @@ These are the available assertion macros:
 
      .. code-block:: dylan
 
-       assert-instance?(<type>, subclass(<string>));
+       assert-instance?(subclass(<string>), <type>);
 
-       assert-instance?(<type>, subclass(<string>),
+       assert-instance?(subclass(<string>, <type>),
                         "subclass returns type");
 
 
@@ -293,10 +293,10 @@ These are the available assertion macros:
 
    Assert that the result of an expression is **not** an instance of a given class.
 
-   :signature: assert-not-instance? *type* *expression* [ *description* ]
+   :signature: assert-not-instance? *expression* *type* [ *description* ]
 
-   :parameter type: The type.
    :parameter expression: An expression.
+   :parameter type: The type.
    :parameter description: A description of what the assertion tests.
       This should be stated in positive form, such as "two is less
       than three".  If no description is supplied one will be
@@ -306,9 +306,9 @@ These are the available assertion macros:
 
      .. code-block:: dylan
 
-       assert-not-instance?(limited(<integer>, min: 0), -1);
+       assert-not-instance?(-1, limited(<integer>, min: 0));
 
-       assert-not-instance?(limited(<integer>, min: 0), -1,
+       assert-not-instance?(-1, limited(<integer>, min: 0),
                             "values below lower bound are not instances");
 
 

@@ -175,17 +175,17 @@ end test testworks-check-instance?-test;
 
 define test testworks-assert-instance?-test ()
   assert-equal(without-recording ()
-                 assert-instance?(<integer>, 1)
+                 assert-instance?(1, <integer>)
                end,
                $passed,
-               "assert-instance?(<integer>, 1) passes");
+               "assert-instance?(1, <integer>) passes");
   assert-equal(without-recording ()
-                 assert-instance?(<string>, 1)
+                 assert-instance?(1, <string>)
                end,
                $failed,
-               "assert-instance?(<string>, 1) fails");
+               "assert-instance?(1, <string>) fails");
   assert-equal(without-recording ()
-                 assert-instance?(<integer>, test-error())
+                 assert-instance?(test-error(), <integer>)
                end,
                $crashed,
                "assert-instance? of error crashes");
@@ -193,17 +193,17 @@ end test testworks-assert-instance?-test;
 
 define test testworks-assert-not-instance?-test ()
   assert-equal(without-recording ()
-                 assert-not-instance?(<string>, 1)
+                 assert-not-instance?(1, <string>)
                end,
                $passed,
-               "assert-not-instance?(<string>, 1) passes");
+               "assert-not-instance?(1, <string>) passes");
   assert-equal(without-recording ()
-                 assert-not-instance?(<integer>, 1)
+                 assert-not-instance?(1, <integer>)
                end,
                $failed,
-               "assert-not-instance?(<integer>, 1) fails");
+               "assert-not-instance?(1, <integer>) fails");
   assert-equal(without-recording ()
-                 assert-not-instance?(<integer>, test-error())
+                 assert-not-instance?(test-error(), <integer>)
                end,
                $crashed,
                "assert-not-instance? of error crashes");
