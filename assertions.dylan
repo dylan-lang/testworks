@@ -147,7 +147,7 @@ define method check-equal-failure-detail
 end method check-equal-failure-detail;
 
 define macro check-instance?
-  { check-instance? (?check-name:expression, ?type:expression, ?value:expression)
+  { check-instance? (?check-name:expression, ?value:expression, ?type:expression)
   } => {
     do-check-instance?(method () ?check-name end,
                        method ()

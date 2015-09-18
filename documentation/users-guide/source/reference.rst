@@ -403,18 +403,18 @@ These are the available checks:
 
    Check that the result of an expression is an instance of a given type.
 
-   :signature: check-instance? *name* *type* *expression*
+   :signature: check-instance? *name* *expression* *type*
 
    :parameter name: An instance of ``<string>``.
-   :parameter type: The expected type.
    :parameter expression: An expression.
+   :parameter type: The expected type.
 
    :example:
 
      .. code-block:: dylan
 
        check-instance?("subclass returns type",
-                       <type>, subclass(<string>));
+                       subclass(<string>), <type>);
 
 
 .. macro:: check-true

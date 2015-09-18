@@ -157,17 +157,17 @@ end test testworks-assert-not-equal-test;
 
 define test testworks-check-instance?-test ()
   assert-equal(without-recording ()
-                 check-instance?($internal-check-name, <integer>, 1)
+                 check-instance?($internal-check-name, 1, <integer>)
                end,
                $passed,
                "check-instance?(<integer>, 1) passes");
   assert-equal(without-recording ()
-                 check-instance?($internal-check-name, <string>, 1)
+                 check-instance?($internal-check-name, 1, <string>)
                end,
                $failed,
                "check-instance?(<string>, 1) fails");
   assert-equal(without-recording ()
-                 check-instance?($internal-check-name, <integer>, test-error())
+                 check-instance?($internal-check-name, test-error(), <integer>)
                end,
                $crashed,
                "check-instance? of error crashes");

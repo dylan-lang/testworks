@@ -74,8 +74,8 @@ define function check-protocol-variable
   let title = spec-title(variable-spec);
   with-test-unit (format-to-string("%s specification", title))
     check-instance?(format-to-string("Variable %s has the correct type", title),
-                    variable-spec-type(variable-spec),
-                    variable-spec-getter(variable-spec)());
+                    variable-spec-getter(variable-spec)(),
+                    variable-spec-type(variable-spec));
     check-true(format-to-string("Variable %s can be set to itself", title),
                begin
                  let value = variable-spec-getter(variable-spec)();
@@ -100,8 +100,8 @@ define function check-protocol-constant
   let title = spec-title(constant);
   with-test-unit (format-to-string("%s specification", title))
     check-instance?(format-to-string("Constant %s has the correct type", title),
-                    variable-spec-type(constant),
-                    variable-spec-getter(constant)());
+                    variable-spec-getter(constant)(),
+                    variable-spec-type(constant));
   end;
   with-test-unit (format-to-string("constant-test %s", title))
     test-protocol-definition
