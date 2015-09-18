@@ -131,7 +131,7 @@ define method check-protocol-class
   let class = class-spec-class(class-spec);
   with-test-unit (format-to-string("class %s specification", title))
     check-instance?(format-to-string("Variable %s is a class", title),
-                    <class>, class);
+                    class, <class>);
     check-true(format-to-string("Variable %s has the correct superclasses", title),
                protocol-class-has-correct-superclasses?(protocol-spec, class));
   end;
@@ -181,8 +181,7 @@ define method check-protocol-class-instantiation
   if (protocol-class-instantiable?(spec, class))
     let instance = #f;
     check-instance?(format-to-string("make %s with required arguments", title),
-                    class,
-                    instance := make-test-instance(class));
+                    instance := make-test-instance(class), class);
     if (instance)
       destroy-test-instance(class, instance)
     else

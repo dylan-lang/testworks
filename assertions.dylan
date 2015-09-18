@@ -147,41 +147,41 @@ define method check-equal-failure-detail
 end method check-equal-failure-detail;
 
 define macro check-instance?
-  { check-instance? (?check-name:expression, ?type:expression, ?value:expression)
+  { check-instance? (?check-name:expression, ?value:expression, ?type:expression)
   } => {
     do-check-instance?(method () ?check-name end,
                        method ()
-                         values(?type, ?value, ?"value")
+                         values(?value, ?type, ?"value")
                        end,
                        #f)
   }
 end macro check-instance?;
 
 define macro assert-instance?
-  { assert-instance? (?type:expression, ?value:expression)
+  { assert-instance? (?value:expression, ?type:expression)
   } => {
-    assert-instance? (?type, ?value, "instance?(" ?"type" ", " ?"value" ")")
+    assert-instance? (?value, ?type, "instance?(" ?"value" ", " ?"type" ")")
   }
-  { assert-instance? (?type:expression, ?value:expression, ?description:expression)
+  { assert-instance? (?value:expression, ?type:expression, ?description:expression)
   } => {
     do-check-instance?(method () ?description end,
                        method ()
-                         values(?type, ?value, ?"value")
+                         values(?value, ?type, ?"value")
                        end,
                        #f)
   }
 end macro assert-instance?;
 
 define macro assert-not-instance?
-  { assert-not-instance? (?type:expression, ?value:expression)
+  { assert-not-instance? (?value:expression, ?type:expression)
   } => {
-    assert-not-instance? (?type, ?value, "instance?(" ?"type" ", " ?"value" ")")
+    assert-not-instance? (?value, ?type, "~instance?(" ?"value" ", " ?"type" ")")
   }
-  { assert-not-instance? (?type:expression, ?value:expression, ?description:expression)
+  { assert-not-instance? (?value:expression, ?type:expression, ?description:expression)
   } => {
     do-check-instance?(method () ?description end,
                        method ()
-                         values(?type, ?value, ?"value")
+                         values(?value, ?type, ?"value")
                        end,
                        #t)
   }
@@ -206,7 +206,7 @@ define function do-check-instance?
           end method;
     name := get-name();
     phase := "evaluating check arguments";
-    let (type :: <type>, value, value-expr :: <string>) = get-arguments();
+    let (value, type :: <type>, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= is %=an instance of %s",
                               value-expr, if (negate?) "not " else "" end, type);
     let (status, reason)

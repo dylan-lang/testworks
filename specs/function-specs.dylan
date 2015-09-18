@@ -256,7 +256,7 @@ define function check-protocol-function
   with-test-unit (format-to-string("%s specification", title))
     let (type, type-name) = protocol-function-type(protocol-spec, function);
     check-instance?(protocol-function-check-name(title, type-name),
-                    type, function);
+                    function, type);
     check-protocol-function-parameters(protocol-spec, title, function);
     check-protocol-function-results(protocol-spec, title, function);
   end;

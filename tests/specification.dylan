@@ -448,8 +448,8 @@ end function-test test-output;
 define testworks function-test test-option ()
   //---*** Fill this in...
   check-instance?("test-option returns a <string>",
-                  <string>,
-                  test-option("foo", default: "bleah"));
+                  test-option("foo", default: "bleah"),
+                  <string>);
 end function-test test-option;
 
 define testworks macro-test with-test-unit-test ()
