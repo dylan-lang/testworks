@@ -160,7 +160,7 @@ end macro check-instance?;
 define macro assert-instance?
   { assert-instance? (?type:expression, ?value:expression)
   } => {
-    assert-instance? (?type, ?value, "instance?(" ?"value" ", " ?"type" ")")
+    assert-instance? (?type, ?value, ?"value" " is an instance of " ?"type")
   }
   { assert-instance? (?type:expression, ?value:expression, ?description:expression)
   } => {
@@ -175,7 +175,7 @@ end macro assert-instance?;
 define macro assert-not-instance?
   { assert-not-instance? (?type:expression, ?value:expression)
   } => {
-    assert-not-instance? (?type, ?value, "instance?(" ?"value" ", " ?"type" ")")
+    assert-not-instance? (?type, ?value, ?"value" " is not an instance of " ?"type")
   }
   { assert-not-instance? (?type:expression, ?value:expression, ?description:expression)
   } => {
