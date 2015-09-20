@@ -104,6 +104,16 @@ Assertions
 Assertions are the smallest unit of verification in testworks.  They
 must appear within the body of a test.
 
+Assertion macros that accept an argument that is the expected value
+as well as the expression that is to be tested typically expect the
+value first and the expression second. The macros don't always require
+that this be the case:
+
+.. code-block:: dylan
+
+    assert-not-equal(5, 2 + 2);
+    assert-instance?(<integer>, 2 + 2);
+
 All assertion macros accept a description of what is being tested as
 an *optional* final argument.  The description should be stated in the
 positive sense.  For example::
@@ -279,6 +289,14 @@ These are the available assertion macros:
       than three".  If no description is supplied one will be
       automatically generated based on the text of the expression.
 
+   :description:
+
+      .. warning:: The arguments to this assertion follow the typical
+         argument ordering of Testworks assertions with the desired
+         value before the expression that represents the test. As such,
+         the desired *type* is the first parameter to this assertion
+         while it is the second parameter for :drm:`instance?`.
+
    :example:
 
      .. code-block:: dylan
@@ -301,6 +319,14 @@ These are the available assertion macros:
       This should be stated in positive form, such as "two is less
       than three".  If no description is supplied one will be
       automatically generated based on the text of the expression.
+
+   :description:
+
+      .. warning:: The arguments to this assertion follow the typical
+         argument ordering of Testworks assertions with the desired
+         value before the expression that represents the test. As such,
+         the desired *type* is the first parameter to this assertion
+         while it is the second parameter for :drm:`instance?`.
 
    :example:
 
