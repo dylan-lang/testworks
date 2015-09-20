@@ -101,7 +101,7 @@ Suites, Tests, and Benchmarks
 Assertions
 ----------
 
-Assertions are the smallest unit of verification in testworks.  They
+Assertions are the smallest unit of verification in Testworks.  They
 must appear within the body of a test.
 
 Assertion macros that accept an argument that is the expected value

@@ -125,7 +125,7 @@ arguments, which will be displayed if the assertion fails.  If the
 description isn't provided, Testworks makes one from the expressions
 passed to the assertion macro.
 
-In general, testworks should be pretty good at reporting the actual
+In general, Testworks should be pretty good at reporting the actual
 values that caused the failure so it shouldn't be necessary to include
 them in the description.
 
