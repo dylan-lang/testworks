@@ -116,9 +116,11 @@ that this be the case:
 
 All assertion macros accept a description of what is being tested as
 an *optional* final argument.  The description should be stated in the
-positive sense.  For example::
+positive sense.  For example:
 
-    assert-equal(2, 2, "2 equals 2")
+.. code-block:: dylan
+
+    assert-equal(2, 2 + 2, "2 + 2 equals 2")
 
 These are the available assertion macros:
 
