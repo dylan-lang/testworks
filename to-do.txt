@@ -92,11 +92,7 @@
   + For one, I'd like an HTML report with some fancy JS stuff in it to
     make it easy to figure things out
 
-  + It should take a command line arg to log the output to a file
-    (right now you can't just redirect it)
-
   + It should be documented how to diff reports
 
   + We should have some sort of archive of them for released builds on
     various platforms.
-
