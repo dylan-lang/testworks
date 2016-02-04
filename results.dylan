@@ -58,7 +58,7 @@ define class <component-result> (<result>)
     required-init-keyword: seconds:;
   constant slot result-microseconds :: false-or(<integer>),
     required-init-keyword: microseconds:;
-  // Hopefully no benchmarks will allocate more than 536MB haha...
+  // Hopefully nothing will allocate more than 536MB haha...
   constant slot result-bytes :: false-or(<integer>),
     required-init-keyword: bytes:;
 end class <component-result>;
