@@ -66,9 +66,6 @@ end class <component-result>;
 define class <test-result> (<component-result>)
 end;
 
-define class <benchmark-result> (<component-result>)
-end;
-
 define class <suite-result> (<component-result>)
 end;
 
@@ -103,11 +100,6 @@ end;
 define method result-type-name
     (result :: <suite-result>) => (name :: <string>)
   "Suite"
-end;
-
-define method result-type-name
-    (result :: <benchmark-result>) => (name :: <string>)
-  "Benchmark"
 end;
 
 define method result-type-name

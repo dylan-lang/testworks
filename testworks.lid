@@ -6,6 +6,7 @@ Files:  library
         utils
         results
         components
+        benchmark
         assertions
         reports
         run
