@@ -180,7 +180,7 @@ define method execute-component
 end method execute-component;
 
 define method execute-component
-    (test :: <runnable>, runner :: <test-runner>)
+    (test :: <test>, runner :: <test-runner>)
  => (result :: <component-result>)
   let subresults = make(<stretchy-vector>);
   let (seconds, microseconds, bytes) = values(0, 0, 0);

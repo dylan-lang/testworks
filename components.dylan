@@ -178,7 +178,7 @@ end macro test-definer;
 define macro benchmark-definer
   { define benchmark ?test-name:name (?keyword-args:*) ?test-body:body end
   } => {
-    define function "%%" ## ?test-name () ?test-body end;
+    define function "%%" ## ?test-name (state :: <benchmark-state>) ?test-body end;
     define constant ?test-name :: <benchmark>
       = make(<benchmark>,
              name: ?"test-name",

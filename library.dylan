@@ -9,7 +9,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use command-line-parser;
   use common-dylan,
-    import: { common-dylan, threads };
+    import: { common-dylan, simple-profiling, threads };
   use io,
     import: { format, print, standard-io, streams };
   use coloring-stream;
@@ -62,6 +62,20 @@ define module testworks
     assert-true,
     assert-false;
 
+  // Benchmark state
+  create
+    *benchmark*,
+    <benchmark-state>,
+    benchmark-bytes-processed,
+    benchmark-bytes-processed-setter,
+    benchmark-items-processed,
+    benchmark-items-processed-setter,
+    benchmark-label,
+    benchmark-label-setter,
+    keep-running?,
+    pause-timing,
+    resume-timing;
+
   // Components
   create
     suite-definer,
@@ -88,6 +102,7 @@ define module %testworks
   use format;
   use locators, import: { <file-locator>, locator-base };
   use print, import: { print-object };
+  use simple-profiling;
   use standard-io;
   use streams;
   use strings, import: { char-compare-ic, starts-with?, string-equal? };
@@ -146,11 +161,15 @@ define module %testworks
     result-subresults,
 
     <test-result>,
-    <benchmark-result>,
     <suite-result>,
     <unit-result>,
     result-reason,
     do-results,
+
+    <benchmark-result>,
+    benchmark-nanoseconds-per-op,
+    benchmark-items-processed-per-second,
+    benchmark-bytes-processed-per-second,
 
     <check-result>,
     <test-unit-result>;

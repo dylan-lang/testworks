@@ -362,7 +362,9 @@ end suite testworks-assertion-macros-suite;
 
 
 define benchmark basic-benchmark ()
-  "just exercise basic benchmark functionality"
+  while (keep-running?(*benchmark*))
+    "just exercise basic benchmark functionality"
+  end
 end;
 
 define suite testworks-benchmarks-suite ()
