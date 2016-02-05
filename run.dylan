@@ -104,20 +104,18 @@ define method maybe-execute-component
   if (runner.runner-progress)
     show-progress(runner, component, #f);
   end;
-  let (subresults, status, reason, seconds, microseconds, bytes)
+  let result
     = if (execute-component?(component, runner))
         execute-component(component, runner)
       else
-        values(#(), $skipped, #f, 0, 0, 0)
+        make(component-result-type(component),
+             name: component.component-name,
+             status: $skipped,
+             reason: #f,
+             seconds: 0,
+             microseconds: 0,
+             bytes: 0)
       end;
-  let result = make(component-result-type(component),
-                    name: component.component-name,
-                    status: status,
-                    reason: reason,
-                    subresults: subresults,
-                    seconds: seconds,
-                    microseconds: microseconds,
-                    bytes: bytes);
   if (runner.runner-progress)
     show-progress(runner, component, result);
   end;
@@ -126,8 +124,7 @@ end method maybe-execute-component;
 
 define method execute-component
     (suite :: <suite>, runner :: <test-runner>)
- => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
-     seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
+ => (result :: <component-result>)
   let subresults :: <stretchy-vector> = make(<stretchy-vector>);
   let seconds :: <integer> = 0;
   let microseconds :: <integer> = 0;
@@ -167,13 +164,19 @@ define method execute-component
       cleanup
         suite.suite-cleanup-function();
       end block;
-  values(subresults, status, #f, seconds, microseconds, bytes)
+  make(component-result-type(suite),
+       name: suite.component-name,
+       status: status,
+       reason: #f,
+       subresults: subresults,
+       seconds: seconds,
+       microseconds: microseconds,
+       bytes: bytes)
 end method execute-component;
 
 define method execute-component
     (test :: <runnable>, runner :: <test-runner>)
- => (subresults :: <sequence>, status :: <result-status>, reason :: false-or(<string>),
-     seconds :: <integer>, microseconds :: <integer>, bytes :: <integer>)
+ => (result :: <component-result>)
   let subresults = make(<stretchy-vector>);
   let (seconds, microseconds, bytes) = values(0, 0, 0);
   let (status, reason)
@@ -215,7 +218,14 @@ define method execute-component
             end if;
         end
       end;
-  values(subresults, status, reason, seconds, microseconds, bytes)
+  make(component-result-type(test),
+       name: test.component-name,
+       status: status,
+       reason: reason,
+       subresults: subresults,
+       seconds: seconds,
+       microseconds: microseconds,
+       bytes: bytes)
 end method execute-component;
 
 define method list-component
