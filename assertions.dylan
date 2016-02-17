@@ -190,7 +190,7 @@ end macro assert-not-instance?;
 define function do-check-instance?
     (get-name :: <function>, get-arguments :: <function>, negate? :: <boolean>)
  => (result :: <result>)
-  let phase = "evaluating check name";
+  let phase = "evaluating assertion description";
   let name = #f;
   block (return)
     let handler <serious-condition>
@@ -198,13 +198,13 @@ define function do-check-instance?
             if (debug?())
               next-handler()  // decline to handle it
             else
-              return(record-check(name | "*** Invalid check name ***",
+              return(record-check(name | "*** Invalid description ***",
                                   $crashed,
                                   format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
     name := get-name();
-    phase := "evaluating check arguments";
+    phase := "evaluating assertion expressions";
     let (type :: <type>, value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= is %=an instance of %s",
                               value-expr, if (negate?) "not " else "" end, type);
