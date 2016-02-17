@@ -189,7 +189,7 @@ end macro assert-not-instance?;
 
 define function do-check-instance?
     (get-name :: <function>, get-arguments :: <function>, negate? :: <boolean>)
- => (status :: <result-status>)
+ => (result :: <result>)
   let phase = "evaluating check name";
   let name = #f;
   block (return)
@@ -198,10 +198,9 @@ define function do-check-instance?
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | "*** Invalid check name ***",
-                           $crashed,
-                           format-to-string("Error %s: %s", phase, condition));
-              return($crashed);
+              return(record-check(name | "*** Invalid check name ***",
+                                  $crashed,
+                                  format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
     name := get-name();
@@ -217,8 +216,7 @@ define function do-check-instance?
                  format-to-string("%s (from expression %=) is not an instance of %s.",
                                   value, value-expr, type))
         end;
-    record-check(name, status, reason);
-    status
+    record-check(name, status, reason)
   end block
 end function do-check-instance?;
 
@@ -247,7 +245,7 @@ end macro assert-true;
 
 define function do-check-true
     (get-name :: <function>, get-arguments :: <function>)
- => (status :: <result-status>)
+ => (result :: <result>)
   let phase = "evaluating assertion description";
   let name = #f;
   block (return)
@@ -256,10 +254,9 @@ define function do-check-true
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | "*** Invalid description ***",
-                           $crashed,
-                           format-to-string("Error %s: %s", phase, condition));
-              return($crashed);
+              return(record-check(name | "*** Invalid description ***",
+                                  $crashed,
+                                  format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
     name := get-name();
@@ -274,8 +271,7 @@ define function do-check-true
                  format-to-string("expression %= evaluates to #f, not a true value.",
                                   value-expr))
         end;
-    record-check(name, status, reason);
-    status
+    record-check(name, status, reason)
   end block
 end function do-check-true;
 
@@ -306,7 +302,7 @@ end macro assert-false;
 
 define function do-check-false
     (get-name :: <function>, get-arguments :: <function>)
- => (status :: <result-status>)
+ => (result :: <result>)
   let phase = "evaluating assertion description";
   let name = #f;
   block (return)
@@ -315,10 +311,9 @@ define function do-check-false
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | "*** Invalid description ***",
-                           $crashed,
-                           format-to-string("Error %s: %s", phase, condition));
-              return($crashed);
+              return(record-check(name | "*** Invalid description ***",
+                                  $crashed,
+                                  format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
     name := get-name();
@@ -333,8 +328,7 @@ define function do-check-false
                  format-to-string("expression %= does not evaluate to #f.",
                                   value-expr))
         end;
-    record-check(name, status, reason);
-    status
+    record-check(name, status, reason)
   end block
 end function do-check-false;
 
@@ -366,7 +360,7 @@ end macro assert-signals;
 
 define function do-check-condition
     (get-name :: <function>, get-arguments :: <function>)
- => (status :: <result-status>)
+ => (result :: <result>)
   let phase = "evaluating assertion description";
   let name = #f;
   block (return)
@@ -375,10 +369,9 @@ define function do-check-condition
             if (debug?())
               next-handler()  // decline to handle it
             else
-              record-check(name | "*** Invalid description ***",
-                           $crashed,
-                           format-to-string("Error %s: %s", phase, condition));
-              return($crashed);
+              return(record-check(name | "*** Invalid description ***",
+                                  $crashed,
+                                  format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
     name := get-name();
@@ -400,8 +393,7 @@ define function do-check-condition
                                              "The error was: %s",
                                            ex.object-class, condition-class, ex))
         end;
-    record-check(name, status, reason);
-    status
+    record-check(name, status, reason)
   end block
 end function do-check-condition;
 
