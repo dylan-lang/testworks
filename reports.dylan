@@ -226,6 +226,7 @@ end method remove-newlines;
 
 define method log-report-function
     (result :: <result>, stream :: <stream>) => ()
+  let stream = make(<indenting-stream>, inner-stream: stream);
   local method generate-report (result :: <result>) => ()
           let test-type = result-type-name(result);
           format(stream, "\nObject: %s\n", test-type);
@@ -237,8 +238,10 @@ define method log-report-function
               format(stream, "Reason: %s\n", result.result-reason);
             end;
             for (subresult in result-subresults(result))
-              generate-report(subresult)
-            end
+              with-indentation (stream, 2)
+                generate-report(subresult);
+              end with-indentation;
+            end for;
           else
             let reason = result.result-reason;
             if (reason)
