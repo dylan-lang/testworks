@@ -61,19 +61,6 @@ end method expected-failure?;
 define class <test> (<runnable>)
 end;
 
-// Benchmarks don't require any assertions.
-// Benchmarks have the keyword "benchmark".
-define class <benchmark> (<runnable>)
-  inherited slot test-requires-assertions? = #f;
-end;
-
-define method make
-    (class :: subclass(<benchmark>), #rest args, #key tags)
- => (test :: <benchmark>)
-  let new-tags = concatenate(#["benchmark"], tags | #[]);
-  apply(next-method, class, tags: new-tags, args)
-end;
-
 define class <test-unit> (<test>)
 end;
 
@@ -84,11 +71,6 @@ define generic component-type-name
 define method component-type-name
     (test :: <test>) => (type-name :: <string>)
   "test"
-end;
-
-define method component-type-name
-    (bench :: <benchmark>) => (type-name :: <string>)
-  "benchmark"
 end;
 
 define method component-type-name
@@ -120,11 +102,6 @@ end;
 define method component-result-type
     (component :: <test>) => (result-type :: subclass(<result>))
   <test-result>
-end;
-
-define method component-result-type
-    (component :: <benchmark>) => (result-type :: subclass(<result>))
-  <benchmark-result>
 end;
 
 define method component-result-type
