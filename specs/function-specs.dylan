@@ -205,11 +205,22 @@ define function check-protocol-function-parameters
                                 " of specified arguments", title),
              required.size >= actual-required-number);
 
-  for (spec in required, specializer in actual-specializers, index from 0)
+  // TODO(cgay): This fails for cases where a library adds a method to
+  // an existing generic function. For example,
+  //     open generic-function \< (<date>, <date>) => (<boolean>);
+  // The generic is defined on (<object>, <object>) so the below test fails.
+  // We should be able to iterate over the gf methods and see if there's
+  // one exactly matching the spec's types.  (On the other hand, having
+  // that in the spec doesn't seem nearly as useful as writing a test that
+  // calls <date> < <date> and gets the right result.)
+
+  for (spec in required,
+       actual in actual-specializers,
+       index from 0)
     check-true(format-to-string("function %s argument %d type %s"
                                   " is a supertype of the specified type %s",
-                                title, index, specializer, spec),
-               subtype?(spec, specializer));
+                                title, index, actual, spec),
+               subtype?(actual, spec));
   end for;
 
   for (key in keys)
