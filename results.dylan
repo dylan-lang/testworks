@@ -40,6 +40,9 @@ define method status-name
   end
 end method status-name;
 
+define generic result-name   (result :: <result>) => (name :: <string>);
+define generic result-status (result :: <result>) => (status :: <result-status>);
+define generic result-reason (result :: <result>) => (reason :: false-or(<string>));
 
 define class <result> (<object>)
   constant slot result-name :: <string>,
@@ -51,6 +54,10 @@ define class <result> (<object>)
     required-init-keyword: reason:;
 end class <result>;
 
+define generic result-seconds      (result :: <metered-result>) => (sec :: false-or(<integer>));
+define generic result-microseconds (result :: <metered-result>) => (usec :: false-or(<integer>));
+define generic result-bytes        (result :: <metered-result>) => (bytes :: false-or(<integer>));
+
 define class <metered-result> (<result>)
   constant slot result-seconds :: false-or(<integer>),
     required-init-keyword: seconds:;
@@ -60,6 +67,8 @@ define class <metered-result> (<result>)
   constant slot result-bytes :: false-or(<integer>),
     required-init-keyword: bytes:;
 end class <metered-result>;
+
+define generic result-subresults   (result :: <component-result>) => (subresults :: <sequence>);
 
 define class <component-result> (<metered-result>)
   constant slot result-subresults :: <sequence> = make(<stretchy-vector>),

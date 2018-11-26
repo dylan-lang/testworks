@@ -1,12 +1,5 @@
 Module: testworks-test-suite
 
-// This spec is mainly here so that we exercise testworks-specs a bit.
-// I'm not planning to try and fill in all the methods with "fill this
-// in" below.  There are some notes on how these specs were originally
-// generated.  They required some by-hand editing.
-
-// Module: %testworks
-
 define %testworks constant-test $skipped ()
   //---*** Fill this in...
 end constant-test $skipped;
