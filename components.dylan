@@ -7,6 +7,8 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 
+define generic component-name (c :: <component>) => (name :: <string>);
+
 /// This is the class of objects that can be performed in a test
 /// suite.  Note that there are no <assertion> or <check> classes so
 /// they aren't considered "components".
@@ -22,6 +24,10 @@ define function full-component-name (c :: <component>) => (name :: <string>)
   c.component-name
 end;
 
+define generic suite-components (suite :: <suite>) => (components :: <sequence> /* of <component> */);
+define generic suite-setup-function (suite :: <suite>) => (function :: <function>);
+define generic suite-cleanup-function (suite :: <suite>) => (function :: <function>);
+
 define class <suite> (<component>)
   constant slot suite-components :: <sequence> /* of <component> */ = #[],
     init-keyword: components:;
@@ -30,6 +36,10 @@ define class <suite> (<component>)
   constant slot suite-cleanup-function :: <function> = method () end,
     init-keyword: cleanup-function:;
 end class <suite>;
+
+define generic test-tags (r :: <runnable>) => (tags :: <sequence> /* of <tag> */);
+define generic test-function (r :: <runnable>) => (fn :: <function>);
+define generic test-requires-assertions? (r :: <runnable>) => (required? :: <boolean>);
 
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
