@@ -1,5 +1,5 @@
 Module:       %testworks
-Synopsis:     Implementation of run-test-application
+Synopsis:     Testworks command-line parsing and top-level entry points
 Author:       Andy Armstrong, Shri Amit
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
@@ -88,9 +88,10 @@ define function parse-args
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("tag", "t"),
-                  help: "Only run tests matching this tag. If tag is prefixed "
-                    "with '-', the test will only run if it does NOT have the tag."
-                    " May be repeated."));
+                  help: "Only run tests matching this tag. If tag is prefixed"
+                    " with '-', the test will only run if it does NOT have the tag."
+                    " May be repeated. Ex: --tag=-slow,-benchmark means don't run"
+                    " benchmarks or tests tagged as slow."));
   block ()
     parse-command-line(parser, args, description: "Run tests suites.");
   exception (ex :: <usage-error>)
@@ -128,8 +129,8 @@ end method find-components;
 
 // Create a <test-runner> from command-line options.
 define function make-runner-from-command-line
-    (parent :: <component>, parser :: <command-line-parser>)
- => (start-suite :: <component>, runner :: <test-runner>, report-function :: <function>)
+    (top :: false-or(<component>), parser :: <command-line-parser>)
+ => (top :: <component>, runner :: <test-runner>, report-function :: <function>)
   // TODO(cgay): Use init-keywords rather than setters so we can make <test-runner>
   // immutable.
   let debug = get-option-value(parser, "debug");
@@ -159,29 +160,44 @@ define function make-runner-from-command-line
 
   let components = find-components(get-option-value(parser, "suite"),
                                    get-option-value(parser, "test"));
-  let start-suite = select (components.size)
-                      0 => parent;
-                      1 => components[0];
-                      otherwise =>
-                        make(<suite>,
-                             name: "Specified Components",
-                             description: "arguments to -suite and -test",
-                             components: components);
-                    end select;
-  values(start-suite, runner, report-function)
+  let top = select (components.size)
+              0 => top;
+              1 => components[0];
+              otherwise =>
+                make(<suite>,
+                     name: "Specified Components",
+                     description: "arguments to -suite and -test",
+                     components: components);
+            end;
+  values(top, runner, report-function)
 end function make-runner-from-command-line;
 
 
-// Run a test or suite.  Uses a test runner created based on
-// command-line arguments.  Use run-tests instead if you want to
-// create the test-runner yourself.  Returns a <result> if any suites
-// or tests were executed; otherwise #f.
+// Run or list tests as filtered by the command-line options. Without
+// any arguments, defaults to running all tests in the library. The
+// `tests` argument may be provided for backward compatibility and
+// must be a single test or test suite. Returns a `<result>` if any
+// tests are executed; otherwise `#f`.
 define method run-test-application
-    (parent :: <component>) => (result :: false-or(<result>))
+    (#rest tests) => (result :: false-or(<result>))
+  if (tests.size > 1)
+    error("run-test-application takes 0 or 1 test suites as argument (got %d)",
+          tests.size);
+  end;
+  let top = if (tests.size = 0)
+              // Make a suite containing all tests, named after the library.
+              let app = locator-base(as(<file-locator>, application-name()));
+              make(<suite>,
+                   name: app,
+                   description: concatenate("All ", app, " tests"),
+                   components: $tests)
+            else
+              tests[0]
+            end;
   let parser = parse-args(application-arguments());
   let (start-suite, runner, report-function)
     = block ()
-        make-runner-from-command-line(parent, parser)
+        make-runner-from-command-line(top, parser)
       exception (ex :: <usage-error>)
         format(*standard-error*, "%s\n", condition-to-string(ex));
         // TODO(cgay): The caller should decide whether to exit the

@@ -411,17 +411,26 @@ define test test-with-test-unit ()
   end;
 end test test-with-test-unit;
 
-define test test-expected-failure-always(expected-failure?: #t)
-  assert-true(#f);
-end test;
+// The following tests are defined without using "define test" so that
+// they don't get registered and then run as normal tests (which would fail).
 
-define test test-expected-failure-maybe(expected-failure?: method () #t end)
-  assert-true(#f);
-end test;
+define constant test-expected-failure-always
+  = make(<test>,
+         name: "test-expected-failure-always",
+         function: method () assert-true(#f) end,
+         expected-failure?: #t);
 
-define test test-unexpected-success(expected-failure?: #t)
-  assert-true(#t);
-end test;
+define constant test-expected-failure-maybe
+  = make(<test>,
+         name: "test-expected-failure-maybe",
+         function: method () assert-true(#f) end,
+         expected-failure?: method () #t end);
+
+define constant test-unexpected-success
+  = make(<test>,
+         name: "test-unexpected-success",
+         function: method () assert-true(#t) end,
+         expected-failure?: #t);
 
 define suite expected-failure-suite ()
   test test-expected-failure-always;

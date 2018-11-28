@@ -43,7 +43,7 @@ define module-spec %testworks ()
   class <component-result> (<result>);
   constant $not-implemented :: <object>;
   function debug-failures? () => (<boolean>);
-  function make-runner-from-command-line (<component>, <command-line-parser>) => (<component>, <test-runner>, <function>);
+  function make-runner-from-command-line (false-or(<component>), <command-line-parser>) => (<component>, <test-runner>, <function>);
   function result-name (<object>) => (<string>);
   function tags-match? (<sequence>, <component>) => (<boolean>);
   constant $passed :: <object>;
@@ -84,12 +84,12 @@ define module-spec testworks ()
   macro-test check-no-condition-test;
   macro-test assert-equal-test;
   macro-test check-no-errors-test;
-  function run-test-application (<component>) => (false-or(<result>));
+  function run-test-application (false-or(<component>)) => (false-or(<result>));
   macro-test assert-not-equal-test;
   // generated without "instantiable"
   open instantiable class <test-runner> (<object>);
   open generic-function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
-  function run-tests (<test-runner>, <component>) => (<component-result>);
+  function run-tests (<test-runner>, <component>) => (false-or(<component-result>));
   macro-test assert-false-test;
   macro-test assert-signals-test;
   macro-test check-condition-test;
@@ -407,6 +407,10 @@ end class-test <test-runner>;
 define testworks function-test check-equal-failure-detail ()
   //---*** Fill this in...
 end function-test check-equal-failure-detail;
+
+define testworks function-test run ()
+  //---*** Fill this in...
+end function-test run;
 
 define testworks function-test run-tests ()
   //---*** Fill this in...

@@ -202,7 +202,7 @@ end method handle-event;
 /// Simple wrapper function
 
 // TODO(cgay): In the testworks library I replaced perform-{suite,test,component}
-// with run-tests.  It should be done here too but I'm making minimal changes in
+// with run.  It should be done here too but I'm making minimal changes in
 // testworks-gui right now since it's difficult to test it.
 
 define function gui-perform-suite

@@ -11,7 +11,8 @@ Testworks Usage
    2  Defining Tests
      2.1  Assertions
      2.2  Tests
-     2.3  Suites
+     2.3  Benchmarks
+     2.4  Suites
    3  Organizing Your Test Suites
    4  Running Your Tests As A Stand-alone Application
    5  Reports
@@ -30,21 +31,6 @@ For the impatient, this section summarizes most of what you need to
 know to use Testworks.
 
 Add ``use testworks;`` to both your test library and test module.
-
-Suites are used to organize tests into groups and may be nested
-arbitrarily.  It is common to have a top-level suite named
-*my-library*-test-suite.
-
-.. code-block:: dylan
-
-   // Top-level test suite for the "example" library.
-   define suite example-test-suite ()
-     suite module1-test-suite;
-     suite module2-test-suite;
-     test fn1-test;
-     test fn2-test;
-     benchmark fn1-benchmark;
-   end;
 
 Tests contain arbitrary code plus assertions:
 
@@ -72,21 +58,52 @@ See also: :func:`assert-true`, :func:`assert-false`,
 takes an optional *description* argument, which can be used to
 indicate the intent of the assertion if it isn't clear.
 
-To run the test suite call
-``run-test-application(example-test-suite)``.
+If you have an exceedingly large or complex test library, "suites" may
+be used to organize tests into groups (e.g., one per module) and may
+be nested arbitrarily.  When using suites, it is common to have a
+top-level suite named *my-library*-test-suite.
 
-You may want to have both an "example-test-suite" library, which
-exports your top-level test suite so it can be included as a sub-suite
-in other testing libraries, and an "example-test-suite-app"
-executable, which can be used to run just the tests for "example"
-itself.  See `Running Your Tests As A Stand-alone Application`_.
+.. code-block:: dylan
 
-:func:`run-test-application` handles parsing the command line and
-running the suite.  Use ::
+   // Top-level test suite for the "example" library.
+   define suite example-test-suite ()
+     suite module1-test-suite;
+     suite module2-test-suite;
+     test fn1-test;
+     test fn2-test;
+     benchmark fn1-benchmark;
+   end;
 
-  example-test-suite-app --help
+**Note** that when using suites you must remember to add every test or
+sub-suite to the top level test suite (transitively) and suites must
+be defined textually *after* the other suites and tests they contain.
 
-to see the command-line options.
+Your test library should call :func:`run-test-application` to parse
+the Testworks command-line options and run the requested tests.  It
+may be called with no arguments to run all tests and benchmarks
+directly, or it can be called with a suite to run only that suite::
+
+  run-test-application()           // Run all tests and benchmarks.
+  run-test-application(my-suite)   // Run everything in my-suite.
+
+The main difference is in what the output looks like. With suites it's
+a little bit more structured and verbose. Without suites it's flat.
+
+The Testworks command-line (assuming your test executable is
+"foo-test")::
+
+  foo-test --help                # See command-line options.
+  foo-test --tag=benchmark       # Run only the benchmarks.
+  foo-test --tag=-benchmark      # Run only the tests.
+  foo-test --suite=my-sub-suite  # Run only my-sub-suite
+
+When using suites, you may want to have both an "foo-test" library,
+which exports your top-level test suite so it can be included as a
+sub-suite in other testing libraries, and a "foo-test-app" executable,
+which can be used to run just the tests for "foo" itself.  See
+`Running Your Tests As A Stand-alone Application`_.
+
+**TODO**: describe how to test definitions that aren't exported by the module-under-test.
 
 
 Defining Tests
@@ -106,7 +123,7 @@ error.  As an example, in
 the expression ``foo > bar`` is compared to ``#f``, and the result is
 recorded by the test harness.  Failing (or crashing) assertions do not
 cause the test to terminate; all assertions are run unless the test
-itself signals an error.
+itself signals an error. (**NOTE:** This behavior will probably change.)
 
 See the :doc:`reference` for detailed documentation on the available
 assertion macros:
@@ -123,11 +140,14 @@ assertion macros:
 Each of these takes an optional description string, after the required
 arguments, which will be displayed if the assertion fails.  If the
 description isn't provided, Testworks makes one from the expressions
-passed to the assertion macro.
+passed to the assertion macro. For example, ``assert-true(2 > 3)``
+produces this failure message::
+
+  (2 > 3) is true failed [expression "(2 > 3)" evaluates to #f, not a true value.]
 
 In general, Testworks should be pretty good at reporting the actual
 values that caused the failure so it shouldn't be necessary to include
-them in the description.
+them in the description all the time.
 
 In the future, there will be support for failures to include the
 source file line number for the assertion.
@@ -142,7 +162,7 @@ Tests
 -----
 
 Tests contain assertions and arbitrary code needed to support those
-assertions. Each test is part of a suite.  Use the
+assertions. Each test may be part of a suite.  Use the
 :macro:`test-definer` macro to define a test:
 
 .. code-block:: dylan
@@ -159,10 +179,10 @@ For example:
       assert-equal(2, 3);
       assert-equal(#f, #f);
       assert-true(identity(#t), "Check identity function");
-    end test my-test;
+    end;
 
-*Note: if a test doesn't execute any assertions then it will be
-marked as "not implemented" in the test results.*
+*Note: if a test doesn't execute any assertions then it is marked as
+"not implemented" in the test results.*
 
 The result looks like this::
 
@@ -191,12 +211,12 @@ or filter out tests to run:
     end test;
 
 Tags can then be passed on the Testworks command-line.  For example,
-this will skip both of the above tests::
+this skips both of the above tests::
 
     $ _build/bin/my-test-suite-app --tag=-huge --tag=-verbose
 
-Negative tags take precedence, so ``--tag=huge --tag=-verbose`` will
-run ``my-test-2`` and skip ``my-test-3``.
+Negative tags take precedence, so ``--tag=huge --tag=-verbose`` runs
+``my-test-2`` and skips ``my-test-3``.
 
 If the test is expected to fail, or fails under some conditions, Testworks
 can be made aware of this:
@@ -216,16 +236,31 @@ can be made aware of this:
       end if;
     end test;
 
-A test that is expected to fail and then fails will be considered to
-be a passing test. If the test succeeds unexpectedly, it will be considered
-a failing test.
+A test that is expected to fail and then fails is considered to be a
+passing test. If the test succeeds unexpectedly, it is considered a
+failing test.
+
+Test setup and teardown is accomplished with normal Dylan code using
+``block () ... cleanup ... end;``...
+
+.. code-block:: dylan
+
+   define test foo ()
+     block ()
+       do-setup-stuff();
+       assert-equal(...);
+       assert-equal(...);
+     cleanup
+       do-teardown-stuff()
+     end
+   end;
 
 Benchmarks
 ----------
 
 Benchmarks are like tests except for:
 
-* They do not require any assertions
+* They do not require any assertions. (They pass unless they signal an error.)
 * They are automatically assigned the "benchmark" tag.
 
 The :macro:`benchmark-definer` macro is like :macro:`test-definer`:
@@ -247,10 +282,8 @@ Benchmarks may be added to suites:
 Benchmarks and tests may be combined in the same suite.  If you do
 that, tags may be used to run only the benchmarks (with
 ``--tag=benchmark``) or only the tests (with ``--tag=-benchmark``).
-This may be sufficient for small projects with a single test suite
-application.  A better option for large projects (e.g., those that
-combine test suites from various libraries) is to have separate suites
-for benchmarks and tests.  Example:
+If you are using suites anyway, you may wish to put benchmarks into a
+suite of their own.  Example:
 
 .. code-block:: dylan
 
@@ -265,8 +298,10 @@ for benchmarks and tests.  Example:
 Suites
 ------
 
-Suites contain tests, benchmarks, and other suites. A suite may be
-defined with the :macro:`suite-definer` macro.  The format is:
+Suites are an optional feature that may be used to organize your tests
+into a hierarchy.  Suites contain tests, benchmarks, and other
+suites. A suite is defined with the :macro:`suite-definer` macro.  The
+format is:
 
 .. code-block:: dylan
 
@@ -291,7 +326,9 @@ For example:
       test my-test;
     end;
 
-Suites can specify setup and cleanup functions using the keyword
+**TODO**: how is the description used?
+
+Suites can specify setup and cleanup functions via the keyword
 arguments ``setup-function`` and ``cleanup-function``. These can be
 used for things like establishing database connections, initializing
 sockets and so on.
@@ -312,20 +349,26 @@ command-line args, execute tests and benchmarks, and generate reports.
 See the next section for details.
 
 
-Organizing Your Test Suites
-===========================
+Organizing Your Tests
+=====================
+
+If you don't use suites, the only organization you need is to name
+your tests and benchmarks uniquely, and you can safely skip the rest
+of this section.  If you do use suites, read on....
 
 Tests are used to combine related assertions into a unit, and suites
-further organize related tests.  Suites may also contain other suites.
+further organize related tests and benchmarks.  Suites may also
+contain other suites.
 
 It is common for the test suite for library xxx to export a single
 test suite named xxx-test-suite, which is further subdivided into
 sub-suites, tests, and benchmarks as appropriate for that library.
-The main test suite is exported so that it can be included as a
+Some suites may be exported so that they can be included as a
 component suite in combined test suites that cover multiple related
 libraries.
 
-The overall structure of a test library may look something like this:
+The overall structure of a test library that is intended to be
+included in a combined test library may look something like this:
 
 .. code-block:: dylan
 
@@ -362,17 +405,25 @@ The overall structure of a test library may look something like this:
       awesomely-slow-function();
     end;
 
-    run-test-application(my-test-suite);
-
 
 Running Your Tests As A Stand-alone Application
 ===============================================
 
-Just exporting your main test suite from your test library doesn't do
-you much good unless something actually runs that suite.  The standard
-way to run the test suite as an application is to define an
-application library named "xxx-test-suite-app" which calls
-:func:`run-test-application` on the "xxx-test-suite".
+If you don't need to export any suites so they can be included in a
+higher-level combined test suite library (i.e., if you're happy
+running your test suite library as an executable) then you can simply
+call ``run-test-application`` to parse the standard testworks
+command-line options and run the specified tests::
+
+  run-test-application();          // if not using suites
+  run-test-application(my-suite);  // if using suites
+
+and you can skip the rest of this section.
+
+If you need to export a suite for use by another library, then you
+must also define a separate executable library, traditionally named
+"xxx-test-suite-app", which calls
+``run-test-application(xxx-test-suite)``.
 
 Here's an example of such an application library:
 
@@ -411,12 +462,12 @@ the source files:
 
     Library: xxx-test-suite-app
     Target-type: executable
-    Files: library
-           xxx-test-suite-app
+    Files: library.dylan
+           xxx-test-suite-app.dylan
 
 Once a library has been defined in this fashion it can be compiled
-into an executable with ``dylan-compiler -build xxx-test-suite-app.lid``.
-
+into an executable with ``dylan-compiler -build
+xxx-test-suite-app.lid`` and run with ``xxx-test-suite-app --help``.
 
 
 Reports

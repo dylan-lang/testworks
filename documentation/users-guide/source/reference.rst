@@ -22,26 +22,6 @@ The Testworks Module
 Suites, Tests, and Benchmarks
 -----------------------------
 
-.. macro:: suite-definer
-
-   Define a new test suite.
-
-   :signature: define suite *suite-name* (#key *setup-function cleanup-function description*) *body* end
-   :parameter suite-name: Name of the suite; a Dylan variable name.
-   :parameter #key setup-function: A function to perform setup before the suite starts.
-   :parameter #key cleanup-function: A function to perform teardown after the suite finishes.
-   :parameter #key description: A string describing the purpose of the suite.
-
-   Suites provide a way to group tests and other suites into a single
-   executable unit.  Suites may be nested arbitrarily.
-
-   *setup-function* is executed before any tests or sub-suites are
-   run.  If *setup-function* signals an error the entire suite is
-   skipped and marked as "crashed".
-
-   *cleanup-function* is executed after all sub-suites and tests have
-   completed, regardless of whether an error is signaled.
-
 .. macro:: test-definer
 
    Define a new test.
@@ -83,20 +63,30 @@ Suites, Tests, and Benchmarks
       fail.
    :parameter #key tags: A list of strings to tag this benchmark.
 
-   Benchmarks may contain arbitrary code and may use assertions,
-   although that isn't required.  If the benchmark signals an error it
-   is marked as "crashed".
+   Benchmarks may contain arbitrary code and do not require any
+   assertions.  If the benchmark signals an error it is marked as
+   "crashed". Other than this, and some differences in how the results
+   are displayed, benchmarks are the same as tests.
 
-   If *expected-failure?* is set to ``#t`` or a function that when executed
-   returns a true value, then the test will be expected to fail. Such a failure
-   will be treated as a successful test run. If the test passes rather than
-   failing, then that will be considered a test failure. This option has
-   no effect on tests which are *not implemented* or which have *crashed*.
+.. macro:: suite-definer
 
-   *tags* provide a way to select or filter out specific tests during
-   a test run.  The Testworks command-line (provided by
-   :func:`run-test-application`) provides a ``--tag`` option for this
-   purpose.
+   Define a new test suite.
+
+   :signature: define suite *suite-name* (#key *setup-function cleanup-function description*) *body* end
+   :parameter suite-name: Name of the suite; a Dylan variable name.
+   :parameter #key setup-function: A function to perform setup before the suite starts.
+   :parameter #key cleanup-function: A function to perform teardown after the suite finishes.
+   :parameter #key description: A string describing the purpose of the suite.
+
+   Suites provide a way to group tests and other suites into a single
+   executable unit.  Suites may be nested arbitrarily.
+
+   *setup-function* is executed before any tests or sub-suites are
+   run.  If *setup-function* signals an error the entire suite is
+   skipped and marked as "crashed".
+
+   *cleanup-function* is executed after all sub-suites and tests have
+   completed, regardless of whether an error is signaled.
 
 Assertions
 ----------
@@ -473,8 +463,10 @@ Test Execution
 
    Run a test suite or test as part of a stand-alone test executable.
 
-   :signature: run-test-application *suite-or-test* => ()
-   :parameter suite-or-test: An instance of :class:`<suite>` or :class:`<runnable>`.
+   :signature: run-test-application #rest *suite-or-test* => ()
+   :parameter suite-or-test: (optional) An instance of
+      :class:`<suite>` or :class:`<runnable>`. If not supplied
+      then all tests and benchmarks are run.
 
    This is the main entry point to run a set of tests in Testworks.
    It parses the command-line and based on the specified options
@@ -483,7 +475,7 @@ Test Execution
 
    Internally, :func:`run-test-application` creates a
    :class:`<test-runner>` based on the command-line options and then
-   calls :func:`run-tests` with the runner and *suite-or-test*.
+   calls :func:`run` with the runner and *suite-or-test*.
 
 .. function:: test-option
 

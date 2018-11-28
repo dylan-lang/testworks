@@ -161,6 +161,18 @@ end macro suite-definer;
 
 /// Tests
 
+// All tests and benchmarks are registered here.
+define constant $tests = make(<stretchy-vector>);
+
+define function register-test (test :: <runnable>)
+  if (member?(test, $tests, test: method (t1, t2)
+                                    component-name(t1) = component-name(t2)
+                                  end))
+    error("Duplicate test name: %=", component-name(test));
+  end;
+  add!($tests, test);
+end;
+
 define macro test-definer
   { define test ?test-name:name (?keyword-args:*) ?test-body:body end
   } => {
@@ -169,6 +181,7 @@ define macro test-definer
                                       name: ?"test-name",
                                       function: "%%" ## ?test-name,
                                       ?keyword-args);
+    register-test(?test-name);
   }
 end macro test-definer;
 
@@ -181,6 +194,7 @@ define macro benchmark-definer
              name: ?"test-name",
              function: "%%" ## ?test-name,
              ?keyword-args);
+    register-test(?test-name);
   }
 end macro benchmark-definer;
 
