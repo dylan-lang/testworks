@@ -23,7 +23,6 @@ define module-spec %testworks ()
   function suite-cleanup-function (<object>) => (<function>);
   class <unit-result> (<result>);
   function result-seconds (<object>) => (false-or(<integer>));
-  function root-suite () => (<suite>);
   constant $xml-version-header :: <object>;
   function status-name (<object>) => (<string>);
   variable *check-recording-function* :: <object>;
@@ -34,9 +33,7 @@ define module-spec %testworks ()
   function show-progress (<test-runner>, false-or(<component>), false-or(<result>)) => ();
   function log-report-function (<result>, <stream>) => ();
   class <suite> (<component>);
-  function find-runnable (<string>, #"key", #"search-suite") => (false-or(<runnable>));
   function null-report-function (<result>, <stream>) => ();
-  function find-suite (<string>, #"key", #"search-suite") => (false-or(<suite>));
   class <component> (<object>);
   function failures-report-function (<result>, <stream>) => ();
   function xml-report-function (<result>, <stream>) => ();
@@ -84,12 +81,12 @@ define module-spec testworks ()
   macro-test check-no-condition-test;
   macro-test assert-equal-test;
   macro-test check-no-errors-test;
-  function run-test-application (<component>) => (false-or(<result>));
+  function run-test-application (#"rest") => (false-or(<result>));
   macro-test assert-not-equal-test;
   // generated without "instantiable"
   open instantiable class <test-runner> (<object>);
   open generic-function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
-  function run-tests (<test-runner>, <component>) => (<component-result>);
+  function run-tests (<test-runner>, <component>) => (false-or(<component-result>));
   macro-test assert-false-test;
   macro-test assert-signals-test;
   macro-test check-condition-test;
@@ -200,10 +197,6 @@ end function-test log-report-function;
 define %testworks class-test <suite> ()
   //---*** Fill this in...
 end class-test <suite>;
-
-define %testworks function-test find-runnable ()
-  //---*** Fill this in...
-end function-test find-runnable;
 
 define %testworks function-test null-report-function ()
   //---*** Fill this in...
