@@ -26,9 +26,8 @@ Suites, Tests, and Benchmarks
 
    Define a new test.
 
-   :signature: define test *test-name* (#key *description, expected-failure?, tags*) *body* end
+   :signature: define test *test-name* (#key *expected-failure?, tags*) *body* end
    :parameter test-name: Name of the test; a Dylan variable name.
-   :parameter #key description: A string describing the purpose of the test.
    :parameter #key expected-failure?: An instance of either :drm:`<boolean>` or
       :drm:`<function>`. This indicates whether or not the test is expected to
       fail.
@@ -55,9 +54,8 @@ Suites, Tests, and Benchmarks
 
    Define a new benchmark.
 
-   :signature: define benchmark *name* (#key *description, expected-failure?, tags*) *body* end
+   :signature: define benchmark *name* (#key *expected-failure?, tags*) *body* end
    :parameter name: Name of the benchmark; a Dylan variable name.
-   :parameter #key description: A string describing the purpose of the benchmark.
    :parameter #key expected-failure?: An instance of either :drm:`<boolean>` or
       :drm:`<function>`. This indicates whether or not the test is expected to
       fail.
@@ -72,11 +70,10 @@ Suites, Tests, and Benchmarks
 
    Define a new test suite.
 
-   :signature: define suite *suite-name* (#key *setup-function cleanup-function description*) *body* end
+   :signature: define suite *suite-name* (#key *setup-function cleanup-function*) *body* end
    :parameter suite-name: Name of the suite; a Dylan variable name.
    :parameter #key setup-function: A function to perform setup before the suite starts.
    :parameter #key cleanup-function: A function to perform teardown after the suite finishes.
-   :parameter #key description: A string describing the purpose of the suite.
 
    Suites provide a way to group tests and other suites into a single
    executable unit.  Suites may be nested arbitrarily.

@@ -9,7 +9,6 @@ define test test-make-runner-from-command-line ()
                   list("--debug=failures", debug-runner?, #t));
   let dummy-component = make(<suite>,
                              name: "Dummy",
-                             description: "not used",
                              components: #());
   for (item in args)
     let (arg, getter, expected) = apply(values, item);
