@@ -7,9 +7,12 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks-test-suite
+  use collections,
+    import: { table-extensions };
   use command-line-parser;
   use common-dylan;
-  use io, import: { format };
+  use io,
+    import: { format };
   use strings;
   use testworks;
   use testworks-specs;
@@ -22,6 +25,8 @@ define module testworks-test-suite
   use common-dylan;
   use format;
   use strings;
+  use table-extensions,
+    import: { table => tabling };
   use testworks;
   use testworks-specs;
   use %testworks;

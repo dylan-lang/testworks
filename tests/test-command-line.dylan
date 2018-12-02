@@ -2,23 +2,39 @@ Module: testworks-test-suite
 Synopsis: Tests for command-line.dylan
 
 
-// Verify that command-line options create a <test-runner> correctly.
-define test test-make-runner-from-command-line ()
-  let args = list(list("--debug=no", debug-runner?, #f),
-                  list("--debug=crashes", debug-runner?, #"crashes"),
-                  list("--debug=failures", debug-runner?, #t));
-  let dummy-component = make(<suite>,
-                             name: "Dummy",
-                             components: #());
+define constant $dummy-suite = make(<suite>, name: "Dummy", components: #());
+
+define test command-line-options-test ()
+  let args = list(list("--debug=no", debug-runner?, #f, #f),
+                  list("--debug=crashes", debug-runner?, #"crashes", #f),
+                  list("--debug=failures", debug-runner?, #t, #f),
+                  list("--debug=foo", debug-runner?, #f, #t),
+                  list("key1=val1 key2=val2", runner-options,
+                       tabling(<string-table>, "key1" => "val1", "key2" => "val2"),
+                       #f),
+                  list("key", runner-options, #f, #t)  // error, not key=val form
+                  );
   for (item in args)
-    let (arg, getter, expected) = apply(values, item);
-    let parser = parse-args(list(arg));
-    let (_, runner, _) = make-runner-from-command-line(dummy-component, parser);
-    let actual = getter(runner);
-    check-equal(arg, expected, actual);
+    let (options, getter, expected, expect-error?) = apply(values, item);
+    // TODO(cgay): We should export something near system:os:application-arguments
+    // that parses a string into command line arguments. This split call isn't very
+    // accurate, but should work well enough for this test:
+    if (expect-error?)
+      assert-signals(<usage-error>,
+                     begin
+                       let parser = parse-args(split(options, " "));
+                       make-runner-from-command-line($dummy-suite, parser);
+                     end,
+                     options);
+    else
+      let parser = parse-args(split(options, " "));
+      let (_, runner, _) = make-runner-from-command-line($dummy-suite, parser);
+      let actual = getter(runner);
+      assert-equal(actual, expected, options);
+    end;
   end;
-end test test-make-runner-from-command-line;
+end;
 
 define suite command-line-test-suite ()
-  test test-make-runner-from-command-line;
+  test command-line-options-test;
 end;
