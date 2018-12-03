@@ -119,6 +119,8 @@ define method maybe-execute-component
              microseconds: 0,
              bytes: 0)
       end;
+  force-output(*standard-error*);
+  force-output(*standard-output*);
   if (runner.runner-progress)
     show-progress(runner, component, result);
   end;
