@@ -51,6 +51,9 @@ define open class <test-runner> (<object>)
       = colorize-stream(*standard-output*),
     init-keyword: output-stream:;
 
+  // Options are from positional args passed as key=val on the
+  // command-line and can be used to pass external context information
+  // to tests. For example, test data directory pathname.
   constant slot runner-options :: <string-table> = make(<string-table>),
     init-keyword: options:;
 end class <test-runner>;
@@ -116,6 +119,8 @@ define method maybe-execute-component
              microseconds: 0,
              bytes: 0)
       end;
+  force-output(*standard-error*);
+  force-output(*standard-output*);
   if (runner.runner-progress)
     show-progress(runner, component, result);
   end;
@@ -341,8 +346,6 @@ define method show-progress
     test-output("\n  %s: [%s]\n  ", result.result-name, reason);
   end;
 end method show-progress;
-
-/// Test options
 
 define function test-option
     (name :: <string>, #key default = unsupplied())

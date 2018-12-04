@@ -93,11 +93,7 @@ define function parse-args
                     " with '-', the test will only run if it does NOT have the tag."
                     " May be repeated. Ex: --tag=-slow,-benchmark means don't run"
                     " benchmarks or tests tagged as slow."));
-  block ()
-    parse-command-line(parser, args, description: "Run tests suites.");
-  exception (ex :: <usage-error>)
-    exit-application(2);
-  end;
+  parse-command-line(parser, args, description: "Run tests suites.");
   parser
 end function parse-args;
 
@@ -136,12 +132,11 @@ define function make-runner-from-command-line
 
   // TODO(cgay): runner-options are unused. Delete? What were they for?
   for (option in parser.positional-options)
-    let split = find-key(option, curry(\==, '='));
-    if (split)
-      let key = copy-sequence(option, end: split);
-      let value = copy-sequence(option, start: split + 1);
-      runner.runner-options[key] := value;
-    end if;
+    let (key, val) = apply(values, split(option, '=', count: 2));
+    if (~val)
+      usage-error("%= is not a valid test run option; must be in key=value form.", option);
+    end;
+    runner.runner-options[key] := val;
   end for;
 
   // TODO(cgay): So...the --suite and --test options may specify
@@ -178,36 +173,35 @@ end function make-runner-from-command-line;
 // TODO(cgay): update callers to pass no args, then remove `components` arg.
 define method run-test-application
     (#rest components) => (result :: false-or(<result>))
-  if (components.size > 1)
-    usage-error("run-test-application takes 0 or 1 test components as argument,"
-                  " (got %d)", components.size);
-  end;
-  let top = if (components.size = 0)
-              // Make a suite named after the library, containing all test components.
-              let app = locator-base(as(<file-locator>, application-name()));
-              make(<suite>,
-                   name: app,
-                   components: find-root-components())
-            else
-              components[0]
-            end;
-  let parser = parse-args(application-arguments());
-  let (start-suite, runner, report-function)
-    = block ()
-        make-runner-from-command-line(top, parser)
-      exception (ex :: <usage-error>)
-        format(*standard-error*, "%s\n", condition-to-string(ex));
-        // TODO(cgay): The caller should decide whether to exit the
-        // application.
-        exit-application(2);
-      end;
+  block (return)
+    let top
+      = select (components.size)
+          0 =>
+            // Make a suite named after the library, containing all test components.
+            let app = locator-base(as(<file-locator>, application-name()));
+            make(<suite>,
+                 name: app,
+                 components: find-root-components());
+          1 =>
+            components[0];
+          otherwise =>
+            usage-error("run-test-application takes 0 or 1 test components as"
+                          " argument, (got %d)", components.size);
+        end;
 
-  let list-opt = get-option-value(parser, "list");
-  if (list-opt)
-    list-components(runner, start-suite, list-opt.as-lowercase);
-    #f
-  else
-    // Run the appropriate test or suite
+    // Parse command line.
+    let parser = parse-args(application-arguments());
+    let (start-suite, runner, report-function)
+      = make-runner-from-command-line(top, parser);
+
+    // List tests and exit.
+    let list-opt = get-option-value(parser, "list");
+    if (list-opt)
+      list-components(runner, start-suite, list-opt.as-lowercase);
+      return(#f);
+    end;
+
+    // Run the requested tests.
     let pathname = get-option-value(parser, "report-file");
     let result = run-tests(runner, start-suite);
     if (pathname)
@@ -220,7 +214,10 @@ define method run-test-application
       report-function(result, *standard-output*);
     end;
     result
-  end if
+  exception (ex :: <usage-error>)
+    format(*standard-error*, "%s\n", condition-to-string(ex));
+    exit-application(2);
+  end block;
 end method run-test-application;
 
 define function list-components

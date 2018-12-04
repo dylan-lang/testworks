@@ -34,11 +34,12 @@ define module testworks
     run-tests,
     *runner*,
     <test-runner>,
-    runner-tags,
-    runner-skip,
+    debug-runner?,
+    runner-options,
     runner-output-stream,
     runner-progress,
-    debug-runner?;
+    runner-skip,
+    runner-tags;
 
   // Checks (deprecated, use assertions)
   create
