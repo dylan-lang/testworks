@@ -8,11 +8,16 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks
   use command-line-parser;
-  use common-dylan, import: { common-dylan, threads };
-  use io, import: { format, print, standard-io, streams };
+  use common-dylan,
+    import: { common-dylan, threads };
+  use io,
+    import: { format, print, standard-io, streams };
   use coloring-stream;
   use strings;
-  use system, import: { file-system };
+  use system,
+    import: { file-system, locators };
+  use uncommon-dylan,
+    import: { uncommon-utils };
 
   export
     testworks,
@@ -77,18 +82,21 @@ end module testworks;
 
 // Internals, for use by test suite.
 define module %testworks
+  use coloring-stream;
   use command-line-parser;
   use common-dylan, exclude: { format-to-string };
   use file-system;
   use format;
+  use locators, import: { <file-locator>, locator-base };
   use print, import: { print-object };
   use standard-io;
   use streams;
-  use coloring-stream;
   use strings, import: { char-compare-ic, starts-with?, string-equal? };
   use testworks;
   use threads,
     import: { dynamic-bind };
+  use uncommon-utils,
+    import: { inc! };
 
   // Debugging options
   export
@@ -112,7 +120,6 @@ define module %testworks
     <benchmark>,
     <test>,
     <test-unit>,
-    find-runnable,
     test-function,
     test-requires-assertions?,
     test-tags;
@@ -122,9 +129,7 @@ define module %testworks
     <suite>,
     make-suite,   //--- Needed for macro hygiene problems
     suite-setup-function, suite-cleanup-function,
-    suite-components,
-    root-suite,
-    find-suite;
+    suite-components;
 
   // Result objects
   export

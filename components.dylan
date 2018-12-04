@@ -114,16 +114,27 @@ define method component-result-type
   <test-unit-result>
 end;
 
+// All tests, benchmarks, and suites are added to this when created.
+define constant $components = make(<stretchy-vector>);
+
+// Add `c` to `$components` or replace an existing component with the
+// same name. The reason this replaces, rather than signaling an
+// error, is because in the REPL you might want to redefine
+// components.
+define function register-component (c :: <component>) => ()
+  let pos = find-key($components, method (comp)
+                                    c.component-name = comp.component-name
+                                  end);
+  if (pos)
+    // TODO(cgay): log a warning here.
+    $components[pos] := c;
+  else
+    add!($components, c);
+  end;
+end;
+
 
 /// Suites
-
-define constant $root-suite = make(<suite>,
-                                   name: "All Defined Suites",
-                                   components: make(<stretchy-vector>));
-
-define method root-suite () => (suite :: <suite>)
-  $root-suite
-end;
 
 define method make-suite
     (name :: <string>, components, #rest keyword-args)
@@ -132,16 +143,7 @@ define method make-suite
                     name: name,
                     components: components,
                     keyword-args);
-  let all-suites :: <stretchy-vector> = root-suite().suite-components;
-  let position = find-key(all-suites,
-                          method (suite)
-                            suite.component-name = name
-                          end);
-  if (position)
-    all-suites[position] := suite
-  else
-    add!(all-suites, suite)
-  end;
+  register-component(suite);
   suite
 end method make-suite;
 
@@ -169,6 +171,7 @@ define macro test-definer
                                       name: ?"test-name",
                                       function: "%%" ## ?test-name,
                                       ?keyword-args);
+    register-component(?test-name);
   }
 end macro test-definer;
 
@@ -181,6 +184,7 @@ define macro benchmark-definer
              name: ?"test-name",
              function: "%%" ## ?test-name,
              ?keyword-args);
+    register-component(?test-name);
   }
 end macro benchmark-definer;
 
@@ -192,49 +196,28 @@ define macro with-test-unit
   } => { ?test-body }
 end macro with-test-unit;
 
-define method find-suite
-    (name :: <string>, #key search-suite = root-suite())
- => (suite :: false-or(<suite>))
-  let lowercase-name = as-lowercase(name);
-  local method do-find-suite (suite :: <suite>)
-          if (as-lowercase(component-name(suite)) = lowercase-name)
-            suite
-          else
-            block (return)
-              for (object in suite-components(suite))
-                if (instance?(object, <suite>))
-                  let subsuite = do-find-suite(object);
-                  if (subsuite)
-                    return(subsuite)
-                  end;
-                end
-              end
-            end
-          end
-        end;
-  do-find-suite(search-suite);
-end method find-suite;
-
-define method find-runnable
-    (name :: <string>, #key search-suite = root-suite())
- => (test :: false-or(<runnable>))
-  let lowercase-name = as-lowercase(name);
-  local method do-find-runnable (suite :: <suite>)
-          block (return)
-            for (object in suite-components(suite))
-              select (object by instance?)
-                <runnable> =>
-                  if (as-lowercase(component-name(object)) = lowercase-name)
-                    return(object)
-                  end if;
-                <suite> =>
-                  let test = do-find-runnable(object);
-                  if (test)
-                    return(test)
-                  end;
-              end
-            end
-          end
-        end;
-  do-find-runnable(search-suite);
-end method find-runnable;
+// Find a minimal set of components that cover all tests and return
+// them.
+define function find-root-components () => (components :: <sequence>)
+  let refs = make(<table>);
+  for (c in $components)
+    refs[c] := 0;
+  end;
+  // Any suite that _contains_ another component is a ref.  Since
+  // $components contains _all_ components there's no need to traverse
+  // the full suite hierarchy recursively.
+  for (c in $components)
+    if (instance?(c, <suite>))
+      for (sub in suite-components(c))
+        inc!(refs[sub]);
+      end;
+    end;
+  end;
+  let roots = make(<stretchy-vector>);
+  for (count keyed-by c in refs)
+    if (count = 0)
+     add!(roots, c);
+    end;
+  end;
+  roots
+end;

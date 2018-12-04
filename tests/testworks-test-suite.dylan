@@ -411,26 +411,38 @@ define test test-with-test-unit ()
   end;
 end test test-with-test-unit;
 
-define test test-expected-failure-always(expected-failure?: #t)
-  assert-true(#f);
-end test;
+// The following tests and suites are defined without using their
+// respective -definer macros so that they don't get registered and
+// then run as normal tests (which would fail).
 
-define test test-expected-failure-maybe(expected-failure?: method () #t end)
-  assert-true(#f);
-end test;
+define constant test-expected-failure-always
+  = make(<test>,
+         name: "test-expected-failure-always",
+         function: method () assert-true(#f) end,
+         expected-failure?: #t);
 
-define test test-unexpected-success(expected-failure?: #t)
-  assert-true(#t);
-end test;
+define constant test-expected-failure-maybe
+  = make(<test>,
+         name: "test-expected-failure-maybe",
+         function: method () assert-true(#f) end,
+         expected-failure?: method () #t end);
 
-define suite expected-failure-suite ()
-  test test-expected-failure-always;
-  test test-expected-failure-maybe;
-end suite;
+define constant test-unexpected-success
+  = make(<test>,
+         name: "test-unexpected-success",
+         function: method () assert-true(#t) end,
+         expected-failure?: #t);
 
-define suite unexpected-success-suite ()
-  test test-unexpected-success;
-end suite;
+define constant expected-failure-suite
+  = make(<suite>,
+         name: "expected-failure-suite",
+         components: vector(test-expected-failure-always,
+                            test-expected-failure-maybe));
+
+define constant unexpected-success-suite
+  = make(<suite>,
+         name: "unexpected-success-suite",
+         components: vector(test-unexpected-success));
 
 define test test-run-tests-expect-failure/suite ()
   let suite-to-check = expected-failure-suite;

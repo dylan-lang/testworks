@@ -1,5 +1,5 @@
 Module:       %testworks
-Synopsis:     Implementation of run-test-application
+Synopsis:     Testworks command-line parsing and top-level entry points
 Author:       Andy Armstrong, Shri Amit
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
@@ -56,9 +56,10 @@ define function parse-args
                   variable: "FILE",
                   help: "File in which to store the report."));
 
-  // TODO(cgay): Make test and suite names use one namespace or
-  // a hierarchical naming scheme these four options are reduced
-  // to tests/suites specified as regular arguments plus --skip.
+  // TODO(cgay): Replace these 4 options with --skip and --match (or
+  // --include?).  Because Dylan is a Lisp-1 suites, tests, and
+  // benchmarks share a common namespace and --skip and --match will
+  // be unambiguous.
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("suite"),
@@ -88,9 +89,10 @@ define function parse-args
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("tag", "t"),
-                  help: "Only run tests matching this tag. If tag is prefixed "
-                    "with '-', the test will only run if it does NOT have the tag."
-                    " May be repeated."));
+                  help: "Only run tests matching this tag. If tag is prefixed"
+                    " with '-', the test will only run if it does NOT have the tag."
+                    " May be repeated. Ex: --tag=-slow,-benchmark means don't run"
+                    " benchmarks or tests tagged as slow."));
   block ()
     parse-command-line(parser, args, description: "Run tests suites.");
   exception (ex :: <usage-error>)
@@ -99,39 +101,21 @@ define function parse-args
   parser
 end function parse-args;
 
-define method find-component
-    (suite-name :: false-or(<string>), test-name :: false-or(<string>))
- => (test :: <component>)
-  let suite = if (suite-name)
-                find-suite(suite-name)
-                  | usage-error("Suite not found: %s", suite-name);
-              end;
-  let test = if (test-name)
-               find-runnable(test-name, search-suite: suite | root-suite())
-                 | usage-error("Test/benchmark not found: %s", test-name);
-             end;
-  test | suite
-end method find-component;
-
-define method find-components
-    (suite-names :: <sequence>, test-names :: <sequence>)
- => (tests :: <stretchy-vector>)
-  let components = make(<stretchy-vector>);
-  for (name in suite-names | #[])
-    add!(components, find-component(name, #f));
-  end;
-  for (name in test-names | #[])
-    add!(components, find-component(#f, name));
-  end;
-  values(components)
-end method find-components;
-
-// Create a <test-runner> from command-line options.
+// Create a `<test-runner>` from command-line options.
 define function make-runner-from-command-line
-    (parent :: <component>, parser :: <command-line-parser>)
- => (start-suite :: <component>, runner :: <test-runner>, report-function :: <function>)
+    (top :: <component>, parser :: <command-line-parser>)
+ => (c :: <component>, runner :: <test-runner>, report-function :: <function>)
   // TODO(cgay): Use init-keywords rather than setters so we can make <test-runner>
-  // immutable.
+  //   immutable.
+  // TODO(cgay): The runner should either contain the top-level components to run
+  //   AND the components to skip, or neither one.
+
+  local method find-component (name :: <string>) => (component)
+          let i = find-key($components, method (c)
+                                          c.component-name = name
+                                        end);
+          (i & $components[i]) | usage-error("test component not found: %=", name);
+        end;
   let debug = get-option-value(parser, "debug");
   let report = get-option-value(parser, "report");
   let progress = as(<symbol>, get-option-value(parser, "progress"));
@@ -142,12 +126,15 @@ define function make-runner-from-command-line
                               "crashes" => #"crashes";
                               "failures" => #t;
                             end select,
-                    skip: find-components(get-option-value(parser, "skip-suite"),
-                                          get-option-value(parser, "skip-test")),
+                    skip: concatenate(map(find-component,
+                                          get-option-value(parser, "skip-suite")),
+                                      map(find-component,
+                                          get-option-value(parser, "skip-test"))),
                     report: report,
                     progress: if (progress = $none) #f else progress end,
                     tags: parse-tags(get-option-value(parser, "tag")));
 
+  // TODO(cgay): runner-options are unused. Delete? What were they for?
   for (option in parser.positional-options)
     let split = find-key(option, curry(\==, '='));
     if (split)
@@ -157,31 +144,57 @@ define function make-runner-from-command-line
     end if;
   end for;
 
-  let components = find-components(get-option-value(parser, "suite"),
-                                   get-option-value(parser, "test"));
-  let start-suite = select (components.size)
-                      0 => parent;
-                      1 => components[0];
-                      otherwise =>
-                        make(<suite>,
-                             name: "Specified Components",
-                             description: "arguments to -suite and -test",
-                             components: components);
-                    end select;
-  values(start-suite, runner, report-function)
+  // TODO(cgay): So...the --suite and --test options may specify
+  // something disjoint from `top`. This begs the question why do we
+  // ever bother passing a component to run-test-application?  Why not
+  // just assume all tests should be run and then filter tests in/out?
+  // If it was so that run-test-application could be used in the REPL,
+  // we should just make all test components callable instead, and
+  // provide a run-all-tests entry point without need of command-line
+  // args.
+  let components = concatenate(map(find-component,
+                                   get-option-value(parser, "suite")),
+                               map(find-component,
+                                   get-option-value(parser, "test")));
+  let top = select (components.size)
+              0 => top;
+              1 => components[0];
+              otherwise =>
+                // Multiple suites or tests specified.
+                make(<suite>,
+                     name: join(components, ", ", key: component-name),
+                     components: components);
+            end;
+  values(top, runner, report-function)
 end function make-runner-from-command-line;
 
 
-// Run a test or suite.  Uses a test runner created based on
-// command-line arguments.  Use run-tests instead if you want to
-// create the test-runner yourself.  Returns a <result> if any suites
-// or tests were executed; otherwise #f.
+// Run or list tests as filtered by the command-line options. Without
+// any arguments, defaults to running all tests in the library. The
+// `components` argument may be provided for backward compatibility
+// and must be a single test, benchmark, or test suite. Returns a
+// `<result>` if any tests are executed; otherwise `#f`.
+//
+// TODO(cgay): update callers to pass no args, then remove `components` arg.
 define method run-test-application
-    (parent :: <component>) => (result :: false-or(<result>))
+    (#rest components) => (result :: false-or(<result>))
+  if (components.size > 1)
+    usage-error("run-test-application takes 0 or 1 test components as argument,"
+                  " (got %d)", components.size);
+  end;
+  let top = if (components.size = 0)
+              // Make a suite named after the library, containing all test components.
+              let app = locator-base(as(<file-locator>, application-name()));
+              make(<suite>,
+                   name: app,
+                   components: find-root-components())
+            else
+              components[0]
+            end;
   let parser = parse-args(application-arguments());
   let (start-suite, runner, report-function)
     = block ()
-        make-runner-from-command-line(parent, parser)
+        make-runner-from-command-line(top, parser)
       exception (ex :: <usage-error>)
         format(*standard-error*, "%s\n", condition-to-string(ex));
         // TODO(cgay): The caller should decide whether to exit the
