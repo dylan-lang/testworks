@@ -86,30 +86,45 @@ define method print-result-summary
             $count-attributes
           end if
         end;
-  format(stream,
-         "  Ran %=%s%= %s%s: %=%s%= passed (%s%%), %=%s%= failed, %=%s%= skipped, "
-           "%=%s%= not implemented, %=%s%= crashed\n",
+  /*
+  testworks-test-suite-app PASSED in 0.154072 seconds:
+    Ran 10 suites: 10 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
+    Ran 37 tests: 37 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
+    Ran 0 benchmarks
+    Ran 1455 checks: 1455 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
+  */
+  format(stream, "  Ran %=%s%= %s%s",
          $total-attributes,
          total,
          $reset-attributes,
          name,
-         if (total == 1) "" else "s" end,
-         $count-attributes,
-         passes,
-         $reset-attributes,
-         percent,
-         count-to-attributes(failures, $failed-attributes),
-         failures,
-         $reset-attributes,
-         count-to-attributes(not-executed, $skipped-attributes),
-         not-executed,
-         $reset-attributes,
-         count-to-attributes(not-implemented, $not-implemented-attributes),
-         not-implemented,
-         $reset-attributes,
-         count-to-attributes(crashes, $crashed-attributes),
-         crashes,
-         $reset-attributes);
+         if (total == 1) "" else "s" end);
+  // If nothing ran, skip the details to make it obvious.
+  if (total = 0)
+    format(stream, "\n");
+  else
+    format(stream, ": %=%s%= passed (%s%%)",
+           $count-attributes, passes, $reset-attributes, percent);
+    // If 100% passed, skip details.
+    if (total = passes)
+      format(stream, "\n");
+    else
+      format(stream, ", %=%s%= failed, %=%s%= skipped, "
+               "%=%s%= not implemented, %=%s%= crashed\n",
+             count-to-attributes(failures, $failed-attributes),
+             failures,
+             $reset-attributes,
+             count-to-attributes(not-executed, $skipped-attributes),
+             not-executed,
+             $reset-attributes,
+             count-to-attributes(not-implemented, $not-implemented-attributes),
+             not-implemented,
+             $reset-attributes,
+             count-to-attributes(crashes, $crashed-attributes),
+             crashes,
+             $reset-attributes);
+    end;
+  end;
 end method print-result-summary;
 
 define method print-result-info

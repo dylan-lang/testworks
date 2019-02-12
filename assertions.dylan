@@ -325,8 +325,8 @@ define function do-check-false
           $passed
         else
           values($failed,
-                 format-to-string("expression %= does not evaluate to #f.",
-                                  value-expr))
+                 format-to-string("expression %= evaluates to %=; expected #f.",
+                                  value-expr, value))
         end;
     record-check(name, status, reason)
   end block
