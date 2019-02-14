@@ -16,8 +16,6 @@ define library testworks
   use strings;
   use system,
     import: { file-system, locators };
-  use uncommon-dylan,
-    import: { uncommon-utils };
 
   export
     testworks,
@@ -96,8 +94,6 @@ define module %testworks
   use testworks;
   use threads,
     import: { dynamic-bind };
-  use uncommon-utils,
-    import: { inc! };
 
   // Debugging options
   export

@@ -209,7 +209,7 @@ define function find-root-components () => (components :: <sequence>)
   for (c in $components)
     if (instance?(c, <suite>))
       for (sub in suite-components(c))
-        inc!(refs[sub]);
+        refs[sub] := refs[sub] + 1;
       end;
     end;
   end;
