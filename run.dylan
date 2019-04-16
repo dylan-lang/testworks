@@ -48,6 +48,8 @@ define open class <test-runner> (<object>)
   // to different streams during the test run and when the report is
   // generated.  e.g., to output the report to a file.
   constant slot runner-output-stream :: <stream>
+      // TODO(cgay): if a non-colorizing stream is used here garbage
+      // text attribute objects are displayed on the stream.
       = colorize-stream(*standard-output*),
     init-keyword: output-stream:;
 
