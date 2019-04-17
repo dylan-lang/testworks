@@ -14,6 +14,8 @@ define library testworks-test-suite
   use io,
     import: { format };
   use strings;
+  use system,
+    import: { file-system, locators };
   use testworks;
   use testworks-specs;
 
@@ -23,7 +25,11 @@ end library testworks-test-suite;
 define module testworks-test-suite
   use command-line-parser;
   use common-dylan;
+  use file-system,
+    prefix: "fs/";
   use format;
+  use locators,
+    import: { <directory-locator> };
   use strings;
   use table-extensions,
     import: { table => tabling };

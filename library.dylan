@@ -15,7 +15,7 @@ define library testworks
   use coloring-stream;
   use strings;
   use system,
-    import: { file-system, locators };
+    import: { date, file-system, locators, operating-system };
 
   export
     testworks,
@@ -71,7 +71,8 @@ define module testworks
 
   // Output
   create
-    test-output;
+    test-output,
+    test-temp-directory;
 
   // Options
   create
@@ -84,9 +85,19 @@ define module %testworks
   use coloring-stream;
   use command-line-parser;
   use common-dylan, exclude: { format-to-string };
-  use file-system;
+  use date,
+    import: { current-date => date/now,
+              format-date => date/format };
+  use file-system,
+    prefix: "fs/";
   use format;
-  use locators, import: { <file-locator>, locator-base };
+  use locators,
+    import: { <directory-locator>,
+              <file-locator>,
+              locator-base,
+              subdirectory-locator };
+  use operating-system,
+    prefix: "os/";
   use print, import: { print-object };
   use standard-io;
   use streams;
@@ -107,6 +118,7 @@ define module %testworks
   // Components
   export
     <component>,
+    *component*,
     execute-component?,
     component-name,
     status-name;

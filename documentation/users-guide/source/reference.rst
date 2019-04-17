@@ -475,15 +475,13 @@ Test Execution
    calls :func:`run-tests` with the runner and *suite-or-test*.
 
 .. function:: test-option
-
+ 
    Return an option value passed on the test-application command line.
 
    :signature: test-option *name* #key *default* => *value*
    :parameter name: An instance of type :drm:`<string>`.
    :parameter #key default: An instance of type :drm:`<string>`.
    :value value: An instance of type :drm:`<string>`.
-
-   :description:
 
    Returns an option value passed to the test on the test application
    command line, in the form ``*name*=*value*``. If no option value
@@ -494,5 +492,20 @@ Test Execution
    path names of reference data files, or the hostname of a test
    database server, to be supplied on the command line of the test
    application and retrieved by the test.
+
+.. function:: test-temp-directory
+
+   Retrieve a unique temporary directory for the current test to use.
+
+   :signature: test-temp-directory => (directory :: <directory-locator>)
+
+   Returns a directory (a ``<directory-locator>``) that may be used for
+   temporary files created by the test or benchmark. The directory is created
+   the first time this function is called for each test or benchmark and is not
+   deleted after the test run is complete in case it's useful for post-mortem
+   analysis.  The directory is named ``_test/<user>-<timestamp>/<test-name>``
+   and is rooted at ``$DYLAN``, if defined, or in the current directory
+   otherwise.
+
 
 .. TODO(cgay): document the remaining exported names.

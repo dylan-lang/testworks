@@ -6,6 +6,31 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
+// Bound to the currently executing component, both during normal
+// test/benchmark execution and while setup/teardown code is running.
+define thread variable *component* :: false-or(<component>) = #f;
+
+// Return a temporary directory unique to the current test or benchmark. The
+// directory is created the first time this is called for a given test.
+// The directory is _test/<user>-<yyyymmdd-hhmmss>/<full-test-name>/, relative
+// to ${DYLAN}/, if defined, or fs/working-directory() otherwise.
+define function test-temp-directory () => (d :: false-or(<directory-locator>))
+  if (instance?(*component*, <runnable>))
+    let dylan = os/environment-variable("DYLAN");
+    let base = if (dylan)
+                 as(<directory-locator>, dylan)
+               else
+                 fs/working-directory()
+               end;
+    let uniquifier
+      = format-to-string("%s-%s", os/login-name() | "unknown",
+                         date/format("%Y%m%d-%H%M%S", date/now()));
+    let test-directory
+      = subdirectory-locator(base, "_test", uniquifier, full-component-name(*component*));
+    fs/ensure-directories-exist(test-directory);
+    test-directory
+  end
+end function;
 
 define inline function debug-failures?
     () => (debug-failures? :: <boolean>)
@@ -28,7 +53,6 @@ define method test-output
     force-output(stream);
   end;
 end method test-output;
-
 
 // A <test-runner> holds options for the test run and collects results.
 define open class <test-runner> (<object>)
@@ -111,7 +135,9 @@ define method maybe-execute-component
   end;
   let result
     = if (execute-component?(component, runner))
-        execute-component(component, runner)
+        dynamic-bind (*component* = component)
+          execute-component(component, runner)
+        end
       else
         make(component-result-type(component),
              name: component.component-name,
