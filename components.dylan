@@ -15,6 +15,13 @@ define abstract class <component> (<object>)
     required-init-keyword: name:;
 end class <component>;
 
+define function full-component-name (c :: <component>) => (name :: <string>)
+  // TODO(cgay): return the full path from the root to this component so that
+  // --match and --skip can use it. Need to store back pointers to parent
+  // suites.
+  c.component-name
+end;
+
 define class <suite> (<component>)
   constant slot suite-components :: <sequence> /* of <component> */ = #[],
     init-keyword: components:;

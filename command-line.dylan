@@ -205,9 +205,9 @@ define method run-test-application
     let pathname = get-option-value(parser, "report-file");
     let result = run-tests(runner, start-suite);
     if (pathname)
-      with-open-file(stream = pathname,
-                     direction: #"output",
-                     if-exists: #"overwrite")
+      fs/with-open-file(stream = pathname,
+                        direction: #"output",
+                        if-exists: #"overwrite")
         report-function(result, stream);
       end;
     else

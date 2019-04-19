@@ -536,3 +536,17 @@ define test test-make-test-converts-strings-to-tags ()
   let test = make(<test>, name: "t", tags: #("foo"), function: method() end);
   assert-true(every?(rcurry(instance?, <tag>), test.test-tags));
 end;
+
+define test test-current-test ()
+  assert-instance?(<test>, *component*);
+end;
+
+define benchmark test-current-benchmark ()
+  assert-instance?(<benchmark>, *component*);
+end;
+
+define test test-test-temp-directory () // yes that's a lot of "test"
+  let dir = test-temp-directory();
+  assert-instance?(<directory-locator>, dir);
+  assert-true(fs/file-exists?(dir));
+end;
