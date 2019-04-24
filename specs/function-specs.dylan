@@ -218,7 +218,7 @@ define function check-protocol-function-parameters
        actual in actual-specializers,
        index from 0)
     check-true(format-to-string("function %s argument %d type %s"
-                                  " is a supertype of the specified type %s",
+                                  " is a subtype of the specified type %s",
                                 title, index, actual, spec),
                subtype?(actual, spec));
   end for;
