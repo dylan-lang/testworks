@@ -268,8 +268,7 @@ define function do-check-true
           $passed
         else
           values($failed,
-                 format-to-string("expression %= evaluates to #f, not a true value.",
-                                  value-expr))
+                 format-to-string("expression %= evaluates to #f.", value-expr))
         end;
     record-check(name, status, reason)
   end block
