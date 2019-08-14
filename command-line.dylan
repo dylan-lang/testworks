@@ -56,6 +56,12 @@ define function parse-args
                   variable: "FILE",
                   help: "File in which to store the report."));
 
+  add-option(parser,
+             make(<repeated-parameter-option>,
+                  names: #("load"),
+                  variable: "FILE",
+                  help: "Load the given shared library file before searching for test suites. May be repeated."));
+
   // TODO(cgay): Replace these 4 options with --skip and --match (or
   // --include?).  Because Dylan is a Lisp-1 suites, tests, and
   // benchmarks share a common namespace and --skip and --match will
@@ -93,9 +99,17 @@ define function parse-args
                     " with '-', the test will only run if it does NOT have the tag."
                     " May be repeated. Ex: --tag=-slow,-benchmark means don't run"
                     " benchmarks or tests tagged as slow."));
-  parse-command-line(parser, args, description: "Run tests suites.");
+  parse-command-line(parser, args, description: "Run test suites.");
   parser
 end function parse-args;
+
+define function do-loads(parser :: <command-line-parser>)
+  for (library-file in get-option-value(parser, "load"))
+    format(*standard-output*, "Loading library %s\n", library-file);
+    force-output(*standard-output*);
+    os/load-library(library-file);
+  end for;
+end function;
 
 // Create a `<test-runner>` from command-line options.
 define function make-runner-from-command-line
@@ -174,10 +188,15 @@ end function make-runner-from-command-line;
 define method run-test-application
     (#rest components) => (result :: false-or(<result>))
   block (return)
+    // Parse command line.
+    let parser = parse-args(application-arguments());
+    do-loads(parser);
+
     let top
       = select (components.size)
           0 =>
-            // Make a suite named after the library, containing all test components.
+            // Make a suite named after the library, containing all test
+            // components.
             let app = locator-base(as(<file-locator>, application-name()));
             make(<suite>,
                  name: app,
@@ -189,8 +208,6 @@ define method run-test-application
                           " argument, (got %d)", components.size);
         end;
 
-    // Parse command line.
-    let parser = parse-args(application-arguments());
     let (start-suite, runner, report-function)
       = make-runner-from-command-line(top, parser);
 
