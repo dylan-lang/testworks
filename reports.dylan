@@ -170,6 +170,62 @@ define method print-result-info
   end;
 end method print-result-info;
 
+define function stats-summary
+    (v :: limited(<vector>, of: <double-float>))
+ => (min-value :: <double-float>,
+     max-value :: <double-float>,
+     mean-value :: <double-float>,
+     median-value :: <double-float>)
+  let sorted = sort(v);
+  let min-value = sorted.first;
+  let max-value = sorted.last;
+  let sum = reduce(\+, 0.0d0, sorted);
+  let mean-value = sum / as(<double-float>, v.size);
+  let midpoint = truncate/(v.size, 2);
+  let median-value
+    = if (odd?(v.size))
+        sorted[midpoint]
+      else
+        (sorted[midpoint - 1] + sorted[midpoint]) / 2.0d0
+      end if;
+  values(min-value, max-value, mean-value, median-value)
+end function;
+
+define method print-result-info
+    (result :: <benchmark-result>, stream :: <stream>, #key indent = "", test) => ()
+  let result-status = result.result-status;
+  let show-result? = if (test) test(result) else #t end;
+  if (show-result?)
+    format(stream, "\n%s%s %s",
+           indent, result.result-name, status-name(result-status));
+    if (result-status == $passed)
+      format(stream, " in %s seconds with %s bytes allocated.",
+             result-time(result), result-bytes(result) | "?");
+    end if;
+    let iteration-results
+      = choose(rcurry(instance?, <benchmark-iteration-result>),
+               result-subresults(result));
+    unless (empty?(iteration-results))
+      let iteration-times
+        = map-as(limited(<vector>, of: <double-float>),
+                 method (result :: <metered-result>) => (time :: <double-float>)
+                   as(<double-float>, result.result-seconds)
+                     + result.result-microseconds / 1.0d6;
+                 end,
+                 iteration-results);
+      let (min-value :: <double-float>, max-value :: <double-float>,
+           mean-value :: <double-float>, median-value :: <double-float>)
+        = stats-summary(iteration-times);
+      format(stream, "\n%s  %d iterations, per iteration min %s seconds, mean %s seconds,"
+               " median %s seconds, max %s seconds",
+             indent, iteration-times.size,
+             float-time-to-string(min-value),
+             float-time-to-string(mean-value),
+             float-time-to-string(median-value),
+             float-time-to-string(max-value));
+    end unless;
+  end if;
+end method print-result-info;
 
 
 /// Report functions

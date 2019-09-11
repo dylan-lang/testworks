@@ -133,3 +133,10 @@ define function time-to-string
   end
 end function time-to-string;
 
+define function float-time-to-string
+    (time :: <double-float>, #key pad-seconds-to :: false-or(<integer>))
+ => (seconds :: <string>)
+  let seconds = truncate(time);
+  time-to-string(seconds, truncate((time - seconds) * 1.0d6),
+                 pad-seconds-to: pad-seconds-to)
+end;
