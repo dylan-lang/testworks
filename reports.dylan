@@ -136,7 +136,7 @@ define method print-result-info
     format(stream, "\n%s%s %s",
            indent, result.result-name, status-name(result-status));
     if (result-status == $passed
-        & instance?(result, <component-result>))
+        & instance?(result, <metered-result>))
       format(stream, " in %s seconds with %s bytes allocated.",
              result-time(result), result-bytes(result) | "?");
     end if
@@ -337,7 +337,7 @@ define method do-xml-result-body
 end method do-xml-result-body;
 
 define method do-xml-result-body
-    (result :: <component-result>, stream :: <stream>) => ()
+    (result :: <metered-result>, stream :: <stream>) => ()
   next-method();
   do-xml-element("seconds",
                  method ()
@@ -354,6 +354,11 @@ define method do-xml-result-body
                    format(stream, "%d", result.result-bytes)
                  end,
                  stream);
+end method do-xml-result-body;
+
+define method do-xml-result-body
+    (result :: <component-result>, stream :: <stream>) => ()
+  next-method();
   if (result.result-reason)
     do-xml-element("reason",
                    method ()
