@@ -84,21 +84,14 @@ define module testworks
   create
     test-option;
 
-  // Specs macros
-  create \library-spec-definer,
-         \module-spec-definer,
-         \protocol-spec-definer,
-         \constant-test-definer,
-         \variable-test-definer,
-         \class-test-definer,
-         \function-test-definer,
-         \macro-test-definer;
-
-  // Specs test functions
-  create make-test-instance,
-         destroy-test-instance,
-         class-test-function;
-
+  // Specs
+  create
+    \library-spec-definer,
+    \module-spec-definer,
+    \protocol-spec-definer,
+    make-test-instance,
+    destroy-test-instance,
+    class-test-function;
 end module testworks;
 
 

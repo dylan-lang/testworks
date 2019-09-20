@@ -36,8 +36,9 @@ define method class-test-function
   #f
 end method class-test-function;
 
-// A macro for building a suite out of a list of binding specifications
-
+// Build a test suite out of a list of binding specifications.
+// The test-*-specification tests are automatic checks done by testworks.
+// The test-* tests are expected to be written by the user.
 define macro binding-spec-suite-definer
   { define binding-spec-suite ?suite-name:name (?options:*)
       ?specs:*
@@ -52,22 +53,22 @@ define macro binding-spec-suite-definer
   { protocol ?protocol-name:name }
     => { suite ?protocol-name ## "-protocol-test-suite"; }
   { ?modifiers:* class ?class-name:name (?superclasses:*); }
-    => { test "check-class-specification-" ## ?class-name;
-         test "test-class-" ## ?class-name; }
+    => { test "test-" ## ?class-name ## "-specification";
+         test "test-" ## ?class-name; }
   { ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*); }
-    => { test "check-function-specification-" ## ?function-name;
-         test "test-function-" ## ?function-name; }
+    => { test "test-" ## ?function-name ## "-specification";
+         test "test-" ## ?function-name; }
   { ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*); }
-    => { test "check-function-specification-" ## ?function-name;
-         test "test-function-" ## ?function-name; }
+    => { test "test-" ## ?function-name ## "-specification";
+         test "test-" ## ?function-name; }
   { ?modifiers:* variable ?variable-name:name :: ?type:expression; }
-    => { test "check-variable-specification-" ## ?variable-name;
-         test "test-variable-" ## ?variable-name; }
+    => { test "test-" ## ?variable-name ## "-specification";
+         test "test-" ## ?variable-name; }
   { ?modifiers:* constant ?constant-name:name :: ?type:expression; }
-    => { test "check-constant-specification-" ## ?constant-name;
-         test "test-constant-" ## ?constant-name; }
+    => { test "test-" ## ?constant-name ## "-specification";
+         test "test-" ## ?constant-name; }
   { ?modifiers:* macro-test ?macro-name:name; }
-    => { test "test-macro-" ## ?macro-name; }
+    => { test "test-" ## ?macro-name; }
   { ?definition:* }
     => { }
 end macro binding-spec-suite-definer;
@@ -80,7 +81,7 @@ define macro binding-specs-definer
       ?modifiers:* class ?class-name:name (?superclasses:*);
       ?more-specs:*
     end }
-    => { define test "check-class-specification-" ## ?class-name ()
+    => { define test "test-" ## ?class-name ## "-specification" ()
            let class-spec = make(<class-spec>,
                                  name: ?#"class-name",
                                  class: ?class-name,
@@ -95,7 +96,7 @@ define macro binding-specs-definer
       ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*);
       ?more-specs:*
     end }
-    => { define test "check-function-specification-" ## ?function-name ()
+    => { define test "test-" ## ?function-name ## "-specification" ()
            let function-spec
              = make(<function-spec>,
                     name: ?#"function-name",
@@ -112,7 +113,7 @@ define macro binding-specs-definer
       ?modifiers:* generic-function ?function-name:name (?parameters:*) => (?results:*);
       ?more-specs:*
     end }
-    => { define test "check-function-specification-" ## ?function-name ()
+    => { define test "test-" ## ?function-name ## "-specification" ()
            let function-spec
              = make(<function-spec>,
                     name: ?#"function-name",
@@ -129,7 +130,7 @@ define macro binding-specs-definer
       ?modifiers:* variable ?variable-name:name :: ?type:expression;
       ?more-specs:*
     end }
-    => { define test "check-variable-specification-" ## ?variable-name ()
+    => { define test "test-" ## ?variable-name ## "-specification" ()
            let variable-spec
              = make(<variable-spec>,
                     name: ?#"variable-name",
@@ -149,7 +150,7 @@ define macro binding-specs-definer
       ?modifiers:* constant ?constant-name:name :: ?type:expression;
       ?more-specs:*
     end }
-    => { define test "check-constant-specification-" ## ?constant-name ()
+    => { define test "test-" ## ?constant-name ## "-specification" ()
            let constant-spec
              = make(<constant-spec>,
                     name: ?#"constant-name",
@@ -266,28 +267,6 @@ end class <variable-spec>;
 define class <constant-spec> (<abstract-variable-spec>)
 end class <constant-spec>;
 
-
-/// A useful macro to define the class specs
-
-define macro variable-test-definer
-  { define ?protocol-name:name variable-test ?variable-name:name ()
-      ?body:body
-    end }
-    => { define test "test-variable-" ## ?variable-name (requires-assertions?: #f)
-           ?body
-         end }
-end macro variable-test-definer;
-
-define macro constant-test-definer
-  { define ?protocol-name:name constant-test ?constant-name:name ()
-      ?body:body
-    end }
-    => { define test "test-constant-" ## ?constant-name (requires-assertions?: #f)
-           ?body
-         end }
-end macro constant-test-definer;
-
-
 /// Variable testing
 
 define function check-variable-specification
@@ -349,18 +328,6 @@ define method initialize (this :: <class-spec>, #key)
   this.class-spec-modifiers := modifiers;
 end method initialize;
 
-
-
-/// A useful macro to define the class specs
-
-define macro class-test-definer
-  { define ?protocol-name:name class-test ?class-name:name ()
-      ?body:body
-    end }
-    => { define test "test-class-" ## ?class-name (requires-assertions?: #f)
-           ?body
-         end }
-end macro class-test-definer;
 
 
 /// Class checking
@@ -470,18 +437,6 @@ define class <function-spec> (<definition-spec>)
   constant slot %function-spec-results :: <sequence> = #[],
     init-keyword: results:;
 end class <function-spec>;
-
-
-/// A useful macro to define the function specs
-
-define macro function-test-definer
-  { define ?protocol-name:name function-test ?function-name:name ()
-      ?body:body
-    end }
-    => { define test "test-function-" ## ?function-name (requires-assertions?: #f)
-           ?body
-         end }
-end macro function-test-definer;
 
 
 /// Function spec modeling
@@ -695,14 +650,3 @@ define function check-function-specification
   check-function-specification-parameters(title, function-spec);
   check-function-specification-results(title, function-spec);
 end function check-function-specification;
-
-/// A useful macro to define a macro test
-
-define macro macro-test-definer
-  { define ?protocol-name:name macro-test ?macro-name:name ()
-      ?body:body
-    end }
-    => { define test "test-macro-" ## ?macro-name (requires-assertions?: #f)
-           ?body
-         end }
-end macro macro-test-definer;
