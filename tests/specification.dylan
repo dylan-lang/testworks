@@ -1,370 +1,369 @@
 Module: testworks-test-suite
 
-define %testworks constant-test $skipped ()
+define test test-constant-$skipped ()
   //---*** Fill this in...
-end constant-test $skipped;
+end;
 
-define %testworks function-test result-microseconds ()
+define test test-function-result-microseconds ()
   //---*** Fill this in...
-end function-test result-microseconds;
+end;
 
-define %testworks class-test <test-result> ()
+define test test-class-<test-result> ()
   //---*** Fill this in...
-end class-test <test-result>;
+end;
 
-define %testworks function-test execute-component? ()
+define test test-function-execute-component? ()
   //---*** Fill this in...
-end function-test execute-component?;
+end;
 
-define %testworks function-test result-time ()
+define test test-function-result-time ()
   //---*** Fill this in...
-end function-test result-time;
+end;
 
-define %testworks function-test parse-tags ()
+define test test-function-parse-tags ()
   //---*** Fill this in...
-end function-test parse-tags;
+end;
 
-define %testworks function-test summary-report-function ()
+define test test-function-summary-report-function ()
   //---*** Fill this in...
-end function-test summary-report-function;
+end;
 
-define %testworks function-test debug? ()
+define test test-function-debug? ()
   //---*** Fill this in...
-end function-test debug?;
+end;
 
-define %testworks function-test suite-cleanup-function ()
+define test test-function-suite-cleanup-function ()
   //---*** Fill this in...
-end function-test suite-cleanup-function;
+end;
 
-define %testworks class-test <unit-result> ()
+define test test-class-<unit-result> ()
   //---*** Fill this in...
-end class-test <unit-result>;
+end;
 
-define %testworks function-test result-seconds ()
+define test test-function-result-seconds ()
   //---*** Fill this in...
-end function-test result-seconds;
+end;
 
-define %testworks constant-test $xml-version-header ()
+define test test-constant-$xml-version-header ()
   //---*** Fill this in...
-end constant-test $xml-version-header;
+end;
 
-define %testworks function-test status-name ()
+define test test-function-status-name ()
   //---*** Fill this in...
-end function-test status-name;
+end;
 
-define %testworks variable-test *check-recording-function* ()
+define test test-variable-*check-recording-function* ()
   //---*** Fill this in...
-end variable-test *check-recording-function*;
+end;
 
-define %testworks function-test make-suite ()
+define test test-function-make-suite ()
   //---*** Fill this in...
-end function-test make-suite;
+end;
 
-define %testworks function-test result-type-name ()
+define test test-function-result-type-name ()
   //---*** Fill this in...
-end function-test result-type-name;
+end;
 
-define %testworks class-test <check-result> ()
+define test test-class-<check-result> ()
   //---*** Fill this in...
-end class-test <check-result>;
+end;
 
-define %testworks class-test <test-unit> ()
+define test test-class-<test-unit> ()
   //---*** Fill this in...
-end class-test <test-unit>;
+end;
 
-define %testworks function-test show-progress ()
+define test test-function-show-progress ()
   //---*** Fill this in...
-end function-test show-progress;
+end;
 
-define %testworks function-test log-report-function ()
+define test test-function-log-report-function ()
   //---*** Fill this in...
-end function-test log-report-function;
+end;
 
-define %testworks class-test <suite> ()
+define test test-class-<suite> ()
   //---*** Fill this in...
-end class-test <suite>;
+end;
 
-define %testworks function-test null-report-function ()
+define test test-function-null-report-function ()
   //---*** Fill this in...
-end function-test null-report-function;
+end;
 
-define %testworks class-test <component> ()
+define test test-class-<component> ()
   //---*** Fill this in...
-end class-test <component>;
+end;
 
-define %testworks function-test failures-report-function ()
+define test test-function-failures-report-function ()
   //---*** Fill this in...
-end function-test failures-report-function;
+end;
 
-define %testworks function-test xml-report-function ()
+define test test-function-xml-report-function ()
   //---*** Fill this in...
-end function-test xml-report-function;
+end;
 
-define %testworks class-test <component-result> ()
+define test test-class-<component-result> ()
   //---*** Fill this in...
-end class-test <component-result>;
+end;
 
-define %testworks constant-test $not-implemented ()
+define test test-constant-$not-implemented ()
   //---*** Fill this in...
-end constant-test $not-implemented;
+end;
 
-define %testworks function-test debug-failures? ()
+define test test-function-debug-failures? ()
   //---*** Fill this in...
-end function-test debug-failures?;
+end;
 
-define %testworks function-test make-runner-from-command-line ()
+define test test-function-make-runner-from-command-line ()
   //---*** Fill this in...
-end function-test make-runner-from-command-line;
+end;
 
-define %testworks function-test result-name ()
+define test test-function-result-name ()
   //---*** Fill this in...
-end function-test result-name;
+end;
 
-define %testworks function-test tags-match? ()
+define test test-constant-$passed ()
   //---*** Fill this in...
-end function-test tags-match?;
+end;
 
-define %testworks constant-test $passed ()
+define test test-function-surefire-report-function ()
   //---*** Fill this in...
-end constant-test $passed;
+end;
 
-define %testworks function-test surefire-report-function ()
+define test test-function-suite-setup-function ()
   //---*** Fill this in...
-end function-test surefire-report-function;
+end;
 
-define %testworks function-test suite-setup-function ()
+define test test-function-result-status ()
   //---*** Fill this in...
-end function-test suite-setup-function;
+end;
 
-define %testworks function-test result-status ()
+define test test-function-result-bytes ()
   //---*** Fill this in...
-end function-test result-status;
+end;
 
-define %testworks function-test result-bytes ()
+define test test-class-<suite-result> ()
   //---*** Fill this in...
-end function-test result-bytes;
+end;
 
-define %testworks class-test <suite-result> ()
+define test test-constant-$crashed ()
   //---*** Fill this in...
-end class-test <suite-result>;
+end;
 
-define %testworks constant-test $crashed ()
+define test test-function-full-report-function ()
   //---*** Fill this in...
-end constant-test $crashed;
+end;
 
-define %testworks function-test full-report-function ()
+define test test-constant-$test-log-footer ()
   //---*** Fill this in...
-end function-test full-report-function;
+end;
 
-define %testworks constant-test $test-log-footer ()
+define test test-function-component-name ()
   //---*** Fill this in...
-end constant-test $test-log-footer;
+end;
 
-define %testworks function-test component-name ()
+define test test-function-do-results ()
   //---*** Fill this in...
-end function-test component-name;
+end;
 
-define %testworks function-test do-results ()
+define test test-class-<test> ()
   //---*** Fill this in...
-end function-test do-results;
+end;
 
-define %testworks class-test <test> ()
+define test test-class-<benchmark> ()
   //---*** Fill this in...
-end class-test <test>;
+end;
 
-define %testworks class-test <benchmark> ()
+define test test-class-<runnable> ()
   //---*** Fill this in...
-end class-test <benchmark>;
+end;
 
-define %testworks class-test <runnable> ()
+define test test-function-test-function ()
   //---*** Fill this in...
-end class-test <runnable>;
+end;
 
-define %testworks function-test test-function ()
+define test test-constant-$failed ()
   //---*** Fill this in...
-end function-test test-function;
+end;
 
-define %testworks constant-test $failed ()
+define test test-function-plural ()
   //---*** Fill this in...
-end constant-test $failed;
+end;
 
-define %testworks function-test plural ()
+define test test-constant-$default ()
   //---*** Fill this in...
-end function-test plural;
+end;
 
-define %testworks constant-test $default ()
+define test test-function-suite-components ()
   //---*** Fill this in...
-end constant-test $default;
+end;
 
-define %testworks function-test suite-components ()
+define test test-function-parse-args ()
   //---*** Fill this in...
-end function-test suite-components;
+end;
 
-define %testworks function-test parse-args ()
+define test test-class-<test-unit-result> ()
   //---*** Fill this in...
-end function-test parse-args;
+end;
 
-define %testworks class-test <test-unit-result> ()
+define test test-class-<tag> ()
   //---*** Fill this in...
-end class-test <test-unit-result>;
+end;
 
-define %testworks class-test <tag> ()
+define test test-class-<result> ()
   //---*** Fill this in...
-end class-test <tag>;
+end;
 
-define %testworks class-test <result> ()
+define test test-function-tags-match? ()
   //---*** Fill this in...
-end class-test <result>;
+end;
 
-define %testworks function-test test-tags ()
+define test test-function-test-tags ()
   //---*** Fill this in...
-end function-test test-tags;
+end;
 
-define %testworks constant-test $test-log-header ()
+define test test-constant-$test-log-header ()
   //---*** Fill this in...
-end constant-test $test-log-header;
+end;
 
-define %testworks constant-test $verbose ()
+define test test-constant-$verbose ()
   //---*** Fill this in...
-end constant-test $verbose;
+end;
 
-define %testworks function-test result-reason ()
+define test test-function-result-reason ()
   //---*** Fill this in...
-end function-test result-reason;
+end;
 
-define %testworks function-test result-subresults ()
+define test test-function-result-subresults ()
   //---*** Fill this in...
-end function-test result-subresults;
+end;
 
-define %testworks function-test test-requires-assertions? ()
+define test test-function-test-requires-assertions? ()
   //---*** Fill this in...
-end function-test test-requires-assertions?;
+end;
 
 
 // Module: testworks
 
-define testworks macro-test assert-instance?-test ()
+define test test-macro-assert-instance?-test ()
   //---*** Fill this in...
-end macro-test assert-instance?-test;
+end;
 
-define testworks macro-test check-instance?-test ()
+define test test-macro-check-instance?-test ()
   //---*** Fill this in...
-end macro-test check-instance?-test;
+end;
 
-define testworks macro-test assert-not-instance?-test ()
+define test test-macro-assert-not-instance?-test ()
   //---*** Fill this in...
-end macro-test assert-not-instance?-test;
+end;
 
-define testworks macro-test check-no-condition-test ()
+define test test-macro-check-no-condition-test ()
   //---*** Fill this in...
-end macro-test check-no-condition-test;
+end;
 
-define testworks macro-test assert-equal-test ()
+define test test-macro-assert-equal-test ()
   //---*** Fill this in...
-end macro-test assert-equal-test;
+end;
 
-define testworks macro-test check-no-errors-test ()
+define test test-macro-check-no-errors-test ()
   //---*** Fill this in...
-end macro-test check-no-errors-test;
+end;
 
-define testworks function-test run-test-application ()
+define test test-function-run-test-application ()
   //---*** Fill this in...
-end function-test run-test-application;
+end;
 
-define testworks macro-test assert-not-equal-test ()
+define test test-macro-assert-not-equal-test ()
   //---*** Fill this in...
-end macro-test assert-not-equal-test;
+end;
 
-define testworks class-test <test-runner> ()
+define test test-class-<test-runner> ()
   //---*** Fill this in...
-end class-test <test-runner>;
+end;
 
-define testworks function-test check-equal-failure-detail ()
+define test test-function-check-equal-failure-detail ()
   //---*** Fill this in...
-end function-test check-equal-failure-detail;
+end;
 
-define testworks function-test run-tests ()
+define test test-function-run-tests ()
   //---*** Fill this in...
-end function-test run-tests;
+end;
 
-define testworks macro-test assert-false-test ()
+define test test-macro-assert-false-test ()
   //---*** Fill this in...
-end macro-test assert-false-test;
+end;
 
-define testworks macro-test assert-signals-test ()
+define test test-macro-assert-signals-test ()
   //---*** Fill this in...
-end macro-test assert-signals-test;
+end;
 
-define testworks macro-test check-condition-test ()
+define test test-macro-check-condition-test ()
   //---*** Fill this in...
-end macro-test check-condition-test;
+end;
 
-define testworks macro-test check-test ()
+define test test-macro-check-test ()
   //---*** Fill this in...
-end macro-test check-test;
+end;
 
-define testworks macro-test suite-definer-test ()
+define test test-macro-suite-definer-test ()
   //---*** Fill this in...
-end macro-test suite-definer-test;
+end;
 
-define testworks function-test runner-skip ()
+define test test-function-runner-skip ()
   //---*** Fill this in...
-end function-test runner-skip;
+end;
 
-define testworks function-test test-output ()
+define test test-function-test-output ()
   //---*** Fill this in...
-end function-test test-output;
+end;
 
-define testworks function-test test-option ()
-  //---*** Fill this in...
+define test test-function-test-option ()
   check-instance?("test-option returns a <string>",
                   <string>,
                   test-option("foo", default: "bleah"));
-end function-test test-option;
+end;
 
-define testworks macro-test with-test-unit-test ()
+define test test-macro-with-test-unit-test ()
   //---*** Fill this in...
-end macro-test with-test-unit-test;
+end;
 
-define testworks macro-test test-definer-test ()
+define test test-macro-test-definer-test ()
   //---*** Fill this in...
-end macro-test test-definer-test;
+end;
 
-define testworks function-test debug-runner? ()
+define test test-function-debug-runner? ()
   //---*** Fill this in...
-end function-test debug-runner?;
+end;
 
-define testworks function-test runner-output-stream ()
+define test test-function-runner-output-stream ()
   //---*** Fill this in...
-end function-test runner-output-stream;
+end;
 
-define testworks macro-test check-false-test ()
+define test test-macro-check-false-test ()
   //---*** Fill this in...
-end macro-test check-false-test;
+end;
 
-define testworks macro-test assert-no-errors-test ()
+define test test-macro-assert-no-errors-test ()
   //---*** Fill this in...
-end macro-test assert-no-errors-test;
+end;
 
-define testworks macro-test assert-true-test ()
+define test test-macro-assert-true-test ()
   //---*** Fill this in...
-end macro-test assert-true-test;
+end;
 
-define testworks function-test runner-tags ()
+define test test-function-runner-tags ()
   //---*** Fill this in...
-end function-test runner-tags;
+end;
 
-define testworks macro-test check-true-test ()
+define test test-macro-check-true-test ()
   //---*** Fill this in...
-end macro-test check-true-test;
+end;
 
-define testworks function-test runner-progress ()
+define test test-function-runner-progress ()
   //---*** Fill this in...
-end function-test runner-progress;
+end;
 
-define testworks macro-test check-equal-test ()
+define test test-macro-check-equal-test ()
   //---*** Fill this in...
-end macro-test check-equal-test;
+end;
 
 define module-spec %testworks ()
   constant $skipped :: <object>;
