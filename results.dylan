@@ -48,12 +48,7 @@ define class <result> (<object>)
     required-init-keyword: reason:;
 end class <result>;
 
-define class <component-result> (<result>)
-  constant slot result-subresults :: <sequence> = make(<stretchy-vector>),
-    init-keyword: subresults:;
-
-  // Profiling data...
-
+define class <metered-result> (<result>)
   constant slot result-seconds :: false-or(<integer>),
     required-init-keyword: seconds:;
   constant slot result-microseconds :: false-or(<integer>),
@@ -61,6 +56,11 @@ define class <component-result> (<result>)
   // Hopefully nothing will allocate more than 536MB haha...
   constant slot result-bytes :: false-or(<integer>),
     required-init-keyword: bytes:;
+end class <metered-result>;
+
+define class <component-result> (<metered-result>)
+  constant slot result-subresults :: <sequence> = make(<stretchy-vector>),
+    init-keyword: subresults:;
 end class <component-result>;
 
 define class <test-result> (<component-result>)
@@ -114,7 +114,7 @@ end;
 
 
 define method result-time
-    (result :: <component-result>, #key pad-seconds-to :: false-or(<integer>))
+    (result :: <metered-result>, #key pad-seconds-to :: false-or(<integer>))
  => (seconds :: <string>)
   time-to-string(result.result-seconds, result.result-microseconds,
                  pad-seconds-to: pad-seconds-to)
@@ -133,3 +133,10 @@ define function time-to-string
   end
 end function time-to-string;
 
+define function float-time-to-string
+    (time :: <double-float>, #key pad-seconds-to :: false-or(<integer>))
+ => (seconds :: <string>)
+  let seconds = truncate(time);
+  time-to-string(seconds, truncate((time - seconds) * 1.0d6),
+                 pad-seconds-to: pad-seconds-to)
+end;

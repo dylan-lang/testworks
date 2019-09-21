@@ -220,6 +220,11 @@ define method execute-component
                           show-progress(*runner*, #f, result);
                         end;
                         result
+                      end,
+                    *benchmark-recording-function* =
+                      method (result :: <result>)
+                        add!(subresults, result);
+                        result
                       end)
         let cond
           = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)

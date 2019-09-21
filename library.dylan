@@ -16,6 +16,7 @@ define library testworks
   use strings;
   use system,
     import: { date, file-system, locators, operating-system };
+  use memory-manager;
 
   export
     testworks,
@@ -69,6 +70,10 @@ define module testworks
     benchmark-definer,
     with-test-unit;
 
+  // Benchmarks
+  create
+    benchmark-repeat;
+
   // Output
   create
     test-output,
@@ -105,6 +110,7 @@ define module %testworks
   use testworks;
   use threads,
     import: { dynamic-bind };
+  use memory-manager, import: { collect-garbage };
 
   // Debugging options
   export

@@ -19,6 +19,7 @@ define table $report-functions :: <string-table> = {
     "none"     => null-report-function,
     "summary"  => summary-report-function,
     "failures" => failures-report-function,
+    "full"     => full-report-function,
     "surefire" => surefire-report-function,
     "xml"      => xml-report-function
 };
