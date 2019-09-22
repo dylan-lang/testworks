@@ -86,9 +86,9 @@ define module testworks
 
   // Specs
   create
-    \library-spec-definer,
-    \module-spec-definer,
-    \protocol-spec-definer,
+    interface-specification-suite-definer,
+    interface-specification-classes,
+    interface-specification-class-instantiable?,
     make-test-instance,
     destroy-test-instance,
     class-test-function;
@@ -220,8 +220,7 @@ define module %testworks
     tags-match?;
 
   // Specs classes
-  export <spec>,
-         <definition-spec>,
+  export <definition-spec>,
          <constant-spec>,
          <variable-spec>,
          <class-spec>,
