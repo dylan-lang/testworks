@@ -90,6 +90,11 @@ directly, or it can be called with a suite to run only that suite::
 The main difference is in what the output looks like. With suites it's
 a little bit more structured and verbose. Without suites it's flat.
 
+Note that if you specify a suite to run it is up to you to ensure that all
+tests and suites have been added to that suite. Otherwise you may be skipping
+some tests. Calling ``run-test-application()`` with no arguments will ensure
+that all tests are run.
+
 The Testworks command-line (assuming your test executable is
 "foo-test")::
 
@@ -97,6 +102,7 @@ The Testworks command-line (assuming your test executable is
   foo-test --tag=benchmark       # Run only the benchmarks.
   foo-test --tag=-benchmark      # Run only the tests.
   foo-test --suite=my-sub-suite  # Run only my-sub-suite
+  foo-test --test=my-test        # Run only my-test
 
 When using suites, you may want to have both an "foo-test" library,
 which exports your top-level test suite so it can be included as a
