@@ -10,6 +10,7 @@ define library testworks
   use command-line-parser;
   use common-dylan,
     import: { common-dylan, threads };
+  use json;
   use io,
     import: { format, print, standard-io, streams };
   use coloring-stream;
@@ -96,6 +97,8 @@ define module %testworks
   use file-system,
     prefix: "fs/";
   use format;
+  use json,
+    import: { encode-json };
   use locators,
     import: { <directory-locator>,
               <file-locator>,

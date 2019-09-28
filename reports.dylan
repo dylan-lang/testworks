@@ -521,3 +521,39 @@ define function surefire-report-function
      collect-suite-results(result));
   format(stream, "</testsuites>\n");
 end function surefire-report-function;
+
+/// JSON report
+
+define function json-report-function (result :: <result>, stream :: <stream>) => ()
+  encode-json(stream, result);
+end;
+
+define method encode-json (stream :: <stream>, result :: <result>)
+  encode-json(stream, result-to-table(result));
+end;
+
+// It's easier to convert to <table> and let the json library do the actual
+// object formatting.
+
+define method result-to-table (result :: <result>) => (t :: <table>)
+  let t = make(<string-table>, size: 8);
+  t["type"] := result-type-name(result);
+  t["name"] := result.result-name;
+  t["status"] := result.result-status;
+  t["reason"] := result.result-reason;
+  t
+end;
+
+define method result-to-table (result :: <metered-result>) => (t :: <table>)
+  let t = next-method();
+  t["seconds"] := result.result-seconds;
+  t["microseconds"] := result.result-microseconds;
+  t["bytes"] := result.result-bytes;
+  t
+end;
+
+define method result-to-table (result :: <component-result>) => (t :: <table>)
+  let t = next-method();
+  t["children"] := result.result-subresults;
+  t
+end;

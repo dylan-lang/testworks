@@ -27,6 +27,7 @@ define table $report-functions :: <string-table>
      "full"     => full-report-function,
      "surefire" => surefire-report-function,
      "xml"      => xml-report-function,
+     "json"     => json-report-function,
 };
 
 define function parse-args
