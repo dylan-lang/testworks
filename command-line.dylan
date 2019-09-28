@@ -14,14 +14,19 @@ define constant $none = #"none";
 define constant $default = #"default";
 define constant $verbose = #"verbose";
 
-define table $report-functions :: <string-table> = {
-    "log"      => log-report-function,
-    "none"     => null-report-function,
-    "summary"  => summary-report-function,
-    "failures" => failures-report-function,
-    "full"     => full-report-function,
-    "surefire" => surefire-report-function,
-    "xml"      => xml-report-function
+// TODO(cgay): This seems to mix two concerns: what I want to output to the
+// screen during and after the test run, and what I want stored in a file for
+// later analysis. I think the --report option should apply to the latter and
+// --verbose (or --output) should apply to the former.
+define table $report-functions :: <string-table>
+  = {
+     "log"      => log-report-function, // Why are these named "-function"?
+     "none"     => null-report-function,
+     "summary"  => summary-report-function,
+     "failures" => failures-report-function,
+     "full"     => full-report-function,
+     "surefire" => surefire-report-function,
+     "xml"      => xml-report-function,
 };
 
 define function parse-args
@@ -50,7 +55,10 @@ define function parse-args
                   choices: key-sequence($report-functions),
                   default: "failures",
                   variable: "TYPE",
-                  help: "Final report to generate: none|summary|FAILURES|log|xml|surefire"));
+                  help: format-to-string("Final report to generate: %s",
+                                         join(sort(key-sequence($report-functions)), "|"))));
+  // TODO(cgay): I adopted the convention of using ./_test in test-temp-directory()
+  // and we could use it here as the default location of the report file.
   add-option(parser,
              make(<parameter-option>,
                   names: #("report-file"),
