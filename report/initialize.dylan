@@ -8,6 +8,8 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 // Some application exit constants
 
+// TODO(cgay): what's wrong with 0 = success and 1 = failure?
+
 define table $error-codes
   = { #"help"                          => 1,
       #"bad-argument-value"            => 2,
@@ -96,6 +98,16 @@ define method display-run-options
 end method display-run-options;
 
 /// application-error
+
+define method application-error
+    (error-name :: <symbol>, format-string :: <string>, #rest args)
+  format-out("\n");
+  apply(format-out, format-string, args);
+  format-out("\nUse %s -help for help on arguments.\n", application-name());
+  // TODO(cgay): just signal errors and have one handler in main() that
+  // can be turned off if --debug is passed.
+  exit-application(application-exit-code(error-name))
+end method;
 
 define method application-exit-code
     (error-name :: <symbol>) => (code :: <integer>)
@@ -406,4 +418,3 @@ define method main
     report-function(results)
   end
 end method main;
-

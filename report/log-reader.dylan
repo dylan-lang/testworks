@@ -6,8 +6,6 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-/// read-log-file
-
 define constant $testworks-message
   = "Make sure the test report was generated using the \"-report log\"\n"
     "or \"-report xml\" option to testworks.";
@@ -83,8 +81,8 @@ define method read-log-file
             end if
           end method read-next-line;
     local method unread-line (line :: <string>) => ()
-            last-line := line
-          end method unread-line;
+            last-line := line;
+          end;
     local method line-starts-with (line :: <string>, s :: <string>) => (b :: <boolean>)
             block (return)
               let len = size(line);
@@ -122,9 +120,6 @@ define method read-log-file
     local method read-log-file-section () => (result :: false-or(<result>))
             let type          = read-keyword-line("Object: ");
             let name          = read-keyword-line("Name: ");
-            when (type = "Suite")
-              debug-message("Reading %s...", name)
-            end;
             let status-string = read-keyword-line("Status: ");
             let reason        = maybe-read-keyword-line("Reason: ");
             let seconds       = #f;
@@ -181,25 +176,21 @@ define method read-log-file
     read-xml-file(path, ignored-tests: ignored-tests, ignored-suites: ignored-suites);
   else
     with-open-file (stream = path)
-      block (return)
+      block (exit-block)
         while (#t)
-          let line = read-line(stream, on-end-of-stream: #f);
-          select (line by \=)
-        #f =>
-          application-error(#"start-token-not-found",
-                            "The log file '%s' doesn't contain any log information.\n%s\n",
+          let line = read-line(stream, on-end-of-stream: #f)
+            | application-error(#"start-token-not-found",
+                                "%s doesn't appear to be a Testworks log report.\n%s\n",
                                 path, $testworks-message);
-        $test-log-header =>
-          return(#"plain");
-        otherwise =>
-          #f;
-          end
-        end
-      end;
+          if (line = $test-log-header)
+            exit-block();
+          end;
+        end;
+      end block;
       read-log-file(stream, ignored-tests: ignored-tests, ignored-suites: ignored-suites)
         | application-error(#"no-matching-results",
-                        "There are no matching results in log file %s\n%s\n",
-                        path, $testworks-message)
+                            "There are no matching results in log file %s\n%s\n",
+                            path, $testworks-message)
     end with-open-file
   end if
 end method read-log-file;
