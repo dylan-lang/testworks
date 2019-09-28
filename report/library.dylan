@@ -8,28 +8,32 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks-report
   use common-dylan;
-  use io;
-  use system;
+  use io,
+    import: { format, format-out, streams };
+  use system,
+    import: { file-system, operating-system, threads };
   use testworks;
   use xml-parser,
     import: { xml-parser };
 
   export testworks-report;
-end library testworks-report;
+end library;
 
 define module testworks-report
   use common-dylan;
+  use format,
+    import: { format-to-string };
   use format-out;
   use streams;
   use file-system;
   use operating-system;
   use threads,
     import: { dynamic-bind };
-  use testworks;
+  use %testworks;
   use xml-parser,
     prefix: "xml/";
 
   export read-log-file,
          perform-test-diff;
-end module testworks-report;
+end module;
 
