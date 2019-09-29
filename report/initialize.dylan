@@ -27,6 +27,8 @@ define table $error-codes
 
 /// Application options
 
+// TODO(cgay): use command-line-parser library
+
 define class <application-options> (<object>)
   constant slot application-quiet? :: <boolean> = #f,
     init-keyword: quiet?:;
@@ -289,6 +291,7 @@ define method parse-arguments
        ignored-suites: map(as-lowercase, ignored-suites))
 end method parse-arguments;
 
+// TODO(cgay): use strings library
 define method case-insensitive-equal?
     (name1 :: <string>, name2 :: <string>)
  => (equal? :: <boolean>)
@@ -379,21 +382,21 @@ define method main
   end if;
   let options = parse-arguments(command-name, arguments);
   display-run-options(options);
-  let log1 = application-log1(options);
-  let log2 = application-log2(options);
+  let path1 = application-log1(options);
+  let path2 = application-log2(options);
   let tests = application-tests(options);
   let suites = application-suites(options);
   let report-function = application-report-function(options);
   let ignored-tests = application-ignored-tests(options);
   let ignored-suites = application-ignored-suites(options);
   let tolerance = application-tolerance(options);
-  local method read-log-file-with-options
-            (log :: <string>) => (result :: <result>)
+  local method read-report-with-options
+            (path :: <string>) => (result :: <result>)
           block ()
             let result
-              = read-log-file(log,
-                              ignored-tests: ignored-tests,
-                              ignored-suites: ignored-suites);
+              = read-report(path,
+                            ignored-tests: ignored-tests,
+                            ignored-suites: ignored-suites);
             if (~empty?(tests) | ~empty?(suites))
               find-named-result(result,
                                 tests: tests,
@@ -404,17 +407,15 @@ define method main
           exception (e :: <file-does-not-exist-error>)
             application-error(#"file-not-found", "Error: %s", e);
           end block
-        end method read-log-file-with-options;
-  if (log2)
-    let result1 = read-log-file-with-options(log1);
-    let result2 = read-log-file-with-options(log2);
+        end method;
+  let result1 = read-report-with-options(path1);
+  if (path2)
+    let result2 = read-report-with-options(path2);
     perform-test-diff
-      (log1: log1, log2: log2,
-       result1: result1, result2: result2,
+      (path1: path1, path1: path2, result1: result1, result2: result2,
        report-function: report-function,
-       tolerance: tolerance)
+       tolerance: tolerance);
   else
-    let results = read-log-file-with-options(log1);
-    report-function(results)
-  end
+    report-function(result1, *standard-output*);
+  end;
 end method main;

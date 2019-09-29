@@ -214,10 +214,10 @@ end method diff-report-function;
 define method diff-summary-report-function
     (result :: <comparison-result>) => ()
   format-out("Comparison Summary:\n");
-  summarize(result, "Suite");
-  summarize(result, "Test");
-  summarize(result, "Check");
-  summarize(result, "Benchmark");
+  summarize(result, "suite");
+  summarize(result, "test");
+  summarize(result, "check");
+  summarize(result, "benchmark");
 end method diff-summary-report-function;
 
 define method print-benchmark-result-header () => ()

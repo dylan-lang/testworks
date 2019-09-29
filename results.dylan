@@ -20,7 +20,7 @@ define constant <result-status>
            $not-implemented);
 
 // It looks like this and testworks-reports:parse-status are meant to
-// be inverses.
+// be inverses.  (This would be a good use for an <enum> class.)
 define method status-name
     (status :: <result-status>) => (name :: <string>)
   select (status)
@@ -94,22 +94,22 @@ define open generic result-type-name
 
 define method result-type-name
     (result :: <test-result>) => (name :: <string>)
-  "Test"
+  "test"
 end;
 
 define method result-type-name
     (result :: <suite-result>) => (name :: <string>)
-  "Suite"
+  "suite"
 end;
 
 define method result-type-name
     (result :: <check-result>) => (name :: <string>)
-  "Check"
+  "check"
 end;
 
 define method result-type-name
     (result :: <test-unit-result>) => (name :: <string>)
-  "Test-unit"
+  "test-unit"
 end;
 
 

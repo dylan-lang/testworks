@@ -9,9 +9,11 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks-report
   use common-dylan;
   use io,
-    import: { format, format-out, streams };
+    import: { format, format-out, standard-io, streams };
+  use json;
+  use strings;
   use system,
-    import: { file-system, operating-system, threads };
+    import: { file-system, locators, operating-system, threads };
   use testworks;
   use xml-parser,
     import: { xml-parser };
@@ -24,7 +26,15 @@ define module testworks-report
   use format,
     import: { format-to-string };
   use format-out;
+  use json,
+    import: { parse-json };
+  use locators,
+    import: { <file-locator>, locator-extension };
+  use standard-io,
+    import: { *standard-output* };
   use streams;
+  use strings,
+    import: { string-equal-ic? };
   use file-system;
   use operating-system;
   use threads,
@@ -33,7 +43,6 @@ define module testworks-report
   use xml-parser,
     prefix: "xml/";
 
-  export read-log-file,
+  export read-report,
          perform-test-diff;
 end module;
-
