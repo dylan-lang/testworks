@@ -6,25 +6,6 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-// Some application exit constants
-
-// TODO(cgay): what's wrong with 0 = success and 1 = failure?
-
-define table $error-codes
-  = { #"help"                          => 1,
-      #"bad-argument-value"            => 2,
-      #"start-token-not-found"         => 3,
-      #"end-token-not-found"           => 4,
-      #"token-not-found"               => 5,
-      #"invalid-report-function"       => 6,
-      #"invalid-command-line-argument" => 7,
-      #"missing-log-file"              => 8,
-      #"no-matching-results"           => 9,
-      #"file-not-found"                => 10,
-      #"end-of-file"                   => 11
-    };
-
-
 /// Application options
 
 // TODO(cgay): use command-line-parser library
@@ -101,21 +82,14 @@ end method display-run-options;
 
 /// application-error
 
-define method application-error
-    (error-name :: <symbol>, format-string :: <string>, #rest args)
-  format-out("\n");
-  apply(format-out, format-string, args);
-  format-out("\nUse %s -help for help on arguments.\n", application-name());
-  // TODO(cgay): just signal errors and have one handler in main() that
-  // can be turned off if --debug is passed.
-  exit-application(application-exit-code(error-name))
-end method;
+define class <testworks-error> (<format-string-condition>, <error>)
+end;
 
-define method application-exit-code
-    (error-name :: <symbol>) => (code :: <integer>)
-  let error-code = element($error-codes, error-name, default: #f);
-  error-code | error("Unknown error value '%='", error-name)
-end method application-exit-code;
+define function application-error (format-string :: <string>, #rest args)
+  signal(make(<testworks-error>,
+              format-string: format-string,
+              format-arguments: args));
+end function;
 
 
 /// Command line arguments
@@ -146,12 +120,13 @@ define method keyword-argument?
     end
 end method keyword-argument?;
 
-define method invalid-argument
-    (error-name :: <symbol>, format-string :: <string>, #rest args) => ()
+define constant $usage-exit-status = 2;
+
+define method invalid-argument (format-string :: <string>, #rest args) => ()
   display-help(application-name());
   format-out("\n");
   apply(format-out, format-string, args);
-  exit-application(application-exit-code(error-name))
+  exit-application($usage-exit-status);
 end method invalid-argument;
 
 define method argument-value
@@ -160,8 +135,7 @@ define method argument-value
  => (value :: <stretchy-vector>)
   if (~allow-zero-arguments?
       & (empty?(arguments) | keyword-argument?(arguments[0])))
-    invalid-argument(#"bad-argument-value",
-                     "No argument specified for keyword '%s'.\n", keyword)
+    invalid-argument("No argument specified for keyword '%s'.\n", keyword)
   end;
   let value = make(<stretchy-vector>);
   while (~empty?(arguments) & ~keyword-argument?(arguments[0]))
@@ -218,9 +192,8 @@ define method parse-arguments
                  "diff-summary" => diff-summary-report-function;
                  "benchmark-diff" => benchmark-diff-report-function;
                  otherwise =>
-                   invalid-argument(#"invalid-report-function",
-                                    "Report function '%s' not supported.\n",
-                                     function-name);
+                   invalid-argument("Report function '%s' not supported.\n",
+                                    function-name);
                end
              end;
       "suite" =>
@@ -242,23 +215,20 @@ define method parse-arguments
         block ()
           tolerance := string-to-integer(vals[0]);
         exception (e :: <error>)
-          invalid-argument(#"bad-argument-value",
-                           "Invalid argument specified for the %s keyword: '%s'.\n",
+          invalid-argument("Invalid argument specified for the %s keyword: '%s'.\n",
                            option, vals[0]);
         end;
       otherwise =>
         case
           log1 & log2 =>
-            invalid-argument(#"invalid-command-line-argument",
-                             "Invalid command line keyword '%s'.\n", option);
+            invalid-argument("Invalid command line keyword '%s'.\n", option);
           log1      => log2 := option;
           otherwise => log1 := option;
         end;
     end
   end;
   unless (log1)
-    invalid-argument(#"missing-log-file",
-                     "Log file missing - one or two log files must be supplied\n")
+    invalid-argument("Log file missing - one or two log files must be supplied\n")
   end;
   unless (report-function)
     report-function := if (log2)
@@ -270,16 +240,14 @@ define method parse-arguments
   if (log2 & member?(report-function, vector(full-report-function,
                                              failures-report-function,
                                              summary-report-function)))
-    invalid-argument(#"bad-argument-value",
-                     "The report function specified is not meaningful "
+    invalid-argument("The report function specified is not meaningful "
                      "when two log files are specified.\n");
   end if;
   if (~log2 & member?(report-function, vector(diff-report-function,
                                               diff-full-report-function,
                                               diff-summary-report-function,
                                               benchmark-diff-report-function)))
-    invalid-argument(#"bad-argument-value",
-                     "The report function specified is only meaningful "
+    invalid-argument("The report function specified is only meaningful "
                      "when two log files are specified.\n");
   end if;
   make(<application-options>,
@@ -350,9 +318,7 @@ define method find-named-result
   let results = find-named-results(result, tests: tests, suites: suites);
   select (size(results))
     0 =>
-      application-error(#"no-matching-results",
-                        "No matches for tests %= or suites %=",
-                        tests, suites);
+      application-error("No matches for tests %= or suites %=", tests, suites);
     1 =>
       results[0];
     otherwise =>
@@ -374,10 +340,9 @@ define method main
   // Process the command line arguments
   if (arguments & ~empty?(arguments))
     let (first-argument, keyword?) = process-argument(arguments[0]);
-    if (keyword?
-        & member?(first-argument, #["help", "?"], test: \=))
+    if (keyword? & member?(first-argument, #["help", "?"], test: \=))
       display-help(command-name);
-      exit-application(application-exit-code(#"help"));
+      exit-application(0);
     end if;
   end if;
   let options = parse-arguments(command-name, arguments);
@@ -405,7 +370,7 @@ define method main
               result
             end
           exception (e :: <file-does-not-exist-error>)
-            application-error(#"file-not-found", "Error: %s", e);
+            application-error("Error: %s", e);
           end block
         end method;
   let result1 = read-report-with-options(path1);

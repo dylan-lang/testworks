@@ -111,14 +111,12 @@ define function read-log-report-1
           end method maybe-read-keyword-line;
     local method read-keyword-line (keyword :: <string>) => (value :: <string>)
             maybe-read-keyword-line(keyword)
-              | application-error(#"token-not-found",
-                                  "Error parsing report: The keyword \"%s\" was not found.\n%s\n",
+              | application-error("Error parsing report: The keyword \"%s\" was not found.\n%s\n",
                                   keyword, $testworks-message);
           end method read-keyword-line;
     local method read-end-token () => ()
             unless (line-starts-with(read-next-line(), "end"))
-              application-error(#"end-token-not-found",
-                                "Error parsing report: 'end' token not found.\n%s\n",
+              application-error("Error parsing report: 'end' token not found.\n%s\n",
                                 $testworks-message);
             end;
           end method read-end-token;
@@ -163,8 +161,7 @@ define function read-log-report-1
     block ()
       read-log-file-section();
     exception (e :: <end-of-stream-error>)
-      application-error(#"end-of-file",
-                        "Error parsing report: End of file reached.\n%s\n",
+      application-error("Error parsing report: End of file reached.\n%s\n",
                         $testworks-message);
     end block
   end block
@@ -177,8 +174,7 @@ define function read-log-report
   block (exit-block)
     while (#t)
       let line = read-line(stream, on-end-of-stream: #f)
-        | application-error(#"start-token-not-found",
-                            "%s doesn't appear to be a Testworks log report.\n%s\n",
+        | application-error("%s doesn't appear to be a Testworks log report.\n%s\n",
                             path, $testworks-message);
       if (line = $test-log-header)
         exit-block();
@@ -186,8 +182,7 @@ define function read-log-report
     end;
   end block;
   read-log-report-1(stream, ignored-tests: ignored-tests, ignored-suites: ignored-suites)
-    | application-error(#"no-matching-results",
-                        "There are no matching results in log file %s\n%s\n",
+    | application-error("There are no matching results in log file %s\n%s\n",
                         path, $testworks-message)
 end function;
 
