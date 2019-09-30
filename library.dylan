@@ -88,7 +88,8 @@ end module testworks;
 
 // Internals, for use by test suite.
 define module %testworks
-  use coloring-stream;
+  use coloring-stream,
+    rename: { $reset-attributes => $reset-text-attributes };
   use command-line-parser;
   use common-dylan, exclude: { format-to-string };
   use date,

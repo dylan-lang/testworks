@@ -316,18 +316,18 @@ define method show-progress
   if (result)
     let result-status = result.result-status;
     test-output("Completed suite %=%s%=: %=%s%= in %ss\n",
-                $component-name-attributes,
+                $component-name-text-attributes,
                 suite.component-name,
-                $reset-attributes,
-                result-status-to-attributes(result-status),
+                $reset-text-attributes,
+                result-status-to-text-attributes(result-status),
                 result-status.status-name.as-uppercase,
-                $reset-attributes,
+                $reset-text-attributes,
                 result.result-time)
   else
     test-output("Running suite %=%s%=:\n",
-                $component-name-attributes,
+                $component-name-text-attributes,
                 suite.component-name,
-                $reset-attributes);
+                $reset-text-attributes);
   end;
 end method show-progress;
 
@@ -345,18 +345,18 @@ define method show-progress
                 else
                   " "
                 end,
-                result-status-to-attributes(result-status),
+                result-status-to-text-attributes(result-status),
                 result-status.status-name.as-uppercase,
-                $reset-attributes,
+                $reset-text-attributes,
                 result.result-time,
                 format-bytes(result.result-bytes));
     reason & test-output("    %s\n", reason);
   else
     test-output("Running %s %=%s%=:%s",
                 test.component-type-name,
-                $component-name-attributes,
+                $component-name-text-attributes,
                 test.component-name,
-                $reset-attributes,
+                $reset-text-attributes,
                 verbose? & "\n" | "");
   end;
 end method show-progress;
@@ -370,9 +370,9 @@ define method show-progress
   let reason = result.result-reason;
   if (runner.runner-progress = $verbose)
     test-output("  %=%s%=: %s%s\n",
-                result-status-to-attributes(status),
+                result-status-to-text-attributes(status),
                 status.status-name.as-uppercase,
-                $reset-attributes,
+                $reset-text-attributes,
                 result.result-name,
                 reason & concatenate(" [", reason, "]") | "");
   elseif (reason)
