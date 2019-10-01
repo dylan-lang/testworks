@@ -6,7 +6,7 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-define library testworks-report
+define library testworks-report-lib
   use common-dylan;
   use io,
     import: { format, format-out, standard-io, streams };
@@ -18,10 +18,10 @@ define library testworks-report
   use xml-parser,
     import: { xml-parser };
 
-  export testworks-report;
+  export testworks-report-lib;
 end library;
 
-define module testworks-report
+define module testworks-report-lib
   use common-dylan;
   use format,
     import: { format-to-string };
@@ -43,6 +43,9 @@ define module testworks-report
   use xml-parser,
     prefix: "xml/";
 
-  export read-report,
-         perform-test-diff;
+  export
+    main,
+
+    // For the test suite
+    read-report;
 end module;
