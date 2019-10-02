@@ -16,7 +16,7 @@ define module-spec %testworks ()
   function result-microseconds (<object>) => (false-or(<integer>));
   class <test-result> (<component-result>);
   open generic-function execute-component? (<component>, <test-runner>) => (<boolean>);
-  function result-time (<component-result>, #"key", #"pad-seconds-to") => (<string>);
+  function result-time (<metered-result>, #"key", #"pad-seconds-to") => (<string>);
   function parse-tags (<sequence>) => (<sequence>);
   function summary-report-function (<result>, <stream>) => ();
   function debug? () => (<boolean>);
