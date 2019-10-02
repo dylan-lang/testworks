@@ -163,6 +163,7 @@ define module %testworks
     <component-result>,
     result-subresults,
 
+    <metered-result>,
     <test-result>,
     <benchmark-result>,
     <suite-result>,
