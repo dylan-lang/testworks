@@ -104,9 +104,8 @@ define function do-check-equal
                          check-equal-failure-detail(val1, val2)
                        end;
           values($failed,
-                 format-to-string("%= (from expression %=) and %= (from "
-                                    "expression %=) are %s=.%s%s",
-                                  val1, expr1, val2, expr2,
+                 format-to-string("%= and %= are %s=.%s%s",
+                                  val1, val2,
                                   if (negate?) "" else "not " end,
                                   if (detail) "  " else "" end,
                                   detail | ""))
