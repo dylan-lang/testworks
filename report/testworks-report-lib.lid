@@ -3,7 +3,7 @@ Synopsis:     A tool to generate reports from test run logs
 Author:       Shri Amit, Andy Armstrong
 Files:  library
         initialize
-        log-reader
+        readers
         test-diff
         reports
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
