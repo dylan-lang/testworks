@@ -1,4 +1,4 @@
-Module:       testworks-report
+Module:       testworks-report-lib
 Synopsis:     A tool to generate reports from test run logs
 Author:       Shri Amit, Andy Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
@@ -6,21 +6,21 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-/// read-log-file
-
 define constant $testworks-message
   = "Make sure the test report was generated using the \"-report log\"\n"
     "or \"-report xml\" option to testworks.";
 
 // It looks like this and testworks:status-name are meant to be
-// inverses.
+// inverses.  (This would be a good use for an <enum> class.)
 define method parse-status
     (status-string :: <string>, reason)
   select (status-string by \=)
     "passed" => $passed;
     "failed" => $failed;
-    "skipped" => $skipped;
     "crashed" => recreate-error(reason);
+    "skipped" => $skipped;
+    "failed as expected" => $expected-failure;
+    "unexpectedly succeeded" => $unexpected-success;
     "not implemented" => $not-implemented;
     otherwise =>
       error("Unexpected status '%s' in report", status-string);
@@ -30,6 +30,7 @@ end method parse-status;
 define method make-result
     (type, name, status, reason, subresults, ignored-tests, ignored-suites,
      seconds, microseconds, allocation)
+  let status = parse-status(status, reason);
   select (as(<symbol>, type))
     #"check" =>
       make(<check-result>,
@@ -62,9 +63,11 @@ define method make-result
   end
 end method make-result;
 
-define method read-log-file
-    (test-stream :: <file-stream>, #key ignored-tests = #[], ignored-suites = #[])
- => (result :: false-or(<result>))
+// TODO(cgay): this is completely broken. Not sure when it happened.
+// Maybe we can just remove the "log" format and use json or xml instead?
+define function read-log-report-1
+    (stream :: <stream>, #key ignored-tests = #[], ignored-suites = #[])
+ => (result :: <result>)
   block (return)
     let last-line = #f;
     // Read next non-blank line.  Error if EOF reached, since that means
@@ -75,16 +78,16 @@ define method read-log-file
               last-line := #f;
               next-line
             else
-              let line = read-line(test-stream);
+              let line = read-line(stream);
               while (line = "")
-                line := read-line(test-stream);
-              end while;
+                line := read-line(stream);
+              end;
               line
             end if
           end method read-next-line;
     local method unread-line (line :: <string>) => ()
-            last-line := line
-          end method unread-line;
+            last-line := line;
+          end;
     local method line-starts-with (line :: <string>, s :: <string>) => (b :: <boolean>)
             block (return)
               let len = size(line);
@@ -108,24 +111,19 @@ define method read-log-file
           end method maybe-read-keyword-line;
     local method read-keyword-line (keyword :: <string>) => (value :: <string>)
             maybe-read-keyword-line(keyword)
-              | application-error(#"token-not-found",
-                                  "Error parsing report: The keyword \"%s\" was not found.\n%s\n",
+              | application-error("Error parsing report: The keyword \"%s\" was not found.\n%s\n",
                                   keyword, $testworks-message);
           end method read-keyword-line;
     local method read-end-token () => ()
             unless (line-starts-with(read-next-line(), "end"))
-              application-error(#"end-token-not-found",
-                                "Error parsing report: 'end' token not found.\n%s\n",
+              application-error("Error parsing report: 'end' token not found.\n%s\n",
                                 $testworks-message);
             end;
           end method read-end-token;
     local method read-log-file-section () => (result :: false-or(<result>))
             let type          = read-keyword-line("Object: ");
             let name          = read-keyword-line("Name: ");
-            when (type = "Suite")
-              debug-message("Reading %s...", name)
-            end;
-            let status-string = read-keyword-line("Status: ");
+            let status        = read-keyword-line("Status: ");
             let reason        = maybe-read-keyword-line("Reason: ");
             let seconds       = #f;
             let microseconds  = #f;
@@ -156,7 +154,6 @@ define method read-log-file
                   end;
                   subresults
                 end;
-            let status = parse-status(status-string, reason);
             make-result(type, name, status, reason, subresults,
                         ignored-tests, ignored-suites,
                         seconds, microseconds, allocation)
@@ -164,53 +161,85 @@ define method read-log-file
     block ()
       read-log-file-section();
     exception (e :: <end-of-stream-error>)
-      application-error(#"end-of-file",
-                        "Error parsing report: End of file reached.\n%s\n",
+      application-error("Error parsing report: End of file reached.\n%s\n",
                         $testworks-message);
     end block
   end block
-end method read-log-file;
+end function;
 
-define method read-log-file
+define function read-log-report
+    (stream :: <stream>, path :: <string>, #key ignored-tests = #[], ignored-suites = #[])
+ => (result :: <result>)
+  // Skip past the report header line.
+  block (exit-block)
+    while (#t)
+      let line = read-line(stream, on-end-of-stream: #f)
+        | application-error("%s doesn't appear to be a Testworks log report.\n%s\n",
+                            path, $testworks-message);
+      if (line = $test-log-header)
+        exit-block();
+      end;
+    end;
+  end block;
+  read-log-report-1(stream, ignored-tests: ignored-tests, ignored-suites: ignored-suites)
+    | application-error("There are no matching results in log file %s\n%s\n",
+                        path, $testworks-message)
+end function;
+
+define function read-report
     (path :: <string>, #key ignored-tests = #[], ignored-suites = #[])
  => (result :: <result>)
-  let xml? = with-open-file(stream = path)
-               read-line(stream) = $xml-version-header
-             end;
-  if (xml?)
-    read-xml-file(path, ignored-tests: ignored-tests, ignored-suites: ignored-suites);
-  else
-    with-open-file (stream = path)
-      block (return)
-        while (#t)
-          let line = read-line(stream, on-end-of-stream: #f);
-          select (line by \=)
-        #f =>
-          application-error(#"start-token-not-found",
-                            "The log file '%s' doesn't contain any log information.\n%s\n",
-                                path, $testworks-message);
-        $test-log-header =>
-          return(#"plain");
-        otherwise =>
-          #f;
-          end
-        end
-      end;
-      read-log-file(stream, ignored-tests: ignored-tests, ignored-suites: ignored-suites)
-        | application-error(#"no-matching-results",
-                        "There are no matching results in log file %s\n%s\n",
-                        path, $testworks-message)
-    end with-open-file
-  end if
-end method read-log-file;
+  let reader = select (locator-extension(as(<file-locator>, path)) by \=)
+                 "xml" => read-xml-report;
+                 "json" => read-json-report;
+                 otherwise => read-log-report; // .log and...who knows what else!
+               end;
+  with-open-file (stream = path)
+    // I'm passing path here for convenience of error reporting, but I think we can
+    // remove it and just do the error handling at top level where the path is known.
+    // -cgay 2019
+    reader(stream, path, ignored-tests: ignored-tests, ignored-suites: ignored-suites)
+  end
+end function;
 
-define method read-xml-file
-    (pathname :: <string>,
-     #key ignored-tests = #[], ignored-suites = #[])
- => (result :: false-or(<result>))
-  let text = with-open-file(stream = pathname)
-               read-to-end(stream)
-             end;
+define function read-json-report
+    (stream :: <stream>, path :: <string>, #key ignored-tests = #[], ignored-suites = #[])
+ => (result :: <result>)
+  // The json report is one top-level json "object" (i.e., <string-table>)
+  // representing a suite.
+  local method table-to-result (t) // See result-to-table:%testworks:testworks
+          let type = t["type"];
+          let name = t["name"];
+          let reason = t["reason"];
+          let status = parse-status(t["status"], reason);
+          if (string-equal-ic?(type, "check"))
+            make(<check-result>, name: name, status: status, reason: reason)
+          else
+            let result-class
+              = select (type by string-equal-ic?)
+                  "suite" => <suite-result>;
+                  "test" => <test-result>;
+                  "benchmark" => <benchmark-result>;
+                  otherwise =>
+                    error("unexpected test result type in report: %= (pathname = %s)", type, path);
+                end;
+            make(result-class,
+                 name: name,
+                 status: status,
+                 reason: reason,
+                 seconds: t["seconds"],
+                 microseconds: t["microseconds"],
+                 bytes: t["bytes"],
+                 subresults: map(table-to-result, t["children"]))
+          end if
+        end method;
+  table-to-result(parse-json(stream))
+end function;
+
+define function read-xml-report
+    (stream :: <stream>, path :: <string>, #key ignored-tests = #[], ignored-suites = #[])
+ => (result :: <result>)
+  let text = read-to-end(stream);
   let xml :: false-or(xml/<document>) = xml/parse-document(text);
   if (xml)
     // The basic format of the document is
@@ -218,9 +247,9 @@ define method read-xml-file
     let root-suite = child-named(xml/root(xml), #"suite");
     convert-xml-node(root-suite, ignored-tests, ignored-suites)
   else
-    error("XML document %s didn't parse correctly.", pathname);
+    error("XML document %s didn't parse correctly.", path);
   end
-end method read-xml-file;
+end function;
 
 define method convert-xml-node
     (node :: xml/<element>, ignored-tests :: <sequence>, ignored-suites :: <sequence>)

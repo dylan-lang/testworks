@@ -1,4 +1,4 @@
-Module:       testworks-report
+Module:       testworks-report-lib
 Synopsis:     A tool to generate reports from test run logs
 Author:       Shri Amit, Andy Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
@@ -36,7 +36,7 @@ define method print-result-reason
   format-out("%s  %s %s%s\n",
              indent, name, status-name(result.result-status),
              if (result.result-reason)
-               format-to-string(" [%s]", reason)
+               format-to-string(" [%s]", result.result-reason)
              else
                ""
              end);
@@ -214,12 +214,52 @@ end method diff-report-function;
 define method diff-summary-report-function
     (result :: <comparison-result>) => ()
   format-out("Comparison Summary:\n");
-  summarize(result, "Suite");
-  summarize(result, "Test");
-  summarize(result, "Check");
-  summarize(result, "Benchmark");
+  summarize(result, "suite");
+  summarize(result, "test");
+  summarize(result, "check");
+  summarize(result, "benchmark");
 end method diff-summary-report-function;
 
+define method print-benchmark-result-header () => ()
+  print-one-benchmark-result("Benchmark", "Time (sec)", "Bytes allocated");
+  format-out("%s\n", $benchmark-result-divider);
+end method;
+
+define method print-one-benchmark-result
+    (name :: <string>, time :: <string>, allocation :: <string>) => ()
+  local method pad-to (name, columns, align-left?)
+          let len = size(name);
+          if (len > columns)
+            name
+          else
+            let filler = make(<string>, size: columns - len, fill: ' ');
+            if (align-left?)
+              concatenate(name, filler)
+            else
+              concatenate(filler, name)
+            end if
+          end if
+        end method;
+  format-out("    %s %s   %s\n",
+             pad-to(name, 50, #t),
+             pad-to(time, 10, #f),
+             pad-to(allocation, 12, #f));
+end method;
+
+define constant $benchmark-result-divider
+  = "    -------------------------------------------------------------------------------";
+
+define method print-benchmark-result-footer
+    (title :: <string>, time :: <string>,
+     allocation :: <string>, crashes :: <integer>, #key divider? = #t)
+ => ()
+  divider? & format-out("%s\n", $benchmark-result-divider);
+  print-one-benchmark-result(title, time, allocation);
+  if (crashes > 0)
+    format-out("\n    [*] %d benchmark%s crashed.\n", crashes, plural(crashes));
+  end if;
+end method;
+                                        
 define method benchmark-diff-report-function
     (top-result :: <comparison-result>, #key show-all? :: <boolean>)
  => ()

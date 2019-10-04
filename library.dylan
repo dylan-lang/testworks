@@ -10,6 +10,7 @@ define library testworks
   use command-line-parser;
   use common-dylan,
     import: { common-dylan, threads };
+  use json;
   use io,
     import: { format, print, standard-io, streams };
   use coloring-stream;
@@ -87,7 +88,8 @@ end module testworks;
 
 // Internals, for use by test suite.
 define module %testworks
-  use coloring-stream;
+  use coloring-stream,
+    rename: { $reset-attributes => $reset-text-attributes };
   use command-line-parser;
   use common-dylan, exclude: { format-to-string };
   use date,
@@ -96,6 +98,8 @@ define module %testworks
   use file-system,
     prefix: "fs/";
   use format;
+  use json,
+    import: { encode-json };
   use locators,
     import: { <directory-locator>,
               <file-locator>,

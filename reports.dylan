@@ -77,13 +77,12 @@ define method print-result-summary
                         else
                           as(<float>, passes) / total
                         end;
-  local method count-to-attributes (value :: <integer>,
-                                    desired :: <text-attributes>)
+  local method count-to-text-attributes (value :: <integer>, desired :: <text-attributes>)
          => (attr :: <text-attributes>)
           if (value > 0)
             desired
           else
-            $count-attributes
+            $count-text-attributes
           end if
         end;
   /*
@@ -94,9 +93,9 @@ define method print-result-summary
     Ran 1455 checks: 1455 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
   */
   format(stream, "  Ran %=%s%= %s%s",
-         $total-attributes,
+         $total-text-attributes,
          total,
-         $reset-attributes,
+         $reset-text-attributes,
          name,
          if (total == 1) "" else "s" end);
   // If nothing ran, skip the details to make it obvious.
@@ -104,25 +103,25 @@ define method print-result-summary
     format(stream, "\n");
   else
     format(stream, ": %=%s%= passed (%s%%)",
-           $count-attributes, passes, $reset-attributes, percent);
+           $count-text-attributes, passes, $reset-text-attributes, percent);
     // If 100% passed, skip details.
     if (total = passes)
       format(stream, "\n");
     else
       format(stream, ", %=%s%= failed, %=%s%= skipped, "
                "%=%s%= not implemented, %=%s%= crashed\n",
-             count-to-attributes(failures, $failed-attributes),
+             count-to-text-attributes(failures, $failed-text-attributes),
              failures,
-             $reset-attributes,
-             count-to-attributes(not-executed, $skipped-attributes),
+             $reset-text-attributes,
+             count-to-text-attributes(not-executed, $skipped-text-attributes),
              not-executed,
-             $reset-attributes,
-             count-to-attributes(not-implemented, $not-implemented-attributes),
+             $reset-text-attributes,
+             count-to-text-attributes(not-implemented, $not-implemented-text-attributes),
              not-implemented,
-             $reset-attributes,
-             count-to-attributes(crashes, $crashed-attributes),
+             $reset-text-attributes,
+             count-to-text-attributes(crashes, $crashed-text-attributes),
              crashes,
-             $reset-attributes);
+             $reset-text-attributes);
     end;
   end;
 end method print-result-summary;
@@ -240,9 +239,9 @@ define method summary-report-function
   let result-status = result.result-status;
   format(stream, "\n%s %=%s%= in %s seconds:\n",
          result.result-name,
-         result-status-to-attributes(result-status),
+         result-status-to-text-attributes(result-status),
          result-status.status-name.as-uppercase,
-         $reset-attributes,
+         $reset-text-attributes,
          result.result-time);
   local method print-class-summary (result, name, class) => ()
           print-result-summary(result, name, stream,
@@ -521,3 +520,39 @@ define function surefire-report-function
      collect-suite-results(result));
   format(stream, "</testsuites>\n");
 end function surefire-report-function;
+
+/// JSON report
+
+define function json-report-function (result :: <result>, stream :: <stream>) => ()
+  encode-json(stream, result);
+end;
+
+define method encode-json (stream :: <stream>, result :: <result>)
+  encode-json(stream, result-to-table(result));
+end;
+
+// It's easier to convert to <table> and let the json library do the actual
+// object formatting.
+
+define method result-to-table (result :: <result>) => (t :: <table>)
+  let t = make(<string-table>, size: 8);
+  t["type"] := result-type-name(result);
+  t["name"] := result.result-name;
+  t["status"] := result.result-status;
+  t["reason"] := result.result-reason;
+  t
+end;
+
+define method result-to-table (result :: <metered-result>) => (t :: <table>)
+  let t = next-method();
+  t["seconds"] := result.result-seconds;
+  t["microseconds"] := result.result-microseconds;
+  t["bytes"] := result.result-bytes;
+  t
+end;
+
+define method result-to-table (result :: <component-result>) => (t :: <table>)
+  let t = next-method();
+  t["children"] := result.result-subresults;
+  t
+end;

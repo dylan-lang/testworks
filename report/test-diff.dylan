@@ -1,4 +1,4 @@
-Module:       testworks-report
+Module:       testworks-report-lib
 Synopsis:     A tool to generate reports from test run logs
 Author:       Shri Amit, Andy Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
@@ -162,8 +162,8 @@ end method create-comparison-result;
 define method create-comparison-result
     (path1 :: <string>, path2 :: <string>)
  => (comp-result :: <comparison-result>)
-  let result1 = read-log-file(path1);
-  let result2 = read-log-file(path2);
+  let result1 = read-report(path1);
+  let result2 = read-report(path2);
   create-comparison-result(result1, result2)
 end method create-comparison-result;
 
@@ -174,11 +174,11 @@ define class <log-comparison-result> (<comparison-result>)
 end class <log-comparison-result>;
 
 define method perform-test-diff
-    (#key log1, log2, result1, result2, report-function = diff-report-function,
+    (#key path1, path2, result1, result2, report-function = diff-report-function,
           tolerance :: <integer> = $default-benchmark-tolerance)
  => ()
-  let result1 = result1 | read-log-file(log1);
-  let result2 = result2 | read-log-file(log2);
+  let result1 = result1 | read-report(path1);
+  let result2 = result2 | read-report(path2);
   dynamic-bind(*benchmark-tolerance* = tolerance)
     let (identical?, subresults) = compare-results(result1, result2);
     let result = make(<log-comparison-result>,
