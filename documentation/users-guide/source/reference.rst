@@ -7,12 +7,6 @@ Testworks Reference
 .. contents::  Contents
    :local:
 
-.. 1  The Testworks Module
-     1.1  Suites, Tests, and Benchmarks
-     1.2  Assertions
-     1.3  Checks
-     1.4  Test Execution
-
 See also: :doc:`usage`
 
 
@@ -84,6 +78,122 @@ Suites, Tests, and Benchmarks
 
    *cleanup-function* is executed after all sub-suites and tests have
    completed, regardless of whether an error is signaled.
+
+
+.. macro:: interface-specification-suite-definer
+
+   Define a test suite to verify an API.
+
+   :signature: define interface-specification-suite *suite-name* () *specs* end;
+   :parameter suite-name: Name of the suite; a Dylan variable name.
+
+   This macro is useful to verify that public interfaces to your library
+   don't change unintentionally.
+
+   *specs* are clauses separated by semicolons, specifying the attributes of an
+   exported name. Each *spec* looks much like the definition of the name being
+   tested. The following example has one of each kind of spec:
+
+   .. code-block:: dylan
+
+      define interface-specification-suite time-specification-suite ()
+        sealed instantiable abstract class <time> (<object>);
+        generic function parse-time (<string>, #"key") => (<time>);
+        variable *foo* :: <string>;
+        constant $unix-epoch :: <time>;
+      end;
+
+   The following sections explain the syntax of each kind of spec in
+   detail. Note that there is no way to verify macros automatically and
+   therefore there is no "macro" spec.
+
+   class specs
+
+     Syntax: *modifiers* class *name* (*superclasses*);
+
+     *modifiers*
+
+       ``sealed`` or ``open``, ``primary`` or ``free``, ``abstract`` or
+       ``concrete``, and ``instantiable``. Currently the first two pairs are
+       unused, but you may want to specify them anyway, to keep the spec in
+       sync with the code.
+
+       If ``instantiable`` is specified, Testworks will try to make an instance
+       of *name* by calling ``make`` with no arguments. If your class requires
+       init arguments, you must define a method on ``make-test-instance``:
+
+       .. code-block:: dylan
+
+         define method make-test-instance
+             (class == <my-class>) => (instance :: <my-class>)
+           make(<my-class>, ...init args...)
+         end
+
+     *name*
+
+       Name of the class to verify.
+
+     *superclasses*
+
+       Comma-separated list of superclass names.
+
+   function specs
+
+     Syntax: *modifiers* function *name* (*parameter-types*) => (*value-types*);
+
+     *modifiers*
+
+       ``generic``
+
+     *name*
+
+       Name of the function. Note that function specs should be used for
+       functions created with ``define function`` (which are really just bare
+       methods bound to a name as with ``define constant m = method() ... end``)
+       and for generic functions.
+
+     *parameter-types*
+
+       Comma-separated list of parameter type names, possibly empty. Where
+       ``#rest``, ``#key``, and ``#all-keys`` appear in the corresponding
+       function definition, use ``#"rest"``, ``#"key"``, and ``#"all-keys"``
+       instead (i.e., with double quotes). Keyword arguments are specified
+       *without* type qualifiers.  Examples from the dylan-test-suite:
+
+       .. code-block:: dylan
+
+          open generic function make
+              (<type>, #"rest", #"key", #"all-keys") => (<object>);
+          open generic function copy-sequence
+              (<sequence>, #"key", #"start", #"end") => (<sequence>);
+
+     *value-types*
+
+       Comma-separated list of return value type names, possibly empty.
+
+   variable specs
+
+     Syntax: variable *name* :: *type*;
+
+     *name*
+
+       Name of the variable.
+
+     *type*
+
+       Type of the variable.
+
+   constant specs
+
+     Syntax: constant *name* :: *type*;
+
+     *name*
+
+       Name of the constant.
+
+     *type*
+
+       Type of the constant.
 
 Assertions
 ----------

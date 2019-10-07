@@ -7,20 +7,7 @@ Testworks Usage
 .. contents::  Contents
    :local:
 
-.. 1  Quick Start
-   2  Defining Tests
-     2.1  Assertions
-     2.2  Tests
-     2.3  Benchmarks
-     2.4  Suites
-   3  Organizing Your Test Suites
-   4  Running Your Tests As A Stand-alone Application
-   5  Reports
-   6  Comparing Test Results
-   7  Test Specifications
-   8  Generating Test Specifications
-
-Testworks is the Dylan unit testing harness.
+Testworks is the Dylan unit testing library.
 
 See also: :doc:`reference`
 
@@ -32,86 +19,43 @@ know to use Testworks.
 
 Add ``use testworks;`` to both your test library and test module.
 
-Tests contain arbitrary code plus assertions:
+Tests contain arbitrary code and at least one assertion:
 
 .. code-block:: dylan
 
-   // Test fn1
-   define test fn1-test ()
+   define test test-fn1 ()
      let v = do-something();
      assert-equal(fn1(v), "expected-value");
      assert-equal(fn1(v, key: 7), "seven", "regression test for bug/12345");
    end;
 
-Benchmarks do not require any assertions and are automatically given
-the "benchmark" tag:
-
-.. code-block:: dylan
-
-   // Benchmark fn1
-   define benchmark fn1-benchmark ()
-     fn1()
-   end;
+If a test contains no assertions it will be marked "not implemented" when the
+tests are run.
 
 See also: :func:`assert-true`, :func:`assert-false`,
 :func:`assert-signals`, and :func:`assert-no-errors`.  Each of these
 takes an optional *description* argument, which can be used to
 indicate the intent of the assertion if it isn't clear.
 
-If you have an exceedingly large or complex test library, "suites" may
-be used to organize tests into groups (e.g., one per module) and may
-be nested arbitrarily.  When using suites, it is common to have a
-top-level suite named *my-library*-test-suite that contains the
-rest.
+Benchmarks do not require any assertions and are automatically given
+the "benchmark" tag:
 
 .. code-block:: dylan
 
-   // Top-level test suite for the "example" library.
-   define suite example-test-suite ()
-     suite module1-test-suite;
-     suite module2-test-suite;
-     test fn1-test;
-     test fn2-test;
-     benchmark fn1-benchmark;
+   define benchmark benchmark-fn1 ()
+     fn1()
    end;
 
-**Note** that when using suites you must remember to add every test or
-sub-suite to the top level test suite (transitively) and suites must
-be defined textually *after* the other suites and tests they contain.
-
-Your test library should call :func:`run-test-application` to parse
-the Testworks command-line options and run the requested tests.  It
-may be called with no arguments to run all tests and benchmarks
-directly, or it can be called with a suite to run only that suite::
+Your test executable should call :func:`run-test-application` to parse the
+Testworks command-line options and run the tests.  It may be called with no
+arguments to run all tests and benchmarks::
 
   run-test-application()           // Run all tests and benchmarks.
-  run-test-application(my-suite)   // Run everything in my-suite.
 
-The main difference is in what the output looks like. With suites it's
-a little bit more structured and verbose. Without suites it's flat.
+Use ``my-test-app --help`` to see the Testworks command-line options, which
+provide various output formats, ways to run specific tests, etc.
 
-Note that if you specify a suite to run it is up to you to ensure that all
-tests and suites have been added to that suite. Otherwise you may be skipping
-some tests. Calling ``run-test-application()`` with no arguments will ensure
-that all tests are run.
-
-The Testworks command-line (assuming your test executable is
-"foo-test")::
-
-  foo-test --help                # See command-line options.
-  foo-test --tag=benchmark       # Run only the benchmarks.
-  foo-test --tag=-benchmark      # Run only the tests.
-  foo-test --suite=my-sub-suite  # Run only my-sub-suite
-  foo-test --test=my-test        # Run only my-test
-
-When using suites, you may want to have both an "foo-test" library,
-which exports your top-level test suite so it can be included as a
-sub-suite in other testing libraries, and a "foo-test-app" executable,
-which can be used to run just the tests for "foo" itself.  See
-`Running Your Tests As A Stand-alone Application`_.
-
-**TODO**: describe how to test definitions that aren't exported by the module-under-test.
-
+See `Suites`_ for a way to organize large test suites.
 
 Defining Tests
 ==============
@@ -127,10 +71,11 @@ error.  As an example, in
 
     assert-true(foo > bar)
 
-the expression ``foo > bar`` is compared to ``#f``, and the result is
-recorded by the test harness.  Failing (or crashing) assertions do not
-cause the test to terminate; all assertions are run unless the test
-itself signals an error. (**NOTE:** This behavior will probably change.)
+the expression ``foo > bar`` is compared to ``#f``, and the result is recorded
+by the test harness.  Failing (or crashing) assertions do not cause the test to
+terminate; all assertions are run unless the test itself signals an
+error. (**NOTE:** See https://github.com/dylan-lang/testworks/issues/86 for
+plans to change this behavior.)
 
 See the :doc:`reference` for detailed documentation on the available
 assertion macros:
@@ -150,7 +95,7 @@ description isn't provided, Testworks makes one from the expressions
 passed to the assertion macro. For example, ``assert-true(2 > 3)``
 produces this failure message::
 
-  (2 > 3) is true failed [expression "(2 > 3)" evaluates to #f, not a true value.]
+  (2 > 3) is true failed [expression "(2 > 3)" evaluates to #f]
 
 In general, Testworks should be pretty good at reporting the actual
 values that caused the failure so it shouldn't be necessary to include
@@ -174,7 +119,7 @@ assertions. Each test may be part of a suite.  Use the
 
 .. code-block:: dylan
 
-    define test NAME (#key DESCRIPTION, EXPECTED-FAILURE?, TAGS)
+    define test NAME (#key EXPECTED-FAILURE?, TAGS)
       BODY
     end;
 
@@ -182,7 +127,7 @@ For example:
 
 .. code-block:: dylan
 
-    define test my-test (description: "A sample test")
+    define test my-test ()
       assert-equal(2, 3);
       assert-equal(#f, #f);
       assert-true(identity(#t), "Check identity function");
@@ -301,6 +246,7 @@ suite of their own.  Example:
      suite strings-benchmarks;
    end;
 
+**TODO**: link to ``benchmark-repeat`` reference doc when written
 
 Suites
 ------
@@ -312,7 +258,7 @@ format is:
 
 .. code-block:: dylan
 
-    define suite NAME (#key description, setup-function, cleanup-function)
+    define suite NAME (#key setup-function, cleanup-function)
         test TEST-NAME;
         benchmark BENCHMARK-NAME;
         suite SUITE-NAME;
@@ -322,18 +268,17 @@ For example:
 
 .. code-block:: dylan
 
-    define suite first-suite (description: "my first suite")
+    define suite first-suite ()
       test my-test;
       test example-test;
       test my-test-2;
       benchmark my-benchmark;
     end;
+
     define suite second-suite ()
       suite first-suite;
       test my-test;
     end;
-
-**TODO**: how is the description used?
 
 Suites can specify setup and cleanup functions via the keyword
 arguments ``setup-function`` and ``cleanup-function``. These can be
@@ -356,8 +301,52 @@ command-line args, execute tests and benchmarks, and generate reports.
 See the next section for details.
 
 
-Organizing Your Tests
-=====================
+Interface Specification Suites
+==============================
+
+The :macro:`interface-specification-suite-definer` macro creates a normal test
+suite, much like ``define suite`` does, but based on an interface
+specification. For example,
+
+.. code-block:: dylan
+
+   define interface-specification-suite time-specification-suite ()
+     sealed instantiable class <time> (<object>);
+     constant $utc :: <zone>;
+     variable *zone* :: <zone>;
+     sealed generic function in-zone (<time>, <zone>) => (<time>);
+     function now (#"key", #"zone") => (<time>);
+     ...
+   end;
+
+The specification usually has one clause, or "spec", for each name exported
+from your public interface module. Each spec creates a test named
+``test-{name}-specification`` to verify that the implementation matches the
+spec for ``{name}``. For example, by checking that the names are bound, that
+their bindings have the correct types, that functions accept the right number
+and types of arguments, etc.
+
+Specification suites are otherwise just normal suites. They may include other
+arbitrary tests and child suites if desired:
+
+.. code-block:: dylan
+
+   define interface-specification-suite time-suite ()
+     ...
+     test test-time-still-moving-forward;
+     suite time-travel-test-suite;
+   end;
+
+This also means that if your interface is large you may use multiple
+:macro:`interface-specification-suite-definer` forms and then group them
+together.
+
+See :macro:`interface-specification-suite-definer` for more details on the
+various kinds of specs.
+
+
+Organizing Tests for One Library
+================================
 
 If you don't use suites, the only organization you need is to name
 your tests and benchmarks uniquely, and you can safely skip the rest
@@ -372,7 +361,8 @@ test suite named xxx-test-suite, which is further subdivided into
 sub-suites, tests, and benchmarks as appropriate for that library.
 Some suites may be exported so that they can be included as a
 component suite in combined test suites that cover multiple related
-libraries.
+libraries. (The alternative to this approach is running each library's
+tests as a separate executable.)
 
 The overall structure of a test library that is intended to be
 included in a combined test library may look something like this:
@@ -380,6 +370,7 @@ included in a combined test library may look something like this:
 .. code-block:: dylan
 
     // --- library.dylan ---
+
     define library xxx-tests
       use common-dylan;
       use testworks;
@@ -395,12 +386,6 @@ included in a combined test library may look something like this:
     end;
 
     // --- main.dylan ---
-    define suite xxx-test-suite ()
-      test my-awesome-test;
-      benchmark my-awesome-benchmark;
-      suite my-awesome-other-suite;
-      ...
-    end;
 
     define test my-awesome-test ()
       assert-true(...);
@@ -412,6 +397,12 @@ included in a combined test library may look something like this:
       awesomely-slow-function();
     end;
 
+    define suite xxx-test-suite ()
+      test my-awesome-test;
+      benchmark my-awesome-benchmark;
+      suite my-awesome-other-suite;
+      ...
+    end;
 
 Running Your Tests As A Stand-alone Application
 ===============================================
@@ -505,165 +496,8 @@ Comparing Test Results
 
 *** To be filled in ***
 
+Quick version:
 
-Test Specifications
-===================
-
-Test specifications are written using the ``testworks-specs`` library
-along side the usual ``testworks`` library.
-
-While tests are normally structured as a hierarchy of test suites
-containing tests, specifications follow a structure more like Dylan
-code:
-
-* Library specifications.
-* Module specifications.
-* Class, function, constant, variable and macro specifications.
-
-Library and module specifications are typically placed in a file
-named ``specification.dylan`` which is listed last in the associated
-LID file.
-
-These specifications consist of two sorts of checks:
-
-* An automated validation that the interface in the specification
-  matches what the library actually provides.
-* The usual tests, provided by the programmer.
-
-Library Specifications
-----------------------
-
-A library specification lists the modules that the library contains
-as well as additional tests and suites which should be run when the
-library specification is checked.
-
-.. code-block:: dylan
-
-   define library-spec io ()
-     module streams;
-     module pprint;
-
-     suite format-test-suite;
-   end library-spec io;
-
-Due to implementation issues, the *library-spec* must be parsed by the
-Dylan compiler **after** the module specifications that are listed as
-well as after any of the additional suites or tests.
-
-Module Specifications
----------------------
-
-A module specification lists the bindings that are exported by the
-module. These bindings are expressed in a format similar to the usual
-definitions.
-
-A simple module specification might look like:
-
-.. code-block:: dylan
-
-   define module-spec pprint ()
-     variable *print-miser-width*   :: false-or(<integer>);
-     variable *default-line-length* :: <integer>;
-
-     sealed instantiable class <pretty-stream> (<stream>);
-
-     function pprint-logical-block (<stream>) => ();
-     function pprint-newline (one-of(#"linear", #"fill", #"miser", #"mandatory"), <stream>) => ();
-     function pprint-indent (one-of(#"block", #"current"), <integer>, <stream>) => ();
-     function pprint-tab (one-of(#"line", #"line-relative", #"section", #"section-relative"), <integer>, <integer>, <stream>) => ();
-
-     macro-test printing-logical-block-test;
-   end module-spec pprint;
-
-   define module-spec print ()
-     ...
-     open generic-function print-object (<object>, <stream>) => ();
-     ...
-   end module-spec print;
-
-There are a couple of things to note here:
-
-* Macros are mentioned as ``macro-test`` and their test names have ``-test``
-  appended to the macro name already.
-* Generic functions are listed as ``generic-function``.
-* Generic functions, regular functions and classes can have adjectives listed.
-
-Actual Tests
-------------
-
-Once your library and module specifications have been written, you can provide
-actual test implementations for each of your specified bindings. In fact, you
-must provide at least an empty test for each binding listed in your module
-specifications.
-
-These are done using the ``class-test``, ``function-test``, ``variable-test``,
-``constant-test`` and ``macro-test`` definer macros.
-
-These all follow the same pattern, demonstrated here for a function test:
-
-.. code-block:: dylan
-
-   define pprint function-test pprint-newline ()
-     //---*** Fill this in...
-   end function-test pprint-newline;
-
-You can see that the *module name* is given as an adjective between ``define``
-and ``function-test``.
-
-Within the test implementation, you can use all of the usual ``testworks``
-checks and assertions. Unlike tests defined via ``define test``, tests
-defined using ``testworks-specs`` default to not failing when they are
-not yet implemented.
-
-Testing Classes
----------------
-
-When testing classes, there are a couple of additional things to be aware
-of. If your class is ``instantiable``, as indicated by using the adjective
-``instantiable`` on your class binding in the module specification, then
-``testworks-specs`` will attempt to instantiate your class to be sure that
-it can do so without errors. If your class requires parameters or anything
-special, then you will need to provide a specialization of the generic function
-``make-test-instance``:
-
-.. code-block:: dylan
-
-   define sideways method make-test-instance
-       (class == <machine-word>)
-    => (instance :: <machine-word>)
-     make(<machine-word>, value: 1729)
-   end method make-test-instance;
-
-Additionally, you may optionally provide a specialization of the generic
-function ``class-test-function`` which will be automatically run by
-``testworks-specs`` and should return a function which will then be run
-by ``testworks-specs`` to perform additional tests for the class. An example
-of this can be found in ``sources/dylan/tests/numbers.dylan``.
-
-Multiple Tests
---------------
-
-In many situations, multiple tests for a single binding are required. The way
-that this should be done using ``testworks-specs`` is currently evolving.
-
-*** To be filled in ***
-
-Examples
---------
-
-There are many examples of tests using ``testworks-specs`` in the Open Dylan
-code base:
-
-* ``sources/common-dylan/tests/``
-* ``sources/duim/tests/``
-* ``sources/dylan/tests/``
-* ``sources/io/tests/``
-* ``sources/lib/jam/tests/``
-* ``sources/lib/llvm/tests/``
-* ``sources/system/tests/``
-
-Generating Test Specifications
-==============================
-
-*** To be filled in ***
-
+*  (master branch)$ my-test-suite --report json --report-file out1.json
+*  (your branch)$ my-test-suite --report json --report-file out2.json
+*  $ testworks-report out1.json out2.json
