@@ -38,12 +38,12 @@ end;
 
 define method result-type-name
     (result :: <benchmark-result>) => (name :: <string>)
-  "Benchmark"
+  "benchmark"
 end;
 
 define method result-type-name
     (result :: <benchmark-iteration-result>) => (name :: <string>)
-  "Iteration"
+  "iteration"
 end;
 
 define thread variable *benchmark-recording-function* = always(#f);
