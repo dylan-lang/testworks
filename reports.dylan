@@ -538,7 +538,7 @@ define method result-to-table (result :: <result>) => (t :: <table>)
   let t = make(<string-table>, size: 8);
   t["type"] := result-type-name(result);
   t["name"] := result.result-name;
-  t["status"] := result.result-status;
+  t["status"] := status-name(result.result-status);
   t["reason"] := result.result-reason;
   t
 end;

@@ -17,7 +17,7 @@ define method parse-status
   select (status-string by \=)
     "passed" => $passed;
     "failed" => $failed;
-    "crashed" => recreate-error(reason);
+    "crashed" => $crashed;
     "skipped" => $skipped;
     "failed as expected" => $expected-failure;
     "unexpectedly succeeded" => $unexpected-success;
@@ -333,14 +333,3 @@ define method find
     end;
   end
 end method find;
-
-
-define class <recreated-error> (<error>)
-end class <recreated-error>;
-
-define method recreate-error
-    (string :: <string>) => (error :: <recreated-error>)
-  make(<recreated-error>,
-       format-string: "%s",
-       format-arguments: vector(string))
-end method recreate-error;
