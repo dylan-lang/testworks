@@ -1,84 +1,23 @@
 Module: testworks-test-suite
 
-define interface-specification-suite %testworks-interface-specification-test-suite ()
-  abstract class <runnable> (<component>);
-  class <benchmark> (<runnable>);
-  class <check-result> (<unit-result>);
-  class <component-result> (<result>);
-  class <component> (<object>);
-  class <result> (<object>);
-  class <suite-result> (<component-result>);
-  class <suite> (<component>);
-  class <test-result> (<component-result>);
-  class <test-unit-result> (<test-result>, <unit-result>);
-  class <test-unit> (<test>);
-  class <test> (<runnable>);
-  class <unit-result> (<result>);
-  constant $crashed :: <object>;
-  constant $default :: <object>;
-  constant $failed :: <object>;
-  constant $not-implemented :: <object>;
-  constant $passed :: <object>;
-  constant $skipped :: <object>;
-  constant $test-log-footer :: <object>;
-  constant $test-log-header :: <object>;
-  constant $verbose :: <object>;
-  constant $xml-version-header :: <object>;
-  function component-name (<component>) => (<string>);
-  function debug-failures? () => (<boolean>);
-  function debug? () => (<boolean>);
-  function do-results (<object>, <object>) => (#"rest");
-  function failures-report-function (<result>, <stream>) => ();
-  function full-report-function (<result>, <stream>) => ();
-  function log-report-function (<result>, <stream>) => ();
-  function make-runner-from-command-line (<component>, <command-line-parser>) => (<component>, <test-runner>, <function>);
-  function make-suite (<string>, <object>, #"rest") => (<suite>);
-  function null-report-function (<result>, <stream>) => ();
-  function parse-args (<sequence>) => (<command-line-parser>);
-  function parse-tags (<sequence>) => (<sequence>);
-  function plural (<integer>) => (<string>);
-  function result-bytes (<metered-result>) => (false-or(<integer>));
-  function result-microseconds (<metered-result>) => (false-or(<integer>));
-  function result-name (<result>) => (<string>);
-  function result-reason (<result>) => (false-or(<string>));
-  function result-seconds (<metered-result>) => (false-or(<integer>));
-  function result-status (<result>) => (<result-status>);
-  function result-subresults (<component-result>) => (<sequence>);
-  function result-time (<metered-result>, #"key", #"pad-seconds-to") => (<string>);
-  function show-progress (<test-runner>, false-or(<component>), false-or(<result>)) => ();
-  function status-name (<result-status>) => (<string>);
-  function suite-cleanup-function (<suite>) => (<function>);
-  function suite-components (<suite>) => (<sequence>);
-  function suite-setup-function (<suite>) => (<function>);
-  function summary-report-function (<result>, <stream>) => ();
-  function surefire-report-function (<result>, <stream>) => ();
-  function tags-match? (<sequence>, <component>) => (<boolean>);
-  function test-function (<runnable>) => (<function>);
-  function test-requires-assertions? (<runnable>) => (<boolean>);
-  function test-tags (<runnable>) => (<sequence>);
-  function xml-report-function (<result>, <stream>) => ();
-  instantiable class <tag> (<object>);
-  open generic function execute-component? (<component>, <test-runner>) => (<boolean>);
-  open generic function result-type-name (<result>) => (<string>);
-  variable *check-recording-function* :: <object>;
-end;
-
 define interface-specification-suite testworks-interface-specification-test-suite ()
+  function run-test-application (#"rest") => (false-or(<result>));
+  function test-output (<string>, #"rest") => ();
+  function test-temp-directory () => (false-or(<directory-locator>));
+  open generic function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
+
+  // For extending the runner capabilities.
   function debug-runner? (<test-runner>) => (<object>);
-  function run-test-application (<component>) => (false-or(<result>));
   function run-tests (<test-runner>, <component>) => (<component-result>);
   function runner-output-stream (<test-runner>) => (<stream>);
   function runner-progress (<test-runner>) => (one-of(#f, $default, $verbose));
   function runner-skip (<test-runner>) => (<sequence>);
   function runner-tags (<test-runner>) => (<sequence>);
   function test-option (<string>, #"key", #"default") => (<string>);
-  function test-output (<string>, #"rest") => ();
-  open generic function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
   open instantiable class <test-runner> (<object>);
 end;
 
 define suite testworks-test-suite ()
-  suite %testworks-interface-specification-test-suite;
   suite testworks-interface-specification-test-suite;
   suite testworks-assertion-macros-suite;
   suite testworks-results-suite;
