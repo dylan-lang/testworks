@@ -128,7 +128,9 @@ define module %testworks
   // Components
   export
     <component>,
+    $components,
     *component*,
+    register-component,
     execute-component?,
     component-name,
     status-name;

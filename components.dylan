@@ -125,15 +125,14 @@ end;
 define constant $components = make(<stretchy-vector>);
 
 // Add `c` to `$components` or replace an existing component with the
-// same name. The reason this replaces, rather than signaling an
-// error, is because in the REPL you might want to redefine
-// components.
+// same name.
 define function register-component (c :: <component>) => ()
   let pos = find-key($components, method (comp)
                                     c.component-name = comp.component-name
                                   end);
   if (pos)
-    // TODO(cgay): log a warning here.
+    cerror("Replace the test and continue",
+           "a test named %= already exists", c.component-name);
     $components[pos] := c;
   else
     add!($components, c);
