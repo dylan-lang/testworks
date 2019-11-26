@@ -183,16 +183,16 @@ define method execute-component
           end;
         end for;
         case
-          empty?(subresults) =>
-            $not-implemented;
+          empty?(subresults)
+            => $not-implemented;
           every?(method (subresult)
                    let status = subresult.result-status;
                    status = $passed | status = $skipped | status = $expected-failure
                  end,
-                 subresults) =>
-            $passed;
-          otherwise =>
-            $failed;
+                 subresults)
+            => $passed;
+          otherwise
+            => $failed;
         end case
       cleanup
         suite.suite-cleanup-function();
@@ -235,25 +235,25 @@ define method execute-component
               bytes := allocation;
             end profiling;
         case
-          instance?(cond, <serious-condition>) =>
-            values($crashed, format-to-string("%s", cond));
-          empty?(subresults) & test.test-requires-assertions? =>
-            $not-implemented;
+          instance?(cond, <serious-condition>)
+            => values($crashed, format-to-string("%s", cond));
+          empty?(subresults) & test.test-requires-assertions?
+            => $not-implemented;
           every?(method (result :: <unit-result>) => (passed? :: <boolean>)
                    result.result-status == $passed
                  end,
-                 subresults) =>
-            if (test.expected-failure?)
-              $unexpected-success
-            else
-              $passed
-            end if;
-          otherwise =>
-            if (test.expected-failure?)
-              $expected-failure
-            else
-              $failed
-            end if;
+                 subresults)
+            => if (test.expected-failure?)
+                 $unexpected-success
+               else
+                 $passed
+               end if;
+          otherwise
+            => if (test.expected-failure?)
+                 $expected-failure
+               else
+                 $failed
+               end if;
         end
       end;
   make(component-result-type(test),
