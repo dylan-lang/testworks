@@ -14,6 +14,9 @@ define constant $expected-failure = #"expected-failure";
 define constant $unexpected-success = #"unexpected-success";
 define constant $not-implemented  = #"nyi";
 
+define constant $passing-statuses
+  = vector($passed, $skipped, $not-implemented, $expected-failure);
+
 define constant <result-status>
   = one-of($passed, $failed, $crashed, $skipped,
            $expected-failure, $unexpected-success,

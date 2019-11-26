@@ -183,11 +183,15 @@ define method execute-component
           end;
         end for;
         case
-          empty?(subresults)
+          // If all subcomponents are unimplemented the suite is unimplemented.
+          // Note that this case matches when subresults are empty.
+          every?(method (subresult)
+                   subresult.result-status = $not-implemented
+                 end,
+                 subresults)
             => $not-implemented;
           every?(method (subresult)
-                   let status = subresult.result-status;
-                   status = $passed | status = $skipped | status = $expected-failure
+                   member?(subresult.result-status, $passing-statuses)
                  end,
                  subresults)
             => $passed;
