@@ -550,3 +550,14 @@ define test test-test-temp-directory () // yes that's a lot of "test"
   assert-instance?(<directory-locator>, dir);
   assert-true(fs/file-exists?(dir));
 end;
+
+define test test-register-component--duplicate-test-name-causes-error ()
+  let n = size($components);
+  let test = make(<test>, name: "t", function: method() end);
+  assert-no-errors(register-component(test));
+  assert-equal(size($components), n + 1);
+  assert-signals(<error>, register-component(test));
+  assert-equal(size($components), n + 1); // no change
+  remove!($components, test);
+  assert-equal(size($components), n);
+end;
