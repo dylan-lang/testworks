@@ -561,3 +561,30 @@ define test test-register-component--duplicate-test-name-causes-error ()
   remove!($components, test);
   assert-equal(size($components), n);
 end;
+
+define test test-that-not-implemented-is-not-a-failure ()
+  let test = make(<test>,
+                  name: "not-implemented-test",
+                  function: method () end);
+  let suite = make(<suite>,
+                   name: "not-implemented-suite",
+                   components: vector(test));
+  let runner = make(<test-runner>, progress: #f);
+  let result = run-tests(runner, suite);
+  assert-equal($not-implemented, result.result-status);
+end;
+
+define test test-that-not-implemented-plus-passed-is-passed ()
+  let test1 = make(<test>,
+                   name: "not-implemented",
+                   function: method () end);
+  let test2 = make(<test>,
+                   name: "passed",
+                   function: method () assert-true(#t); end);
+  let suite = make(<suite>,
+                   name: "not-implemented-suite",
+                   components: vector(test1, test2));
+  let runner = make(<test-runner>, progress: #f);
+  let result = run-tests(runner, suite);
+  assert-equal($passed, result.result-status);
+end;

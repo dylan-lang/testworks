@@ -1,5 +1,5 @@
 Module:       %testworks
-Synopsis:     Components are suites and tests.
+Synopsis:     Components are suites, tests, and benchmarks.
 Author:       Shri Amit, Andrew Armstrong
 Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
               All rights reserved.
@@ -7,9 +7,7 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 
-/// This is the class of objects that can be performed in a test
-/// suite.  Note that there are no <assertion> or <check> classes so
-/// they aren't considered "components".
+// The class of objects that can be "performed" in a test suite.
 define abstract class <component> (<object>)
   constant slot component-name :: <string>,
     required-init-keyword: name:;
