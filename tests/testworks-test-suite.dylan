@@ -588,3 +588,29 @@ define test test-that-not-implemented-plus-passed-is-passed ()
   let result = run-tests(runner, suite);
   assert-equal($passed, result.result-status);
 end;
+
+define test test-included-in-suite-multiple-times ()
+  let test1 = make(<test>,
+                   name: "tarantella",
+                   function: always("tarantella"));
+  let test2 = make(<test>,
+                   name: "bach cello suites",
+                   function: always("bach cello suites"));
+  let benchmark1 = make(<benchmark>,
+                        name: "initials",
+                        function: always("initials"));
+  assert-no-errors(make(<suite>,
+                        name: "suite 1",
+                        components: list(test1, test2, benchmark1)));
+  // TODO(cgay): signal <testwork-error> throughout testworks code
+  assert-signals(<error>,
+                 make(<suite>,
+                      name: "suite 2",
+                      components: list(test1, test1)));
+  assert-signals(<error>,
+                 make(<suite>,
+                      name: "suite 3",
+                      components: list(test1, make(<suite>,
+                                                   name: "suite 4",
+                                                   components: list(test1)))));
+end test;

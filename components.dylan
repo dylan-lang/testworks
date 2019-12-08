@@ -29,6 +29,43 @@ define class <suite> (<component>)
     init-keyword: cleanup-function:;
 end class <suite>;
 
+define method make (class == <suite>, #rest args, #key) => (suite :: <suite>)
+  let suite = next-method();
+  check-for-tests-included-multiple-times(suite);
+  suite
+end;
+
+// Signal an error if any test is included in a suite more than once,
+// transitively.
+define function check-for-tests-included-multiple-times (suite :: <suite>)
+  let seen = make(<table>);
+  local method check-seen (runnable :: <runnable>)
+          let function = runnable.test-function;
+          if (element(seen, function, default: #f))
+            cerror("Continue and run the test multiple times",
+                   "test %= is included in suite %= multiple times",
+                   runnable.component-name,
+                   suite.component-name);
+          else
+            seen[function] := function;
+          end;
+        end method;
+  do-components(suite, check-seen, type: <runnable>);
+end function;
+
+// Call `function` on each component of type `type` under `component`.
+define function do-components
+    (component :: <component>, function :: <function>, #key type = <component>)
+  if (instance?(component, type))
+    function(component);
+  end;
+  if (instance?(component, <suite>))
+    for (child in component.suite-components)
+      do-components(child, function, type: type);
+    end;
+  end;
+end function;
+
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
     required-init-keyword: function:;
