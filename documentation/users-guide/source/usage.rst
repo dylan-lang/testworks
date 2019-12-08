@@ -368,6 +368,10 @@ Some suites may be exported so that they can be included as a
 component suite in combined test suites that cover multiple related
 libraries.
 
+**Note:** It is an error for a test to be included in a suite multiple times,
+even transitively. Doing so would result in a misleading pass/fail ratio, and
+it is more likely to be a mistake than to be intentional.
+
 The overall structure of a test library that is intended to be
 included in a combined test library may look something like this:
 
