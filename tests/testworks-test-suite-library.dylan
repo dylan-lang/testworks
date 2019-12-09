@@ -17,7 +17,6 @@ define library testworks-test-suite
   use system,
     import: { file-system, locators };
   use testworks;
-  use testworks-specs;
 
   export testworks-test-suite;
 end library testworks-test-suite;
@@ -34,7 +33,6 @@ define module testworks-test-suite
   use table-extensions,
     import: { table => tabling };
   use testworks;
-  use testworks-specs;
   use %testworks;
 
   export testworks-test-suite;

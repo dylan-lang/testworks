@@ -54,6 +54,17 @@ define method test-output
   end;
 end method test-output;
 
+// These are terrible (e.g. what does #f or default mean here?). Use enums or something.
+define constant <progress-option> = one-of(#f, $default, $verbose);
+define constant <debug-option> = one-of(#f, #"crashes", #t);
+
+define generic runner-tags     (runner :: <test-runner>) => (tags :: <sequence>);
+define generic runner-progress (runner :: <test-runner>) => (progress :: <progress-option>);
+define generic debug-runner?   (runner :: <test-runner>) => (debug? :: <debug-option>);
+define generic runner-skip     (runner :: <test-runner>) => (skip :: <sequence> /* of <component> */);
+define generic runner-output-stream (runner :: <test-runner>) => (stream :: <stream>);
+define generic runner-options  (runner :: <test-runner>) => (options :: <table>);
+
 // A <test-runner> holds options for the test run and collects results.
 define open class <test-runner> (<object>)
   // TODO(cgay): <report> = one-of(#"failures", #"crashes", #"none", ...)
@@ -61,9 +72,9 @@ define open class <test-runner> (<object>)
   //  init-keyword: report:;
   constant slot runner-tags :: <sequence> = #[],
     init-keyword: tags:;
-  constant slot runner-progress :: one-of(#f, $default, $verbose),
+  constant slot runner-progress :: <progress-option>,
     init-keyword: progress:;
-  constant slot debug-runner? = #f,
+  constant slot debug-runner? :: <debug-option> = #f,
     init-keyword: debug?:;
   constant slot runner-skip :: <sequence> = #[],   // of components
     init-keyword: skip:;

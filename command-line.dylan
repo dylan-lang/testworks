@@ -154,7 +154,8 @@ define function make-runner-from-command-line
                     progress: if (progress = $none) #f else progress end,
                     tags: parse-tags(get-option-value(parser, "tag")));
 
-  // TODO(cgay): runner-options are unused. Delete? What were they for?
+  // Options seem useful, but why are they positional rather than --option?
+  // i.e., what makes them so special?
   for (option in parser.positional-options)
     let (key, val) = apply(values, split(option, '=', count: 2));
     if (~val)
@@ -195,7 +196,7 @@ end function make-runner-from-command-line;
 // `<result>` if any tests are executed; otherwise `#f`.
 //
 // TODO(cgay): update callers to pass no args, then remove `components` arg.
-define method run-test-application
+define function run-test-application
     (#rest components) => (result :: false-or(<result>))
   block (return)
     // Parse command line.
@@ -245,7 +246,7 @@ define method run-test-application
     format(*standard-error*, "%s\n", condition-to-string(ex));
     exit-application(2);
   end block;
-end method run-test-application;
+end function run-test-application;
 
 define function list-components
     (runner :: <test-runner>, start-suite :: <component>, what :: <string>)

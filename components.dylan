@@ -20,6 +20,10 @@ define function full-component-name (c :: <component>) => (name :: <string>)
   c.component-name
 end;
 
+define generic suite-components (suite :: <suite>) => (components :: <sequence> /* of <component> */);
+define generic suite-setup-function (suite :: <suite>) => (function :: <function>);
+define generic suite-cleanup-function (suite :: <suite>) => (function :: <function>);
+
 define class <suite> (<component>)
   constant slot suite-components :: <sequence> /* of <component> */ = #[],
     init-keyword: components:;
@@ -65,6 +69,10 @@ define function do-components
     end;
   end;
 end function;
+
+define generic test-tags (r :: <runnable>) => (tags :: <sequence> /* of <tag> */);
+define generic test-function (r :: <runnable>) => (fn :: <function>);
+define generic test-requires-assertions? (r :: <runnable>) => (required? :: <boolean>);
 
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,

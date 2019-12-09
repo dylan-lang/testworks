@@ -83,6 +83,14 @@ define module testworks
   // Options
   create
     test-option;
+
+  // Specs
+  create
+    interface-specification-suite-definer,
+    interface-specification-classes,
+    interface-specification-class-instantiable?,
+    make-test-instance,
+    destroy-test-instance;
 end module testworks;
 
 
@@ -211,4 +219,16 @@ define module %testworks
     <tag>,
     parse-tags,
     tags-match?;
+
+  // Specs classes
+  export <definition-spec>,
+         <constant-spec>,
+         <variable-spec>,
+         <class-spec>,
+         <function-spec>;
+
+  // Specs accessors
+  export spec-name,
+         spec-title;
+
 end module %testworks;
