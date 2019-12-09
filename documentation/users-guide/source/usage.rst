@@ -14,8 +14,8 @@ See also: :doc:`reference`
 Quick Start
 ===========
 
-For the impatient, this section summarizes most of what you need to
-know to use Testworks.
+For the impatient, this section summarizes most of what you need to know to use
+Testworks.
 
 Add ``use testworks;`` to both your test library and test module.
 
@@ -29,16 +29,30 @@ Tests contain arbitrary code and at least one assertion:
      assert-equal(fn1(v, key: 7), "seven", "regression test for bug/12345");
    end;
 
-If a test contains no assertions it will be marked "not implemented" when the
-tests are run.
+If there are no assertions in a test it is considered "not implemented", which
+is displayed in the output (as a reminder to implement it) but is not
+considered a failure.
 
-See also: :func:`assert-true`, :func:`assert-false`,
-:func:`assert-signals`, and :func:`assert-no-errors`.  Each of these
-takes an optional *description* argument, which can be used to
-indicate the intent of the assertion if it isn't clear.
+See also: :func:`assert-true`, :func:`assert-false`, :func:`assert-signals`,
+and :func:`assert-no-errors`.  Each of these takes an optional *description*
+argument, which can be used to indicate the intent of the assertion if it isn't
+clear.
 
-Benchmarks do not require any assertions and are automatically given
-the "benchmark" tag:
+Benchmarks do not require any assertions and are automatically given the
+"benchmark" tag:
+
+.. code-block:: dylan
+
+   // Benchmark fn1
+   define benchmark fn1-benchmark ()
+     fn1()
+   end;
+
+See also, :func:`benchmark-repeat`.
+
+If you have a large or complex test library, "suites" may be used to organize
+tests into groups (for example one suite per module) and may be nested
+arbitrarily.
 
 .. code-block:: dylan
 
@@ -46,14 +60,26 @@ the "benchmark" tag:
      fn1()
    end;
 
-Your test executable should call :func:`run-test-application` to parse the
-Testworks command-line options and run the tests.  It may be called with no
-arguments to run all tests and benchmarks::
+**Note:** Suites must be defined textually after* the other suites and tests
+they contain.
 
-  run-test-application()           // Run all tests and benchmarks.
+To run your tests of course you need an executable and there are two ways to
+accomplish this:
 
-Use ``my-test-app --help`` to see the Testworks command-line options, which
-provide various output formats, ways to run specific tests, etc.
+1.  Compile your test library as an executable and call
+    :func:`run-test-application` (with no arguments) to parse the Testworks
+    command-line options and run all tests. For example, for the `foo-test`
+    library::
+
+      _build/bin/foo-test
+
+1.  Compile your test library as a shared library and run it with the
+    `testworks-run` application. For example, for the `foo-test` library::
+
+      _build/bin/testworks-run --load libfoo-test.so
+
+In both cases :func:`run-test-application` parses the command line so the
+options are the same. Use `--help` to see all options.
 
 See `Suites`_ for a way to organize large test suites.
 
