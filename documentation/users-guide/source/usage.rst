@@ -68,18 +68,18 @@ accomplish this:
 
 1.  Compile your test library as an executable and call
     :func:`run-test-application` (with no arguments) to parse the Testworks
-    command-line options and run all tests. For example, for the `foo-test`
+    command-line options and run all tests. For example, for the ``foo-test``
     library::
 
       _build/bin/foo-test
 
 1.  Compile your test library as a shared library and run it with the
-    `testworks-run` application. For example, for the `foo-test` library::
+    ``testworks-run`` application. For example, for the `foo-test` library::
 
       _build/bin/testworks-run --load libfoo-test.so
 
 In both cases :func:`run-test-application` parses the command line so the
-options are the same. Use `--help` to see all options.
+options are the same. Use ``--help`` to see all options.
 
 See `Suites`_ for a way to organize large test suites.
 
@@ -272,7 +272,7 @@ suite of their own.  Example:
      suite strings-benchmarks;
    end;
 
-**TODO**: link to ``benchmark-repeat`` reference doc when written
+See also, :macro:`benchmark-repeat`.
 
 Suites
 ------
@@ -501,24 +501,29 @@ xxx-test-suite-app.lid`` and run with ``xxx-test-suite-app --help``.
 Reports
 =======
 
-Testworks provides the user with multiple report functions:
+The ``--report`` and ``--report-file`` options can be used to write a full
+report of test run results so that those results can be compared with
+subsequent test runs, for example to find regressions. These are the available
+report types:
 
-Summary (the default)
+failures
+  Prints out only the list of failures and a summary.
+
+json
+  Outputs JSON objects that match the suite/test/assertion tree structure,
+  with full detail.
+
+summary (the default)
   Prints out only a summary of how many assertions, tests and suites
   were executed, passed, failed or crashed.
-Failures
-  Prints out only the list of failures and a summary.
-XML
-  Outputs XML that directly matches the suite/test/assertion tree
-  structure, with full detail.
-Surefire
-  Outputs XML is Surefire format.  This elides information about
-  specific assertions.  This format is supported by various tools
-  such as Jenkins.
-None
-  Prints nothing at all.
 
-Use the ``--report-file`` option to redirect the report to a file.
+surefire
+  Outputs XML in Surefire format.  This elides information about specific
+  assertions.  This format is supported by various tools such as Jenkins.
+
+xml
+  Outputs XML that directly matches the suite/test/assertion tree structure,
+  with full detail.
 
 
 Comparing Test Results

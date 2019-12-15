@@ -60,7 +60,7 @@ Suites, Tests, and Benchmarks
    "crashed". Other than this, and some differences in how the results
    are displayed, benchmarks are the same as tests.
 
-.. function:: benchmark-repeat
+.. macro:: benchmark-repeat
 
    Repeatedly execute a block of code, recording profiling information for each
    execution.
@@ -70,6 +70,9 @@ Suites, Tests, and Benchmarks
 
    Results for benchmarks that call benchmark-repeat display the min, max,
    mean, and median run times across all iterations.
+
+   It may be necessary to use ``--report=full`` to display detailed benchmark
+   statistics.
 
    At the beginning of each iteration benchmark-repeat first collects garbage
    to attempt to reduce variability across different executions.
