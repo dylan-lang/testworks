@@ -8,7 +8,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// Application options
 
-// TODO(cgay): use command-line-parser library
+// TODO(cgay): use command-line-parser https://github.com/dylan-lang/testworks/issues/121
 
 define class <application-options> (<object>)
   constant slot application-quiet? :: <boolean> = #f,
@@ -82,6 +82,7 @@ end method display-run-options;
 
 /// application-error
 
+// TODO(cgay): this should be defined in the testworks module
 define class <testworks-error> (<format-string-condition>, <error>)
 end;
 
@@ -147,8 +148,8 @@ end method argument-value;
 define constant $help-format-string =
   "Application: %s\n"
   "\n"
-  "  Arguments: log1\n"
-  "             [log2]\n"
+  "  Arguments: report1\n"
+  "             [report2]\n"
   "             [-quiet]\n"
   "             [-report [full failures summary diff full-diff diff-summary benchmark-diff]]\n"
   "             [-suite <name1> <name2> ... ...]\n"
@@ -228,7 +229,7 @@ define method parse-arguments
     end
   end;
   unless (log1)
-    invalid-argument("Log file missing - one or two log files must be supplied\n")
+    invalid-argument("Report file missing - one or two report files must be supplied\n")
   end;
   unless (report-function)
     report-function := if (log2)
@@ -241,14 +242,14 @@ define method parse-arguments
                                              failures-report-function,
                                              summary-report-function)))
     invalid-argument("The report function specified is not meaningful "
-                     "when two log files are specified.\n");
+                     "when two report files are specified.\n");
   end if;
   if (~log2 & member?(report-function, vector(diff-report-function,
                                               diff-full-report-function,
                                               diff-summary-report-function,
                                               benchmark-diff-report-function)))
     invalid-argument("The report function specified is only meaningful "
-                     "when two log files are specified.\n");
+                     "when two report files are specified.\n");
   end if;
   make(<application-options>,
        log1: log1, log2: log2,
