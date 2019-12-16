@@ -20,7 +20,6 @@ define constant $verbose = #"verbose";
 // --verbose (or --output) should apply to the former.
 define table $report-functions :: <string-table>
   = {
-     "log"      => log-report-function, // Why are these named "-function"?
      "none"     => null-report-function,
      "summary"  => summary-report-function,
      "failures" => failures-report-function,

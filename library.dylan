@@ -199,7 +199,6 @@ define module %testworks
     summary-report-function,
     failures-report-function,
     full-report-function,
-    log-report-function,
     xml-report-function,
     surefire-report-function;
 
@@ -209,8 +208,6 @@ define module %testworks
     parse-args;
 
   export
-    $test-log-header,
-    $test-log-footer,
     $xml-version-header,
     *check-recording-function*;
 

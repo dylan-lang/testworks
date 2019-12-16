@@ -276,61 +276,6 @@ define method full-report-function
 end method full-report-function;
 
 
-/// Log report
-
-// TODO(cgay): either delete this or replace it with a json report.
-
-define constant $test-log-header = "--------Test Log Report--------";
-define constant $test-log-footer = "--------End Log Report---------";
-
-define method remove-newlines
-    (string :: <string>) => (new-string :: <string>)
-  let string = copy-sequence(string);
-  for (i from 0 below size(string))
-    when (string[i] = '\n')
-      string[i] := ' '
-    end
-  end;
-  string
-end method remove-newlines;
-
-define method log-report-function
-    (result :: <result>, stream :: <stream>) => ()
-  let stream = make(<indenting-stream>, inner-stream: stream);
-  local method generate-report (result :: <result>) => ()
-          let test-type = result-type-name(result);
-          format(stream, "\nObject: %s\n", test-type);
-          format(stream, "Name: %s\n", remove-newlines(result-name(result)));
-          format(stream, "Status: %s\n", status-name(result-status(result)));
-          let status = result.result-status;
-          if (instance?(result, <component-result>))
-            if (result.result-reason)
-              format(stream, "Reason: %s\n", result.result-reason);
-            end;
-            for (subresult in result-subresults(result))
-              with-indentation (stream, 2)
-                generate-report(subresult);
-              end with-indentation;
-            end for;
-          else
-            let reason = result.result-reason;
-            if (reason)
-              format(stream, "Reason: %s\n", remove-newlines(reason));
-            end;
-            if (~reason & instance?(result, <component-result>))
-              format(stream, "Seconds: %s\nAllocation: %d bytes\n",
-                     result-time(result), result-bytes(result) | 0);
-            end if;
-          end;
-          format(stream, "end\n");
-        end method generate-report;
-  format(stream, "\n%s", $test-log-header);
-  generate-report(result);
-  format(stream, "\n%s\n", $test-log-footer);
-  failures-report-function(result, stream)
-end method log-report-function;
-
-
 /// XML report
 
 define constant $xml-version-header
