@@ -48,5 +48,6 @@ define module testworks-report-lib
 
     // For the test suite
     read-report,
-    read-json-report;
+    read-json-report,
+    read-xml-report;
 end module;

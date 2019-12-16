@@ -60,7 +60,8 @@ define function read-json-report
                   "test" => <test-result>;
                   "benchmark" => <benchmark-result>;
                   otherwise =>
-                    error("unexpected test result type in report: %= (pathname = %s)", type, path);
+                    application-error("unexpected test result type in report: %= "
+                                        "(pathname = %s)", type, path);
                 end;
             make(result-class,
                  name: name,
@@ -81,12 +82,10 @@ define function read-xml-report
   let text = read-to-end(stream);
   let xml :: false-or(xml/<document>) = xml/parse-document(text);
   if (xml)
-    // The basic format of the document is
-    // <?xml header><test-report><suite>...</suite>...<summary>...</summary></test-report>
     let root-suite = child-named(xml/root(xml), #"suite");
     convert-xml-node(root-suite, ignored-tests, ignored-suites)
   else
-    error("XML document %s didn't parse correctly.", path);
+    application-error("XML document %s didn't parse correctly.", path);
   end
 end function;
 
@@ -96,56 +95,49 @@ define method convert-xml-node
   let node-type = xml/name(node);
   let name = child-named(node, #"name");
   let name = name & xml/text(name);
-  debug-message("converting name = %s", name);
   if (~name)
     #f  // we're in a <name>, <status>, <reason>, etc. element
   elseif (member?(as-lowercase(name), ignored-tests)
             | member?(as-lowercase(name), ignored-suites))
-    debug-message("Ignored %s", name);
+    #f
   else
     let reason = child-named(node, #"reason");
     reason := reason & xml/text(reason);
-    let status = parse-status(xml/text(child-named(node, #"status")),
-                              reason);
-    local method get-subresults ()
-            choose(identity,  // remove #f
-                   map(rcurry(convert-xml-node, ignored-tests, ignored-suites),
-                       xml/node-children(node)))
-          end;
-    select (node-type)
-      #"suite" =>
-        make(<suite-result>,
-             name: name,
-             status: status,
-             subresults: get-subresults());
-      #"test" =>
-        make(<test-result>,
-             name: name,
-             status: status,
-             subresults: get-subresults());
-      #"test-unit" =>
-        make(<test-unit-result>,
-             name: name, status: status, reason: reason,
-             subresults: get-subresults());
-      #"check" =>
-        make(<check-result>,
-             name: name, status: status, reason: reason);
-      #"benchmark" =>
+    let status = parse-status(xml/text(child-named(node, #"status")), reason);
+    local
+      method get-subresults ()
+        choose(identity,  // remove #f
+               map(rcurry(convert-xml-node, ignored-tests, ignored-suites),
+                   xml/node-children(node)))
+      end method,
+      method make-component-result (class :: <class>)
         let seconds = child-named(node, #"seconds");
         let seconds = seconds & string-to-integer(xml/text(seconds));
         let microseconds = child-named(node, #"microseconds");
         let microseconds = microseconds & string-to-integer(xml/text(microseconds));
-        let allocation = child-named(node, #"allocation");
-        let allocation = allocation & string-to-integer(xml/text(allocation));
-        make(<benchmark-result>,
+        let bytes = child-named(node, #"allocation");
+        let bytes = bytes & string-to-integer(xml/text(bytes));
+        make(class,
              name: name,
              status: status,
              reason: reason,
              seconds: seconds,
              microseconds: microseconds,
-             allocation: allocation);
+             bytes: bytes,
+             subresults: get-subresults())
+      end method;
+    select (node-type)
+      #"suite"     => make-component-result(<suite-result>);
+      #"test"      => make-component-result(<test-result>);
+      #"benchmark" => make-component-result(<benchmark-result>);
+      #"test-unit"
+        => make(<test-unit-result>,
+                name: name, status: status, reason: reason,
+                subresults: get-subresults());
+      #"check"
+        => make(<check-result>, name: name, status: status, reason: reason);
       otherwise =>
-        error("Unexpected node type: %s", node-type);
+        application-error("Unexpected XML node type: %s", node-type);
     end
   end if
 end method convert-xml-node;
