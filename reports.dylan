@@ -47,7 +47,7 @@ define method count-results
            not-executed := not-executed + 1;
          $not-implemented =>
            not-implemented := not-implemented + 1;
-         $expected-failure =>
+         $expected-to-fail =>
            passes := passes + 1;
          $unexpected-success =>
            failures := failures + 1;

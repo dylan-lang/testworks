@@ -77,8 +77,8 @@ define generic test-requires-assertions? (r :: <runnable>) => (required? :: <boo
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
     required-init-keyword: function:;
-  constant slot %expected-failure? :: type-union(<boolean>, <function>) = #f,
-    init-keyword: expected-failure?:;
+  constant slot %expected-to-fail? :: type-union(<boolean>, <function>) = #f,
+    init-keyword: expected-to-fail?:;
   // Benchmarks don't require assertions.  Needs to be an instance
   // variable, not a bare method, because testworks-specs
   // auto-generated tests often don't get filled in.  I want to kill
@@ -101,12 +101,12 @@ define method make
   apply(next-method, class, tags: tags, args)
 end method make;
 
-define method expected-failure? (r :: <runnable>)
-  select (r.%expected-failure? by instance?)
-    <boolean> => r.%expected-failure?;
-    <function> => r.%expected-failure?();
+define method expected-to-fail? (r :: <runnable>)
+  select (r.%expected-to-fail? by instance?)
+    <boolean> => r.%expected-to-fail?;
+    <function> => r.%expected-to-fail?();
   end select
-end method expected-failure?;
+end method;
 
 define class <test> (<runnable>)
 end;

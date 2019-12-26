@@ -415,29 +415,29 @@ end test test-with-test-unit;
 // respective -definer macros so that they don't get registered and
 // then run as normal tests (which would fail).
 
-define constant test-expected-failure-always
+define constant test-expected-to-fail-always
   = make(<test>,
-         name: "test-expected-failure-always",
+         name: "test-expected-to-fail-always",
          function: method () assert-true(#f) end,
-         expected-failure?: #t);
+         expected-to-fail?: #t);
 
-define constant test-expected-failure-maybe
+define constant test-expected-to-fail-maybe
   = make(<test>,
-         name: "test-expected-failure-maybe",
+         name: "test-expected-to-fail-maybe",
          function: method () assert-true(#f) end,
-         expected-failure?: method () #t end);
+         expected-to-fail?: method () #t end);
 
 define constant test-unexpected-success
   = make(<test>,
          name: "test-unexpected-success",
          function: method () assert-true(#t) end,
-         expected-failure?: #t);
+         expected-to-fail?: #t);
 
-define constant expected-failure-suite
+define constant expected-to-fail-suite
   = make(<suite>,
-         name: "expected-failure-suite",
-         components: vector(test-expected-failure-always,
-                            test-expected-failure-maybe));
+         name: "expected-to-fail-suite",
+         components: vector(test-expected-to-fail-always,
+                            test-expected-to-fail-maybe));
 
 define constant unexpected-success-suite
   = make(<suite>,
@@ -445,7 +445,7 @@ define constant unexpected-success-suite
          components: vector(test-unexpected-success));
 
 define test test-run-tests-expect-failure/suite ()
-  let suite-to-check = expected-failure-suite;
+  let suite-to-check = expected-to-fail-suite;
   let runner = make(<test-runner>, progress: #f);
   let suite-results = run-tests(runner, suite-to-check);
   assert-equal($passed, suite-results.result-status);
@@ -456,14 +456,14 @@ define test test-run-tests-expect-failure/suite ()
 end test test-run-tests-expect-failure/suite;
 
 define test test-run-tests-expect-failure/test ()
-  let test-to-check = test-expected-failure-always;
+  let test-to-check = test-expected-to-fail-always;
   let runner = make(<test-runner>, progress: #f);
   let test-results = run-tests(runner, test-to-check);
-  assert-equal($expected-failure, test-results.result-status);
+  assert-equal($expected-to-fail, test-results.result-status);
 
-  let test-to-check = test-expected-failure-maybe;
+  let test-to-check = test-expected-to-fail-maybe;
   let test-results = run-tests(runner, test-to-check);
-  assert-equal($expected-failure, test-results.result-status);
+  assert-equal($expected-to-fail, test-results.result-status);
 
   let test-to-check = test-unexpected-success;
   let test-results = run-tests(runner, test-to-check);

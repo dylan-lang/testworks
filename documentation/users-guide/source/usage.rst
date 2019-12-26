@@ -201,12 +201,12 @@ can be made aware of this:
 
 .. code-block:: dylan
 
-    define test failing-test (expected-failure?: #t)
+    define test failing-test (expected-to-fail?: #t)
       assert-true(#f);
     end test;
 
     define test fails-on-windows
-        (expected-failure?: method () $os-name = #"win32" end)
+        (expected-to-fail?: method () $os-name = #"win32" end)
       if ($os-name = #"win32")
         assert-false(#t);
       else

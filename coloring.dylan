@@ -11,7 +11,7 @@ define constant $skipped-text-attributes            = text-attributes(foreground
 define constant $not-implemented-text-attributes    = text-attributes(foreground: $color-cyan);
 define constant $failed-text-attributes             = text-attributes(foreground: $color-red);
 define constant $crashed-text-attributes            = text-attributes(foreground: $color-red);
-define constant $expected-failure-text-attributes   = text-attributes(foreground: $color-cyan);
+define constant $expected-to-fail-text-attributes   = text-attributes(foreground: $color-cyan);
 define constant $unexpected-success-text-attributes = text-attributes(foreground: $color-red);
 define constant $component-name-text-attributes     = text-attributes(intensity: $bright-intensity);
 define constant $total-text-attributes              = text-attributes(intensity: $bright-intensity);
@@ -25,7 +25,7 @@ define function result-status-to-text-attributes
     $failed => $failed-text-attributes;
     $crashed => $crashed-text-attributes;
     $skipped => $skipped-text-attributes;
-    $expected-failure => $expected-failure-text-attributes;
+    $expected-to-fail => $expected-to-fail-text-attributes;
     $unexpected-success => $unexpected-success-text-attributes;
     $not-implemented => $not-implemented-text-attributes;
     otherwise =>

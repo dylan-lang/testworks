@@ -258,14 +258,14 @@ define method execute-component
                    result.result-status == $passed
                  end,
                  subresults)
-            => if (test.expected-failure?)
+            => if (test.expected-to-fail?)
                  $unexpected-success
                else
                  $passed
                end if;
           otherwise
-            => if (test.expected-failure?)
-                 $expected-failure
+            => if (test.expected-to-fail?)
+                 $expected-to-fail
                else
                  $failed
                end if;
