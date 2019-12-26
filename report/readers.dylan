@@ -59,6 +59,7 @@ define function read-json-report
                   "suite" => <suite-result>;
                   "test" => <test-result>;
                   "benchmark" => <benchmark-result>;
+                  "iteration" => <benchmark-iteration-result>;
                   otherwise =>
                     application-error("unexpected test result type in report: %= "
                                         "(pathname = %s)", type, path);
@@ -70,7 +71,9 @@ define function read-json-report
                  seconds: t["seconds"],
                  microseconds: t["microseconds"],
                  bytes: t["bytes"],
-                 subresults: map(table-to-result, t["children"]))
+                 // Note that for <benchmark-iteration-result> we depend on the
+                 // fact that extra keyword args passed to `make` are ignored.
+                 subresults: map(table-to-result, element(t, "children", default: #[])))
           end if
         end method;
   table-to-result(parse-json(stream))

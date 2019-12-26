@@ -180,6 +180,7 @@ define module %testworks
     <metered-result>,
     <test-result>,
     <benchmark-result>,
+    <benchmark-iteration-result>,
     <suite-result>,
     <unit-result>,
     result-reason,
