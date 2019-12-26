@@ -127,12 +127,15 @@ define method convert-xml-node
              seconds: seconds,
              microseconds: microseconds,
              bytes: bytes,
+             // Note that for <benchmark-iteration-result> we depend on the
+             // fact that extra keyword args passed to `make` are ignored.
              subresults: get-subresults())
       end method;
     select (node-type)
       #"suite"     => make-component-result(<suite-result>);
       #"test"      => make-component-result(<test-result>);
       #"benchmark" => make-component-result(<benchmark-result>);
+      #"iteration" => make-component-result(<benchmark-iteration-result>);
       #"test-unit"
         => make(<test-unit-result>,
                 name: name, status: status, reason: reason,
