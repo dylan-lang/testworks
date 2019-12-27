@@ -419,19 +419,23 @@ define constant test-expected-to-fail-always
   = make(<test>,
          name: "test-expected-to-fail-always",
          function: method () assert-true(#f) end,
-         expected-to-fail?: #t);
+         // Intentionally not passing `expected-to-fail?: #t` here. It should
+         // be set to `#t` because a reason is provided below.
+         expected-to-fail-reason: "because of assert-true(#f)");
 
 define constant test-expected-to-fail-maybe
   = make(<test>,
          name: "test-expected-to-fail-maybe",
          function: method () assert-true(#f) end,
-         expected-to-fail?: method () #t end);
+         expected-to-fail?: method () #t end,
+         expected-to-fail-reason: "because of assert-true(#f)");
 
 define constant test-unexpected-success
   = make(<test>,
          name: "test-unexpected-success",
          function: method () assert-true(#t) end,
-         expected-to-fail?: #t);
+         expected-to-fail?: #t,
+         expected-to-fail-reason: "because of assert-true(#t)");
 
 define constant expected-to-fail-suite
   = make(<suite>,
@@ -468,7 +472,8 @@ define test test-run-tests-expect-failure/test ()
   let test-to-check = test-unexpected-success;
   let test-results = run-tests(runner, test-to-check);
   assert-equal($unexpected-success, test-results.result-status);
-end test test-run-tests-expect-failure/test;
+  assert-true(find-substring(test-results.result-reason, "because of assert-true(#t)"));
+end test;
 
 define suite testworks-results-suite ()
   test test-run-tests/suite;

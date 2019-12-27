@@ -13,10 +13,10 @@ define abstract class <component> (<object>)
     required-init-keyword: name:;
 end class <component>;
 
+// Things have changed since this was introduced. (Local) test names must be
+// unique now so there's no need to have a distinction between the full path to
+// a component and the component's local name. This can be removed. --cgay
 define function full-component-name (c :: <component>) => (name :: <string>)
-  // TODO(cgay): return the full path from the root to this component so that
-  // --match and --skip can use it. Need to store back pointers to parent
-  // suites.
   c.component-name
 end;
 
@@ -79,10 +79,12 @@ define abstract class <runnable> (<component>)
     required-init-keyword: function:;
   constant slot %expected-to-fail? :: type-union(<boolean>, <function>) = #f,
     init-keyword: expected-to-fail?:;
-  // Benchmarks don't require assertions.  Needs to be an instance
-  // variable, not a bare method, because testworks-specs
-  // auto-generated tests often don't get filled in.  I want to kill
-  // testworks-specs with fire.
+  constant slot expected-to-fail-reason :: false-or(<string>) = #f,
+    init-keyword: expected-to-fail-reason:;
+  // Benchmarks don't require assertions.  Needs to be an instance variable,
+  // not a bare method, because testworks-specs auto-generated tests often
+  // don't get filled in.  (This can be fixed now that specs has been
+  // redone. --cgay)
   constant slot test-requires-assertions? :: <boolean> = #t,
     init-keyword: requires-assertions?:;
   constant slot test-tags :: <sequence> /* of <tag> */ = #[],
@@ -90,16 +92,29 @@ define abstract class <runnable> (<component>)
 end class <runnable>;
 
 define method make
-    (class :: subclass(<runnable>), #rest args, #key name, tags)
+    (class :: subclass(<runnable>),
+     #rest args,
+     #key name, tags, expected-to-fail?, expected-to-fail-reason)
  => (runnable :: <runnable>)
   let tags = map(make-tag, tags | #[]);
   let negative = choose(tag-negated?, tags);
   if (~empty?(negative))
-    error("Tags associated with tests or benchmarks may not be negated.  Test: %s, Tags: %s",
-          name, negative);
+    error("tags associated with tests or benchmarks may not be negated."
+            " test = %s, tags = %s", name, negative);
   end;
-  apply(next-method, class, tags: tags, args)
-end method make;
+  if (expected-to-fail-reason & ~expected-to-fail?)
+    expected-to-fail? := #t;
+  end;
+  if (expected-to-fail? & ~expected-to-fail-reason)
+    error("the expected-to-fail-reason init argument must be supplied for"
+            " tests that are expected to fail. test = %s", name);
+  end;
+  apply(next-method, class,
+        tags: tags,
+        expected-to-fail?: expected-to-fail?,
+        expected-to-fail-reason: expected-to-fail-reason,
+        args)
+end method;
 
 define method expected-to-fail? (r :: <runnable>)
   select (r.%expected-to-fail? by instance?)
