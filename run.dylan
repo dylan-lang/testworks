@@ -258,19 +258,21 @@ define method execute-component
                    result.result-status == $passed
                  end,
                  subresults)
-            => if (test.expected-failure?)
-                 $unexpected-success
+            => if (test.expected-to-fail?)
+                 let reason = format-to-string("test passed but was expected to fail due to %=",
+                                               test.expected-to-fail-reason);
+                 values($unexpected-success, reason)
                else
                  $passed
                end if;
           otherwise
-            => if (test.expected-failure?)
-                 $expected-failure
+            => if (test.expected-to-fail?)
+                 $expected-to-fail
                else
                  $failed
                end if;
-        end
-      end;
+        end case
+      end dynamic-bind;
   make(component-result-type(test),
        name: test.component-name,
        status: status,

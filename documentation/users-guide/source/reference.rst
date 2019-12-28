@@ -20,11 +20,14 @@ Suites, Tests, and Benchmarks
 
    Define a new test.
 
-   :signature: define test *test-name* (#key *expected-failure?, tags*) *body* end
+   :signature: define test *test-name* (#key *expected-to-fail?, expected-to-fail-reason, tags*) *body* end
    :parameter test-name: Name of the test; a Dylan variable name.
-   :parameter #key expected-failure?: An instance of either :drm:`<boolean>` or
+   :parameter #key expected-to-fail?: An instance of either :drm:`<boolean>` or
       :drm:`<function>`. This indicates whether or not the test is expected to
       fail.
+   :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``. Must
+      be supplied if ``expected-to-fail?`` is true. A good reason usually
+      references a bug.
    :parameter #key tags: A list of strings to tag this test.
 
    Tests may contain arbitrary code, plus any number of assertions.
@@ -33,24 +36,29 @@ Suites, Tests, and Benchmarks
    an assertion signals an error, the test is marked as "crashed" and
    remaining assertions are skipped.
 
-   If *expected-failure?* is set to ``#t`` or a function that when executed
+   If *expected-to-fail?* is set to ``#t`` or a function that when executed
    returns a true value, then the test will be expected to fail. Such a failure
-   will be treated as a successful test run. If the test passes rather than
-   failing, then that will be considered a test failure. This option has
-   no effect on tests which are *not implemented* or which have *crashed*.
+   is treated as a successful test run. If the test passes rather than failing,
+   it is considered a test failure. This option has no effect on tests which
+   are *not implemented* or which have *crashed*.
 
-   *tags* provide a way to select or filter out specific tests during
-   a test run.  The Testworks command-line (provided by
-   :func:`run-test-application`) provides a ``--tag`` option for this
-   purpose.
+   *expected-to-fail-reason* is required if the test is expected to
+   fail. Normally it should reference a bug (a URL or at least a bug number).
+   If *expected-to-fail-reason* is supplied, *expected-to-fail?* may be
+   omitted because it is implied to be ``#t``.
+
+   *tags* provide a way to select or filter out specific tests during a test
+   run.  The Testworks command-line (provided by :func:`run-test-application`)
+   has a ``--tag`` option to only run tests that match (or don't match)
+   specific tags.
 
 .. macro:: benchmark-definer
 
    Define a new benchmark.
 
-   :signature: define benchmark *name* (#key *expected-failure?, tags*) *body* end
+   :signature: define benchmark *name* (#key *expected-to-fail?, tags*) *body* end
    :parameter name: Name of the benchmark; a Dylan variable name.
-   :parameter #key expected-failure?: An instance of either :drm:`<boolean>` or
+   :parameter #key expected-to-fail?: An instance of either :drm:`<boolean>` or
       :drm:`<function>`. This indicates whether or not the test is expected to
       fail.
    :parameter #key tags: A list of strings to tag this benchmark.

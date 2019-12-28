@@ -47,7 +47,7 @@ define method count-results
            not-executed := not-executed + 1;
          $not-implemented =>
            not-implemented := not-implemented + 1;
-         $expected-failure =>
+         $expected-to-fail =>
            passes := passes + 1;
          $unexpected-success =>
            failures := failures + 1;
@@ -192,9 +192,8 @@ end function;
 
 define method print-result-info
     (result :: <benchmark-result>, stream :: <stream>, #key indent = "", test) => ()
-  let result-status = result.result-status;
-  let show-result? = if (test) test(result) else #t end;
-  if (show-result?)
+  if (~test | test(result))
+    let result-status = result.result-status;
     format(stream, "\n%s%s %s",
            indent, result.result-name, status-name(result-status));
     if (result-status == $passed)

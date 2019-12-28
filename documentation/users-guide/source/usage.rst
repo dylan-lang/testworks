@@ -201,12 +201,14 @@ can be made aware of this:
 
 .. code-block:: dylan
 
-    define test failing-test (expected-failure?: #t)
+    define test failing-test
+        (expected-to-fail-reason: "bug 1234")
       assert-true(#f);
     end test;
 
     define test fails-on-windows
-        (expected-failure?: method () $os-name = #"win32" end)
+        (expected-to-fail?: method () $os-name = #"win32" end,
+         expected-to-fail-reason: "blah is not implemented for WIN32 platform")
       if ($os-name = #"win32")
         assert-false(#t);
       else
@@ -214,9 +216,11 @@ can be made aware of this:
       end if;
     end test;
 
-A test that is expected to fail and then fails is considered to be a
-passing test. If the test succeeds unexpectedly, it is considered a
-failing test.
+A test that is expected to fail and then fails is considered to be a passing
+test. If the test succeeds unexpectedly, it is considered a failing
+test. ``expected-to-fail-reason:`` **must** be supplied if
+``expected-to-fail?:`` is true. An example of a good reason is a bug URL or
+other bug reference.
 
 Test setup and teardown is accomplished with normal Dylan code using
 ``block () ... cleanup ... end;``...

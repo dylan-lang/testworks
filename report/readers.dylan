@@ -15,7 +15,7 @@ define method parse-status
     "failed" => $failed;
     "crashed" => $crashed;
     "skipped" => $skipped;
-    "failed as expected" => $expected-failure;
+    "failed as expected" => $expected-to-fail;
     "unexpectedly succeeded" => $unexpected-success;
     "not implemented" => $not-implemented;
     otherwise =>
