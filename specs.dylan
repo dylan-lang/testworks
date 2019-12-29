@@ -74,9 +74,7 @@ define open generic make-test-instance
 define open generic destroy-test-instance
     (class :: <class>, object :: <object>) => ();
 
-// Build a test suite out of a list of binding specifications.
-// The test-*-specification tests are automatic checks done by testworks.
-// The test-* tests are expected to be written by the user.
+// Build a test suite that verifies a list of binding specifications.
 define macro binding-spec-suite-definer
   { define binding-spec-suite ?suite-name:name (?options:*)
       ?specs:*
@@ -88,15 +86,16 @@ define macro binding-spec-suite-definer
   { } => { }
   { ?spec:*; ... } => { ?spec ... }
  spec:
+  // TODO(cgay): pretty sure this is leftover from old specs implementation.
   { protocol ?protocol-name:name }
     => { suite ?protocol-name ## "-protocol-test-suite"; }
   { ?modifiers:* class ?class-name:name (?superclasses:*); }
     => { test "test-" ## ?class-name ## "-specification"; }
   { ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*); }
     => { test "test-" ## ?function-name ## "-specification"; }
-  { variable ?variable-name:name :: ?type:expression; }
+  { ?modifiers:* variable ?variable-name:name :: ?type:expression; }
     => { test "test-" ## ?variable-name ## "-specification"; }
-  { constant ?constant-name:name :: ?type:expression; }
+  { ?modifiers:* constant ?constant-name:name :: ?type:expression; }
     => { test "test-" ## ?constant-name ## "-specification"; }
 
   // These two allow interface specification suites to be broken up into
@@ -105,6 +104,14 @@ define macro binding-spec-suite-definer
   { test ?:name; }  => { test ?name; }
 end macro;
 
+define function spec-expected-to-fail-reason (modifiers) => (reason :: false-or(<string>))
+  if (member?(#"expected-to-fail", modifiers))
+    // This'll do for now. Could do something funky like check if the following modifier
+    // is a string and use it as a reason? The syntax gets pretty wonky though.
+    "the spec was marked as expected to fail"
+  end
+end;
+
 define macro binding-specs-definer
   { define binding-specs ?suite-specification:name (?options:*) end }
     => { }
@@ -112,7 +119,8 @@ define macro binding-specs-definer
       ?modifiers:* class ?class-name:name (?superclasses:*);
       ?more-specs:*
     end }
-    => { define test "test-" ## ?class-name ## "-specification" ()
+    => { define test "test-" ## ?class-name ## "-specification"
+             (expected-to-fail-reason: spec-expected-to-fail-reason(vector(?modifiers)))
            let class-spec = make(<class-spec>,
                                  name: ?#"class-name",
                                  class: ?class-name,
@@ -128,7 +136,8 @@ define macro binding-specs-definer
       ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*);
       ?more-specs:*
     end }
-    => { define test "test-" ## ?function-name ## "-specification" ()
+    => { define test "test-" ## ?function-name ## "-specification"
+             (expected-to-fail-reason: spec-expected-to-fail-reason(vector(?modifiers)))
            let function-spec
              = make(<function-spec>,
                     name: ?#"function-name",
@@ -143,18 +152,21 @@ define macro binding-specs-definer
            ?more-specs
          end; }
   { define binding-specs ?suite-specification:name (?options:*)
-      variable ?variable-name:name :: ?type:expression;
+      ?modifiers:* variable ?variable-name:name :: ?type:expression;
       ?more-specs:*
     end }
-    => { define test "test-" ## ?variable-name ## "-specification" ()
+    => { define test "test-" ## ?variable-name ## "-specification"
+             (expected-to-fail-reason: spec-expected-to-fail-reason(vector(?modifiers)))
            let variable-spec
              = make(<variable-spec>,
                     name: ?#"variable-name",
                     type: ?type,
-                    getter: method () => (value :: ?type)
-                              ?variable-name
-                            end,
-                    setter: method (value :: ?type) => (value :: ?type)
+                    // Getter is untyped because check-variable-specification checks the
+                    // type explicitly and there is no need for a runtime exception.
+                    getter: method () ?variable-name end,
+                    setter: method (value) => (value)
+                              // See note above. Type is checked for getter. For setter
+                              // we only need to verify the value can be set to itself.
                               ?variable-name := value
                             end);
            add-definition-spec(?suite-specification, variable-spec);
@@ -164,10 +176,11 @@ define macro binding-specs-definer
            ?more-specs
          end; }
   { define binding-specs ?suite-specification:name (?options:*)
-      constant ?constant-name:name :: ?type:expression;
+      ?modifiers:* constant ?constant-name:name :: ?type:expression;
       ?more-specs:*
     end }
-    => { define test "test-" ## ?constant-name ## "-specification" ()
+    => { define test "test-" ## ?constant-name ## "-specification"
+             (expected-to-fail-reason: spec-expected-to-fail-reason(vector(?modifiers)))
            // TODO: Is it possible to generate code for constant specs that
            // tries to set the constant and fails if it works? ...without
            // generating a compiler warning when it's actually constant?

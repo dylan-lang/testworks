@@ -1,6 +1,6 @@
 Module: testworks-test-suite
 
-define interface-specification-suite testworks-interface-specification-test-suite ()
+define interface-specification-suite testworks-interface-specification-suite ()
   function run-test-application (#"rest") => (false-or(<result>));
   function test-output (<string>, #"rest") => ();
   function test-temp-directory () => (false-or(<directory-locator>));
@@ -17,9 +17,22 @@ define interface-specification-suite testworks-interface-specification-test-suit
   open instantiable class <test-runner> (<object>);
 end;
 
+define class <expected-to-fail-class> (<object>) end;
+define variable *expected-to-fail-variable* = #t;
+define constant $expected-to-fail-constant = #"etfc";
+define function expected-to-fail-function () end;
+
+define interface-specification-suite testworks-expected-to-fail-specification-suite ()
+  expected-to-fail variable *expected-to-fail-variable* :: <integer>;
+  expected-to-fail constant $expected-to-fail-constant :: <string>;
+  expected-to-fail instantiable class <expected-to-fail-class> (<integer>);
+  expected-to-fail function expected-to-fail-function (<object>) => (#"rest");
+end;
+
 define suite testworks-test-suite ()
-  suite testworks-interface-specification-test-suite;
+  suite testworks-interface-specification-suite;
   suite testworks-assertion-macros-suite;
+  suite testworks-expected-to-fail-specification-suite;
   suite testworks-results-suite;
   suite command-line-test-suite;
   suite testworks-benchmarks-suite;
