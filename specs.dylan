@@ -88,15 +88,13 @@ define macro binding-spec-suite-definer
   { } => { }
   { ?spec:*; ... } => { ?spec ... }
  spec:
-  { protocol ?protocol-name:name }
-    => { suite ?protocol-name ## "-protocol-test-suite"; }
-  { ?modifiers:* class ?class-name:name (?superclasses:*); }
+  { ?modifiers:* class ?class-name:name (?superclasses:*) ?test-options:* ; }
     => { test "test-" ## ?class-name ## "-specification"; }
-  { ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*); }
+  { ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*) ?test-options:* ; }
     => { test "test-" ## ?function-name ## "-specification"; }
-  { variable ?variable-name:name :: ?type:expression; }
+  { variable ?variable-name:name :: ?type:expression ?test-options:* ; }
     => { test "test-" ## ?variable-name ## "-specification"; }
-  { constant ?constant-name:name :: ?type:expression; }
+  { constant ?constant-name:name :: ?type:expression ?test-options:* ; }
     => { test "test-" ## ?constant-name ## "-specification"; }
 
   // These two allow interface specification suites to be broken up into
@@ -108,11 +106,13 @@ end macro;
 define macro binding-specs-definer
   { define binding-specs ?suite-specification:name (?options:*) end }
     => { }
+
+  // class specs
   { define binding-specs ?suite-specification:name (?options:*)
-      ?modifiers:* class ?class-name:name (?superclasses:*);
+      ?modifiers:* class ?class-name:name (?superclasses:*), #rest ?test-options:* ;
       ?more-specs:*
     end }
-    => { define test "test-" ## ?class-name ## "-specification" ()
+    => { define test "test-" ## ?class-name ## "-specification" (?test-options)
            let class-spec = make(<class-spec>,
                                  name: ?#"class-name",
                                  class: ?class-name,
@@ -124,11 +124,13 @@ define macro binding-specs-definer
          define binding-specs ?suite-specification (?options)
            ?more-specs
          end; }
+
+  // function specs
   { define binding-specs ?suite-specification:name (?options:*)
-      ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*);
+      ?modifiers:* function ?function-name:name (?parameters:*) => (?results:*), #rest ?test-options:* ;
       ?more-specs:*
     end }
-    => { define test "test-" ## ?function-name ## "-specification" ()
+    => { define test "test-" ## ?function-name ## "-specification" (?test-options)
            let function-spec
              = make(<function-spec>,
                     name: ?#"function-name",
@@ -142,11 +144,13 @@ define macro binding-specs-definer
          define binding-specs ?suite-specification (?options)
            ?more-specs
          end; }
+
+  // variable specs
   { define binding-specs ?suite-specification:name (?options:*)
-      variable ?variable-name:name :: ?type:expression;
+      variable ?variable-name:name :: ?type:expression, #rest ?test-options:* ;
       ?more-specs:*
     end }
-    => { define test "test-" ## ?variable-name ## "-specification" ()
+    => { define test "test-" ## ?variable-name ## "-specification" (?test-options)
            let variable-spec
              = make(<variable-spec>,
                     name: ?#"variable-name",
@@ -163,11 +167,13 @@ define macro binding-specs-definer
          define binding-specs ?suite-specification (?options)
            ?more-specs
          end; }
+
+  // constant specs
   { define binding-specs ?suite-specification:name (?options:*)
-      constant ?constant-name:name :: ?type:expression;
+      constant ?constant-name:name :: ?type:expression, #rest ?test-options:* ;
       ?more-specs:*
     end }
-    => { define test "test-" ## ?constant-name ## "-specification" ()
+    => { define test "test-" ## ?constant-name ## "-specification" (?test-options)
            // TODO: Is it possible to generate code for constant specs that
            // tries to set the constant and fails if it works? ...without
            // generating a compiler warning when it's actually constant?
@@ -182,6 +188,7 @@ define macro binding-specs-definer
          define binding-specs ?suite-specification (?options)
            ?more-specs
          end; }
+
   // Drop `test blah;` on the floor; it's handled by `define binding-spec-suite`.
   { define binding-specs ?suite-specification:name (?options:*)
       test ?test-name:name;
@@ -190,6 +197,7 @@ define macro binding-specs-definer
     => { define binding-specs ?suite-specification (?options)
            ?more-specs
          end; }
+
   // Drop `suite blah;` on the floor; it's handled by `define binding-spec-suite`.
   { define binding-specs ?suite-specification:name (?options:*)
       suite ?suite-name:name;
