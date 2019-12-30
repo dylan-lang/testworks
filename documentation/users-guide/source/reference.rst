@@ -134,7 +134,7 @@ Suites, Tests, and Benchmarks
 
    class specs
 
-     Syntax: *modifiers* class *name* (*superclasses*);
+     Syntax: *modifiers* class *name* (*superclasses*) [, *test-options* ];
 
      *modifiers*
 
@@ -162,9 +162,14 @@ Suites, Tests, and Benchmarks
 
        Comma-separated list of superclass names.
 
+     *test-options*
+
+       Any options valid for :macro:`test-definer`. For example,
+       ``expected-to-fail-reason: "foo"``.
+
    function specs
 
-     Syntax: *modifiers* function *name* (*parameter-types*) => (*value-types*);
+     Syntax: *modifiers* function *name* (*parameter-types*) => (*value-types*) [, *test-options* ];
 
      *modifiers*
 
@@ -196,9 +201,14 @@ Suites, Tests, and Benchmarks
 
        Comma-separated list of return value type names, possibly empty.
 
+     *test-options*
+
+       Any options valid for :macro:`test-definer`. For example,
+       ``expected-to-fail-reason: "foo"``.
+
    variable specs
 
-     Syntax: variable *name* :: *type*;
+     Syntax: variable *name* :: *type* [, *test-options* ];
 
      *name*
 
@@ -208,9 +218,14 @@ Suites, Tests, and Benchmarks
 
        Type of the variable.
 
+     *test-options*
+
+       Any options valid for :macro:`test-definer`. For example,
+       ``expected-to-fail-reason: "foo"``.
+
    constant specs
 
-     Syntax: constant *name* :: *type*;
+     Syntax: constant *name* :: *type* [, *test-options* ];
 
      *name*
 
@@ -219,6 +234,11 @@ Suites, Tests, and Benchmarks
      *type*
 
        Type of the constant.
+
+     *test-options*
+
+       Any options valid for :macro:`test-definer`. For example,
+       ``expected-to-fail-reason: "foo"``.
 
 Assertions
 ----------
