@@ -194,15 +194,6 @@ define module %testworks
     show-progress,
     $default, $verbose;
 
-  // Report functions
-  export
-    null-report-function,
-    summary-report-function,
-    failures-report-function,
-    full-report-function,
-    xml-report-function,
-    surefire-report-function;
-
   // Command line handling
   export
     make-runner-from-command-line,

@@ -20,13 +20,13 @@ define constant $verbose = #"verbose";
 // --verbose (or --output) should apply to the former.
 define table $report-functions :: <string-table>
   = {
-     "none"     => null-report-function,
-     "summary"  => summary-report-function,
-     "failures" => failures-report-function,
-     "full"     => full-report-function,
-     "surefire" => surefire-report-function,
-     "xml"      => xml-report-function,
-     "json"     => json-report-function,
+     "none"     => print-null-report,
+     "summary"  => print-summary-report,
+     "failures" => print-failures-report,
+     "full"     => print-full-report,
+     "surefire" => print-surefire-report,
+     "xml"      => print-xml-report,
+     "json"     => print-json-report,
 };
 
 define function parse-args

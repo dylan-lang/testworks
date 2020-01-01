@@ -228,11 +228,11 @@ end method print-result-info;
 
 /// Report functions
 
-define method null-report-function
+define method print-null-report
     (result :: <result>, stream :: <stream>) => ()
 end;
 
-define method summary-report-function
+define method print-summary-report
     (result :: <result>, stream :: <stream>) => ()
   let stream = colorize-stream(stream);
   let result-status = result.result-status;
@@ -252,9 +252,9 @@ define method summary-report-function
   print-class-summary(result, "test", <test-result>);
   print-class-summary(result, "benchmark", <benchmark-result>);
   print-class-summary(result, "check", <check-result>);
-end method summary-report-function;
+end method;
 
-define method failures-report-function
+define method print-failures-report
     (result :: <result>, stream :: <stream>) => ()
   if (result.result-status ~= $passed)
     print-result-info (result, stream,
@@ -264,15 +264,15 @@ define method failures-report-function
                              end);
     format(stream, "\n");
   end;
-  summary-report-function(result, stream);
-end method failures-report-function;
+  print-summary-report(result, stream);
+end method;
 
-define method full-report-function
+define method print-full-report
     (result :: <result>, stream :: <stream>) => ()
   format(stream, "\n");
   print-result-info(result, stream, test: always(#t));
-  summary-report-function(result, stream);
-end method full-report-function;
+  print-summary-report(result, stream);
+end method;
 
 
 /// XML report
@@ -375,7 +375,7 @@ define method do-xml-result
                  stream);
 end method do-xml-result;
 
-define method xml-report-function
+define method print-xml-report
     (result :: <result>, stream :: <stream>) => ()
   format(stream, "%s\n", $xml-version-header);
   do-xml-element("test-report",
@@ -384,7 +384,7 @@ define method xml-report-function
                    do-xml-result(result, stream);
                  end,
                  stream);
-end method xml-report-function;
+end method;
 
 
 /// Surefire report
@@ -456,18 +456,18 @@ define function collect-suite-results
   all-suites
 end function collect-suite-results;
 
-define function surefire-report-function
+define function print-surefire-report
     (result :: <result>, stream :: <stream>) => ()
   format(stream, "%s\n", $xml-version-header);
   format(stream, "<testsuites>\n");
   do(rcurry(emit-surefire-suite, stream),
      collect-suite-results(result));
   format(stream, "</testsuites>\n");
-end function surefire-report-function;
+end function;
 
 /// JSON report
 
-define function json-report-function (result :: <result>, stream :: <stream>) => ()
+define function print-json-report (result :: <result>, stream :: <stream>) => ()
   encode-json(stream, result);
 end;
 
