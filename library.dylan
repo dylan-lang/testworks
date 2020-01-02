@@ -168,7 +168,7 @@ define module %testworks
     <result-status>,
     result-status,
       $passed, $failed, $skipped, $not-implemented, $crashed,
-      $expected-to-fail, $unexpected-success,
+      $expected-failure, $unexpected-success,
     result-seconds,
     result-microseconds,
     result-time,

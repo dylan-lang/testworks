@@ -28,102 +28,88 @@ end method do-results;
 
 define method count-results
     (result :: <result>, #key test = always(#t))
- => (passes :: <integer>, failures :: <integer>,
-     not-executed :: <integer>, not-implemented :: <integer>,
-     crashes :: <integer>)
-  let passes          = 0;
-  let failures        = 0;
-  let not-executed    = 0;
-  let not-implemented = 0;
-  let crashes         = 0;
-  do-results
-    (method (result)
-       select (result.result-status)
-         $passed =>
-           passes := passes + 1;
-         $failed =>
-           failures := failures + 1;
-         $skipped =>
-           not-executed := not-executed + 1;
-         $not-implemented =>
-           not-implemented := not-implemented + 1;
-         $expected-to-fail =>
-           passes := passes + 1;
-         $unexpected-success =>
-           failures := failures + 1;
-         $crashed =>
-           crashes := crashes + 1;
-         otherwise =>
-           error("Invalid result status: %=", result.result-status);
-       end
-     end,
-     result,
-     test: test);
-  values(passes, failures, not-executed, not-implemented, crashes)
-end method count-results;
+ => (pass :: <integer>, fail :: <integer>, crash :: <integer>,
+     skip :: <integer>, nyi :: <integer>, expected-to-fail :: <integer>)
+  let (pass, fail, crash, skip, nyi, expected-failures) = values(0, 0, 0, 0, 0, 0);
+  do-results(method (result)
+               // Not all types of result have all of these kinds of status.
+               // e.g., <check-result> is never $skipped or $not-implemented.
+               select (result.result-status)
+                 $passed =>
+                   pass := pass + 1;
+                 $failed =>
+                   fail := fail + 1;
+                 $crashed =>
+                   crash := crash + 1;
+                 $skipped =>
+                   skip := skip + 1;
+                 $not-implemented =>
+                   nyi := nyi + 1;
+                 $expected-failure =>
+                   expected-failures := expected-failures + 1;
+                 $unexpected-success =>
+                   fail := fail + 1; // Should report separately?
+                 otherwise =>
+                   error("Invalid result status: %=", result.result-status);
+               end;
+             end method,
+             result,
+             test: test);
+  values(pass, fail, crash, skip, nyi, expected-failures)
+end method;
 
 
 /// Summary generation
 
+// Output lines like these, one per call. `kind` is "suite", "test", "benchmark", or "check".
+//    Ran 10 suites: FAILED
+//    Ran 37 tests: FAILED (1 crashed, 1 failed, 3 not implemented, 1 skipped, 1 expected failure)
+//    Ran 1 benchmark: PASSED
+//    Ran 1455 checks: 22 crashed 1 failed
 define method print-result-summary
-    (result :: <result>, name :: <string>, stream :: <stream>,
+    (result :: <result>, kind :: <string>, stream :: <stream>,
      #key test = always(#t))
  => ()
-  let (passes, failures, not-executed, not-implemented, crashes)
+  let (passed, failed, crashed, skipped, nyi, expected-failures)
     = count-results(result, test: test);
-  let total = passes + failures + not-implemented + crashes;
-  let percent = 100.0 * if (total = 0)
-                          1
-                        else
-                          as(<float>, passes) / total
-                        end;
-  local method count-to-text-attributes (value :: <integer>, desired :: <text-attributes>)
-         => (attr :: <text-attributes>)
-          if (value > 0)
-            desired
-          else
-            $count-text-attributes
-          end if
-        end;
-  /*
-  testworks-test-suite-app PASSED in 0.154072 seconds:
-    Ran 10 suites: 10 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
-    Ran 37 tests: 37 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
-    Ran 0 benchmarks
-    Ran 1455 checks: 1455 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
-  */
-  format(stream, "  Ran %=%s%= %s%s",
+  let total = passed + failed + crashed + skipped + nyi + expected-failures;
+  let did-paren? = #f;
+  let did-comma? = #f;
+  local method print-count (count, label, #key plural = "")
+          if (count > 0)
+            if (~did-paren?)
+              did-paren? := #t;
+              write(stream, " (");
+            end;
+            if (did-comma?)
+              write(stream, ", ");
+            end;
+            format(stream, "%d %s%s", count, label, if (count = 1) "" else plural end);
+            did-comma? := #t;
+          end;
+        end method;
+  // "Ran 10 suites: " etc
+  format(stream, "Ran %=%s%= %s%s:",
          $total-text-attributes,
          total,
          $reset-text-attributes,
-         name,
+         kind,
          if (total == 1) "" else "s" end);
-  // If nothing ran, skip the details to make it obvious.
-  if (total = 0)
-    format(stream, "\n");
+  let passed? = crashed = 0 & failed = 0;
+  if (passed?)
+    format(stream, " %=PASSED%=", $passed-text-attributes, $reset-text-attributes);
   else
-    format(stream, ": %=%s%= passed (%s%%)",
-           $count-text-attributes, passes, $reset-text-attributes, percent);
-    // If 100% passed, skip details.
-    if (total = passes)
-      format(stream, "\n");
-    else
-      format(stream, ", %=%s%= failed, %=%s%= skipped, "
-               "%=%s%= not implemented, %=%s%= crashed\n",
-             count-to-text-attributes(failures, $failed-text-attributes),
-             failures,
-             $reset-text-attributes,
-             count-to-text-attributes(not-executed, $skipped-text-attributes),
-             not-executed,
-             $reset-text-attributes,
-             count-to-text-attributes(not-implemented, $not-implemented-text-attributes),
-             not-implemented,
-             $reset-text-attributes,
-             count-to-text-attributes(crashes, $crashed-text-attributes),
-             crashes,
-             $reset-text-attributes);
-    end;
+    format(stream, " %=FAILED%=", $failed-text-attributes, $reset-text-attributes);
   end;
+  print-count(failed, "failed");
+  print-count(crashed, "crashed");
+  print-count(skipped, "skipped");
+  print-count(nyi, "not implemented");
+  print-count(expected-failures, "expected failure", plural: "s");
+  if (did-paren?)
+    write(stream, ")");
+  end;
+  write(stream, "\n");
 end method print-result-summary;
 
 define method print-result-info
@@ -235,23 +221,20 @@ end;
 define method print-summary-report
     (result :: <result>, stream :: <stream>) => ()
   let stream = colorize-stream(stream);
-  let result-status = result.result-status;
-  format(stream, "\n%s %=%s%= in %s seconds:\n",
-         result.result-name,
-         result-status-to-text-attributes(result-status),
-         result-status.status-name.as-uppercase,
-         $reset-text-attributes,
-         result.result-time);
   local method print-class-summary (result, name, class) => ()
-          print-result-summary(result, name, stream,
-                               test: method (subresult)
-                                       instance?(subresult, class)
-                                     end)
+          print-result-summary(result, name, stream, test: rcurry(instance?, class))
         end;
+  write(stream, "\n");
   print-class-summary(result, "suite", <suite-result>);
   print-class-summary(result, "test", <test-result>);
   print-class-summary(result, "benchmark", <benchmark-result>);
   print-class-summary(result, "check", <check-result>);
+  let result-status = result.result-status;
+  format(stream, "%=%s%= in %s seconds\n",
+         result-status-to-text-attributes(result-status),
+         result-status.status-name.as-uppercase,
+         $reset-text-attributes,
+         result.result-time);
 end method;
 
 define method print-failures-report

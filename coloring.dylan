@@ -15,7 +15,6 @@ define constant $expected-to-fail-text-attributes   = text-attributes(foreground
 define constant $unexpected-success-text-attributes = text-attributes(foreground: $color-red);
 define constant $component-name-text-attributes     = text-attributes(intensity: $bright-intensity);
 define constant $total-text-attributes              = text-attributes(intensity: $bright-intensity);
-define constant $count-text-attributes              = text-attributes(intensity: $bright-intensity);
 
 define function result-status-to-text-attributes
     (result :: <result-status>)
@@ -25,7 +24,7 @@ define function result-status-to-text-attributes
     $failed => $failed-text-attributes;
     $crashed => $crashed-text-attributes;
     $skipped => $skipped-text-attributes;
-    $expected-to-fail => $expected-to-fail-text-attributes;
+    $expected-failure => $expected-to-fail-text-attributes;
     $unexpected-success => $unexpected-success-text-attributes;
     $not-implemented => $not-implemented-text-attributes;
     otherwise =>

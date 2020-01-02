@@ -463,11 +463,11 @@ define test test-run-tests-expect-failure/test ()
   let test-to-check = test-expected-to-fail-always;
   let runner = make(<test-runner>, progress: #f);
   let test-results = run-tests(runner, test-to-check);
-  assert-equal($expected-to-fail, test-results.result-status);
+  assert-equal($expected-failure, test-results.result-status);
 
   let test-to-check = test-expected-to-fail-maybe;
   let test-results = run-tests(runner, test-to-check);
-  assert-equal($expected-to-fail, test-results.result-status);
+  assert-equal($expected-failure, test-results.result-status);
 
   let test-to-check = test-unexpected-success;
   let test-results = run-tests(runner, test-to-check);

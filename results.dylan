@@ -10,16 +10,16 @@ define constant $passed = #"passed";
 define constant $failed = #"failed";
 define constant $crashed = #"crashed";
 define constant $skipped = #"skipped";
-define constant $expected-to-fail = #"expected-failure";
+define constant $expected-failure = #"expected-failure";
 define constant $unexpected-success = #"unexpected-success";
 define constant $not-implemented  = #"nyi";
 
 define constant $passing-statuses
-  = vector($passed, $skipped, $not-implemented, $expected-to-fail);
+  = vector($passed, $skipped, $not-implemented, $expected-failure);
 
 define constant <result-status>
   = one-of($passed, $failed, $crashed, $skipped,
-           $expected-to-fail, $unexpected-success,
+           $expected-failure, $unexpected-success,
            $not-implemented);
 
 // It looks like this and testworks-reports:parse-status are meant to
@@ -31,7 +31,7 @@ define method status-name
     $failed => "failed";
     $crashed => "crashed";
     $skipped => "skipped";
-    $expected-to-fail => "failed as expected";
+    $expected-failure => "failed as expected";
     $unexpected-success => "unexpectedly succeeded";
     $not-implemented => "not implemented";
     otherwise =>
