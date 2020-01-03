@@ -47,7 +47,11 @@ end;
 // or per test.  The Surefire report has a place for stdout, too.
 define method test-output
     (format-string :: <string>, #rest format-args) => ()
-  let stream = runner-output-stream(*runner*);
+  let stream = if (*runner*)
+                 runner-output-stream(*runner*)
+               else
+                 *standard-output*
+               end;
   with-stream-locked (stream)
     apply(format, stream, format-string, format-args);
     force-output(stream);
@@ -267,7 +271,7 @@ define method execute-component
                end if;
           otherwise
             => if (test.expected-to-fail?)
-                 $expected-to-fail
+                 $expected-failure
                else
                  $failed
                end if;

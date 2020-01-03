@@ -168,7 +168,7 @@ define module %testworks
     <result-status>,
     result-status,
       $passed, $failed, $skipped, $not-implemented, $crashed,
-      $expected-to-fail, $unexpected-success,
+      $expected-failure, $unexpected-success,
     result-seconds,
     result-microseconds,
     result-time,
@@ -193,15 +193,6 @@ define module %testworks
   export
     show-progress,
     $default, $verbose;
-
-  // Report functions
-  export
-    null-report-function,
-    summary-report-function,
-    failures-report-function,
-    full-report-function,
-    xml-report-function,
-    surefire-report-function;
 
   // Command line handling
   export

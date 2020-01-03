@@ -431,6 +431,12 @@ define thread variable *check-recording-function* = always(#f);
 define method record-check
     (name :: <string>, status :: <result-status>, reason :: false-or(<string>))
  => (status :: <result>)
+  if ((status = $failed | status = $crashed)
+        & expected-to-fail?(*component*))
+    // If a test is expected to fail it propagates to the test's assertions,
+    // otherwise they would turn the result red incorrectly.
+    status := $expected-failure;
+  end;
   let result = make(<check-result>,
                     name: name, status: status, reason: reason);
   *check-recording-function*(result);
