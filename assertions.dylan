@@ -145,6 +145,31 @@ define method check-equal-failure-detail
   join(choose(identity, vector(detail1, detail2)), ", ")
 end method check-equal-failure-detail;
 
+// TODO: if key sets are same, compare values. Limit to showing 1 mismatch?
+define method check-equal-failure-detail
+    (t1 :: <table>, t2 :: <table>) => (detail :: false-or(<string>))
+  let detail1 = next-method();
+  let t1-missing-keys = make(<stretchy-vector>);
+  let t2-missing-keys = make(<stretchy-vector>);
+  for (_ keyed-by k in t2)
+    if (unfound?(element(t1, k, default: $unfound)))
+      add!(t1-missing-keys, k);
+    end;
+  end;
+  for (_ keyed-by k in t1)
+    if (unfound?(element(t2, k, default: $unfound)))
+      add!(t2-missing-keys, k);
+    end;
+  end;
+  let detail2 = (~empty?(t1-missing-keys)
+                   & concatenate("table1 is missing keys ",
+                                 join(sort(t1-missing-keys), ", ")));
+  let detail3 = (~empty?(t2-missing-keys)
+                   & concatenate("table2 is missing keys ",
+                                 join(sort(t2-missing-keys), ", ")));
+  join(choose(identity, vector(detail1, detail2, detail3)), "; ")
+end method;
+
 define macro check-instance?
   { check-instance? (?check-name:expression, ?type:expression, ?value:expression)
   } => {
