@@ -9,7 +9,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 define library testworks
   use command-line-parser;
   use common-dylan,
-    import: { common-dylan, threads };
+    import: { common-dylan, simple-random, threads };
   use json;
   use io,
     import: { format, print, standard-io, streams };
@@ -116,6 +116,8 @@ define module %testworks
   use operating-system,
     prefix: "os/";
   use print, import: { print-object };
+  use simple-random,
+    import: { random };
   use standard-io;
   use streams;
   use strings, import: { char-compare-ic, starts-with?, string-equal? };

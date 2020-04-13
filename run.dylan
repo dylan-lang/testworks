@@ -62,12 +62,39 @@ end method test-output;
 define constant <progress-option> = one-of(#f, $default, $verbose);
 define constant <debug-option> = one-of(#f, #"crashes", #t);
 
+define constant $source-order  = #"source"; // order they appear in the source code.
+define constant $lexical-order = #"lexical";
+define constant $random-order  = #"random";
+define constant $default-order = $source-order;
+
+define constant <order> = one-of($source-order, $lexical-order, $random-order);
+
+define generic sort-components (components :: <sequence>, order :: <order>)
+  => (_ :: <sequence>);
+
+define method sort-components (components :: <sequence>, order == $source-order)
+ => (_ :: <sequence>)
+  components
+end;
+
+define method sort-components (components :: <sequence>, order == $lexical-order)
+ => (_ :: <sequence>)
+  sort(components, test: method (a, b) a.component-name < b.component-name end)
+end;
+
+define method sort-components (components :: <sequence>, order == $random-order)
+ => (_ :: <sequence>)
+  sort(components, test: method (a, b) random(100) < 50 end)
+end;
+
 define generic runner-tags     (runner :: <test-runner>) => (tags :: <sequence>);
 define generic runner-progress (runner :: <test-runner>) => (progress :: <progress-option>);
 define generic debug-runner?   (runner :: <test-runner>) => (debug? :: <debug-option>);
 define generic runner-skip     (runner :: <test-runner>) => (skip :: <sequence> /* of <component> */);
+define generic runner-order    (runner :: <test-runner>) => (order :: <order>);
 define generic runner-output-stream (runner :: <test-runner>) => (stream :: <stream>);
 define generic runner-options  (runner :: <test-runner>) => (options :: <table>);
+
 
 // A <test-runner> holds options for the test run and collects results.
 define open class <test-runner> (<object>)
@@ -82,6 +109,8 @@ define open class <test-runner> (<object>)
     init-keyword: debug?:;
   constant slot runner-skip :: <sequence> = #[],   // of components
     init-keyword: skip:;
+  constant slot runner-order :: <order> = $default-order,
+    init-keyword: order:;
 
   // The stream on which output is done.  Note that this may be bound
   // to different streams during the test run and when the report is
@@ -180,7 +209,7 @@ define method execute-component
   let status
     = block ()
         suite.suite-setup-function();
-        for (component in suite.suite-components)
+        for (component in sort-components(suite.suite-components, runner.runner-order))
           let subresult = maybe-execute-component(component, runner);
           add!(subresults, subresult);
           if (instance?(subresult, <component-result>)

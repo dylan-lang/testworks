@@ -57,6 +57,16 @@ define function parse-args
                   variable: "TYPE",
                   help: format-to-string("Final report to generate: %s",
                                          join(sort(key-sequence($report-functions)), "|"))));
+  add-option(parser,
+             make(<choice-option>,
+                  names: #("order"),
+                  choices: map(method (key) as-lowercase(as(<string>, key)) end,
+                               list($source-order, $lexical-order, $random-order)),
+                  default: as-lowercase(as(<string>, $default-order)),
+                  help: "Order in which to run tests. Note that when suites are being used"
+                    " the suite is ordered with other tests/suites at the same level and"
+                    " then when that suite runs its components are ordered separately."));
+
   // TODO(cgay): I adopted the convention of using ./_test in test-temp-directory()
   // and we could use it here as the default location of the report file.
   add-option(parser,
@@ -151,7 +161,8 @@ define function make-runner-from-command-line
                                           get-option-value(parser, "skip-test"))),
                     report: report,
                     progress: if (progress = $none) #f else progress end,
-                    tags: parse-tags(get-option-value(parser, "tag")));
+                    tags: parse-tags(get-option-value(parser, "tag")),
+                    order: as(<symbol>, get-option-value(parser, "order")));
 
   // Options seem useful, but why are they positional rather than --option?
   // i.e., what makes them so special?
