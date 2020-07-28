@@ -199,63 +199,58 @@ define function make-runner-from-command-line
 end function make-runner-from-command-line;
 
 
-// Run or list tests as filtered by the command-line options. Without
-// any arguments, defaults to running all tests in the library. The
-// `components` argument may be provided for backward compatibility
-// and must be a single test, benchmark, or test suite. Returns a
-// `<result>` if any tests are executed; otherwise `#f`.
+// Run or list tests as filtered by the command-line options and then call
+// exit-application. Without any arguments, defaults to running all tests in
+// the library. The `components` argument may be provided for backward
+// compatibility and must be a single test, benchmark, or test suite.
 //
 // TODO(cgay): update callers to pass no args, then remove `components` arg.
-define function run-test-application
-    (#rest components) => (result :: false-or(<result>))
-  block (return)
-    // Parse command line.
-    let parser = parse-args(application-arguments());
-    do-loads(parser);
+define function run-test-application (#rest components)
+  // Parse command line.
+  let parser = parse-args(application-arguments());
+  do-loads(parser);
 
-    let top
-      = select (components.size)
-          0 =>
-            // Make a suite named after the library, containing all test
-            // components.
-            let app = locator-base(as(<file-locator>, application-name()));
-            make(<suite>,
-                 name: app,
-                 components: find-root-components());
-          1 =>
-            components[0];
-          otherwise =>
-            usage-error("run-test-application takes 0 or 1 test components as"
-                          " argument, (got %d)", components.size);
-        end;
-
-    let (start-suite, runner, report-function)
-      = make-runner-from-command-line(top, parser);
-
-    // List tests and exit.
-    let list-opt = get-option-value(parser, "list");
-    if (list-opt)
-      list-components(runner, start-suite, list-opt.as-lowercase);
-      return(#f);
-    end;
-
-    // Run the requested tests.
-    let pathname = get-option-value(parser, "report-file");
-    let result = run-tests(runner, start-suite);
-    if (pathname)
-      fs/with-open-file(stream = pathname,
-                        direction: #"output",
-                        if-exists: #"overwrite")
-        report-function(result, stream);
+  let top
+    = select (components.size)
+        0 =>
+          // Make a suite named after the library, containing all test
+          // components.
+          let app = locator-base(as(<file-locator>, application-name()));
+          make(<suite>,
+               name: app,
+               components: find-root-components());
+        1 =>
+          components[0];
+        otherwise =>
+          format(*standard-error*,
+                 "run-test-application takes 0 or 1 test components as"
+                   " arguments, (got %d)", components.size);
+          exit-application(2);
       end;
-    else
-      report-function(result, *standard-output*);
+
+  let (start-suite, runner, report-function)
+    = make-runner-from-command-line(top, parser);
+
+  // List tests and exit.
+  let list-opt = get-option-value(parser, "list");
+  if (list-opt)
+    list-components(runner, start-suite, list-opt.as-lowercase);
+    exit-application(0);
+  end;
+
+  // Run the requested tests.
+  let pathname = get-option-value(parser, "report-file");
+  let result = run-tests(runner, start-suite);
+  if (pathname)
+    fs/with-open-file(stream = pathname,
+                      direction: #"output",
+                      if-exists: #"overwrite")
+      report-function(result, stream);
     end;
-    result
-  exception (ex :: <usage-error>)
-    format(*standard-error*, "%s\n", condition-to-string(ex));
-    exit-application(2);
-  end block;
+  else
+    report-function(result, *standard-output*);
+  end;
+  exit-application(if (result.result-status == $passed) 0 else 1 end);
 end function run-test-application;
 
 define function list-components
