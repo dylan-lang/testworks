@@ -1,0 +1,43 @@
+# This is a basic workflow to help you get started with Actions
+
+name: OD-Test
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      with:
+        path: code
+
+    # Runs a single command using the runners shell
+    - name: Install Open Dylan
+      run: |
+        pwd
+        curl -o opendylan.tar.bz2 https://opendylan.org/downloads/opendylan/2019.1/opendylan-2019.1-x86_64-linux.tar.bz2
+        tar xfj opendylan.tar.bz2
+        sudo apt install libgc-dev libunwind-dev
+        ls -l
+    - name: Build testworks
+      run: |
+        mkdir -p registry/generic
+        echo "abstract://dylan/code/testworks.lid" > registry/generic/testworks
+        echo "abstract://dylan/code/tests/testworks-test-suite-app.lid" > registry/generic/testworks-test-suite-app
+        echo "abstract://dylan/code/tests/testworks-test-suite.lid" > registry/generic/testworks-test-suite
+        opendylan-2019.1/bin/dylan-compiler -build -clean testworks-test-suite-app
+    - name: Run testworks tests
+      run: _build/bin/testworks-test-suite-app
