@@ -32,14 +32,22 @@ jobs:
         curl -o dylan-tool.tar.bz2 https://opendylan.org/downloads/dylan-tool-0.1.tar.bz2
         tar xfj dylan-tool.tar.bz2
         sudo apt install libgc-dev libunwind-dev
-        pwd
-        find .
-        dylan-tool/bin/dylan-tool new workspace testworks
-        cd workspace
-        ln -s ../repo/testworks
-        ../dylan-tool/bin/dylan/tool update
-        ls -l
+        echo "done installing libunwind"
+        find dylan-tool -print
+        ./dylan-tool/bin/dylan-tool new workspace testworks
+        echo "created workspace"
+        ln -s repo/testworks workspace/testworks
+        ./dylan-tool/bin/dylan-tool update
+        echo "updated workspace"
+        ls -l *
     - name: Build testworks
-      run: opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app
+      run: |
+        pwd
+        ls -l
+        cd workspace
+        opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app
     - name: Run testworks tests
-      run: _build/bin/testworks-test-suite-app
+      run: |
+        pwd
+        ls -l
+        ./workspace/_build/bin/testworks-test-suite-app
