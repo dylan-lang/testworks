@@ -32,6 +32,8 @@ jobs:
         curl -o dylan-tool.tar.bz2 https://opendylan.org/downloads/dylan-tool-0.1.tar.bz2
         tar xfj dylan-tool.tar.bz2
         sudo apt install libgc-dev libunwind-dev
+        pwd
+        find .
         dylan-tool/bin/dylan-tool new workspace testworks
         cd workspace
         ln -s ../repo/testworks
