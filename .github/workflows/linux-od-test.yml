@@ -22,22 +22,22 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
       with:
-        path: code
-
+        path: repo
     # Runs a single command using the runners shell
-    - name: Install Open Dylan
+    - name: Install Open Dylan and Testworks deps
       run: |
         pwd
         curl -o opendylan.tar.bz2 https://opendylan.org/downloads/opendylan/2019.1/opendylan-2019.1-x86_64-linux.tar.bz2
         tar xfj opendylan.tar.bz2
+        curl -o dylan-tool.tar.bz2 https://opendylan.org/downloads/dylan-tool-0.1.tar.bz2
+        tar xfj dylan-tool.tar.bz2
         sudo apt install libgc-dev libunwind-dev
+        dylan-tool/bin/dylan-tool new workspace testworks
+        cd workspace
+        ln -s ../repo/testworks
+        ../dylan-tool/bin/dylan/tool update
         ls -l
     - name: Build testworks
-      run: |
-        mkdir -p registry/generic
-        echo "abstract://dylan/code/testworks.lid" > registry/generic/testworks
-        echo "abstract://dylan/code/tests/testworks-test-suite-app.lid" > registry/generic/testworks-test-suite-app
-        echo "abstract://dylan/code/tests/testworks-test-suite.lid" > registry/generic/testworks-test-suite
-        opendylan-2019.1/bin/dylan-compiler -build -clean testworks-test-suite-app
+      run: opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app
     - name: Run testworks tests
       run: _build/bin/testworks-test-suite-app
