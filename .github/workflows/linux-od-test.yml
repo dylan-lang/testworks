@@ -36,11 +36,12 @@ jobs:
         sudo apt install libgc-dev libunwind-dev
         echo "done installing libunwind"
         ldd dylan-tool/bin/dylan-tool
-        dylan-tool/bin/dylan-tool help
-        # ./dylan-tool/bin/dylan-tool new workspace testworks
+        echo "running dylan-tool new"
+        dylan-tool/bin/dylan-tool new workspace testworks
         echo "created workspace"
         ln -s repo/testworks workspace/testworks
-        ./dylan-tool/bin/dylan-tool update
+        echo "running dylan-tool update"
+        dylan-tool/bin/dylan-tool update
         echo "updated workspace"
         ls -l *
     - name: Build testworks
@@ -48,6 +49,7 @@ jobs:
         pwd
         ls -l
         cd workspace
+        echo "building testworks"
         opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app
     - name: Run testworks tests
       run: |
