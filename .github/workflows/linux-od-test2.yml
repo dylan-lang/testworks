@@ -36,12 +36,13 @@ jobs:
       - name: Build testworks
         run: |
           echo "Building testworks..."
-          pwd
-          find .
+          ls -l
           opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app
+          find _build -ls
+          cat _build/build/testworks-test-suite-app/build.log
+
       - name: Run testworks tests
         run: |
           echo "Running testworks-test-suite-app..."
-          pwd
-          find .
+          ls -l
           _build/bin/testworks-test-suite-app
