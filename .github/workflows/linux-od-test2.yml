@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "Building testworks..."
           ls -l
-          opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app; true
+          opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app || echo "fail don't fail"
           find _build -ls
           cat _build/build/testworks-test-suite-app/build.log
 
