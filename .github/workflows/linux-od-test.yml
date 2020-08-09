@@ -28,7 +28,7 @@ jobs:
       run: |
         pwd
         uname -a
-        curl -o opendylan.tar.bz2 https://github.com/dylan-lang/opendylan/releases/download/v2019.1.0/opendylan-2019.1-x86-linux.tar.bz2
+        curl -o opendylan.tar.bz2 https://github.com/dylan-lang/opendylan/releases/download/v2019.1.0/opendylan-2019.1-x86_64-linux.tar.bz2
         tar xfj opendylan.tar.bz2
         opendylan-2019.1/bin/dylan-compiler -version
         curl -o dylan-tool.tar.bz2 https://opendylan.org/downloads/dylan-tool-0.1.tar.bz2
