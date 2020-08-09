@@ -37,7 +37,7 @@ jobs:
         echo "done installing libunwind"
         ldd dylan-tool/bin/dylan-tool
         echo "running dylan-tool new"
-        dylan-tool/bin/dylan-tool new workspace testworks
+        strace dylan-tool/bin/dylan-tool new workspace testworks
         echo "created workspace"
         ln -s repo/testworks workspace/testworks
         echo "running dylan-tool update"
