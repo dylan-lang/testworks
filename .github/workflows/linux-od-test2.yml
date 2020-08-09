@@ -10,8 +10,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # The build job.
-  build:
+
+  build-and-run:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "Building testworks..."
           ls -l
-          opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app
+          opendylan-2019.1/bin/dylan-compiler -build testworks-test-suite-app; true
           find _build -ls
           cat _build/build/testworks-test-suite-app/build.log
 
