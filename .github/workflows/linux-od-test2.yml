@@ -20,6 +20,11 @@ jobs:
       - name: Checkout testworks
         uses: actions/checkout@v2
 
+      - name: Checkout json
+        uses: actions/checkout@v2
+        with:
+          repository: dylan-lang/json
+
       - name: Install Open Dylan
         run: |
           echo "Installing Open Dylan..."
