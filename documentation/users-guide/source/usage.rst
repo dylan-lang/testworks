@@ -56,22 +56,26 @@ arbitrarily.
 
 .. code-block:: dylan
 
-   define benchmark benchmark-fn1 ()
-     fn1()
+   define suite my-library-suite ()
+     suite module1-suite;
+     suite module2-suite;
+     test some-other-test;
    end;
 
-**Note:** Suites must be defined textually after* the other suites and tests
+**Note:** Suites must be defined textually *after* the other suites and tests
 they contain.
 
 To run your tests of course you need an executable and there are two ways to
 accomplish this:
 
-1.  Compile your test library as an executable and call
-    :func:`run-test-application` (with no arguments) to parse the Testworks
-    command-line options and run all tests. For example, for the ``foo-test``
-    library::
+1.  Have your library call :func:`run-test-application` and compile it as an
+    executable. With no arguments :func:`run-test-application` runs all tests
+    and benchmarks, as filtered by the Testworks command-line options.
 
-      _build/bin/foo-test
+    If you prefer to manually organize your tests with suites, pass your
+    top-level suite to :func:`run-test-application` and that determines the
+    initial set of tests that are filtered by the command line. **Note:**
+    if you forget to add a test to any suite, the test will not be run.
 
 1.  Compile your test library as a shared library and run it with the
     ``testworks-run`` application. For example, for the `foo-test` library::
