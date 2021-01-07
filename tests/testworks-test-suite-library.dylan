@@ -31,7 +31,7 @@ define module testworks-test-suite
     import: { <directory-locator> };
   use strings;
   use table-extensions,
-    import: { table => tabling };
+    import: { tabling };
   use testworks;
   use %testworks;
 
