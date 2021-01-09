@@ -15,7 +15,7 @@ define method parse-status
     "failed" => $failed;
     "crashed" => $crashed;
     "skipped" => $skipped;
-    "failed as expected" => $expected-to-fail;
+    "failed as expected" => $expected-failure;
     "unexpectedly succeeded" => $unexpected-success;
     "not implemented" => $not-implemented;
     otherwise =>
@@ -28,7 +28,7 @@ define function read-report
  => (result :: <result>)
   let extension = locator-extension(as(<file-locator>, path));
   let reader
-    = select (extension by string-equal-ic?)
+    = select (extension by \=)
         // TODO(cgay): read surefire xml format
         "xml" => read-xml-report;
         "json" => read-json-report;
