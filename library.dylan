@@ -191,6 +191,15 @@ define module %testworks
     <check-result>,
     <test-unit-result>;
 
+  // Report functions
+  export
+    print-null-report,
+    print-summary-report,
+    print-failures-report,
+    print-full-report,
+    print-xml-report,
+    print-surefire-report;
+
   // Progress
   export
     show-progress,

@@ -180,12 +180,12 @@ end method summarize;
 
 /// Report functions
 
-define method diff-full-report-function
+define method print-diff-full-report
     (result :: <comparison-result>) => ()
   print-comparison-info(result, test: always(#t));
   format-out("\n");
-  diff-summary-report-function(result)
-end method diff-full-report-function;
+  print-diff-summary-report(result)
+end method;
 
 define method contains-check-results?
     (result :: <comparison-result>) => (b :: <boolean>)
@@ -194,7 +194,7 @@ define method contains-check-results?
   | any?(contains-check-results?, comparison-subresults(result))
 end method contains-check-results?;
 
-define method diff-report-function
+define method print-diff-report
     (result :: <comparison-result>) => ()
   // To maintain backward compatibility with pre-benchmarking code, if the
   // comparison contains any checks then use the non-benchmark display
@@ -205,20 +205,20 @@ define method diff-report-function
                                   ~result.comparison-identical?
                                 end);
   else
-    benchmark-diff-report-function(result, show-all?: #f);
+    print-benchmark-diff-report(result, show-all?: #f);
   end if;
   format-out("\n");
-  diff-summary-report-function(result)
-end method diff-report-function;
+  print-diff-summary-report(result)
+end method;
 
-define method diff-summary-report-function
+define method print-diff-summary-report
     (result :: <comparison-result>) => ()
   format-out("Comparison Summary:\n");
   summarize(result, "suite");
   summarize(result, "test");
   summarize(result, "check");
   summarize(result, "benchmark");
-end method diff-summary-report-function;
+end method;
 
 define method print-benchmark-result-header () => ()
   print-one-benchmark-result("Benchmark", "Time (sec)", "Bytes allocated");
@@ -260,7 +260,7 @@ define method print-benchmark-result-footer
   end if;
 end method;
                                         
-define method benchmark-diff-report-function
+define method print-benchmark-diff-report
     (top-result :: <comparison-result>, #key show-all? :: <boolean>)
  => ()
   let any-displayed? = #f;
@@ -312,4 +312,4 @@ define method benchmark-diff-report-function
     format-out("*** No benchmark results differed by more than %d%%.\n",
                *benchmark-tolerance*);
   end if;
-end method benchmark-diff-report-function;
+end method;

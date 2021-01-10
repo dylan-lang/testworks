@@ -174,7 +174,7 @@ define class <log-comparison-result> (<comparison-result>)
 end class <log-comparison-result>;
 
 define method perform-test-diff
-    (#key path1, path2, result1, result2, report-function = diff-report-function,
+    (#key path1, path2, result1, result2, report-function = print-diff-report,
           tolerance :: <integer> = $default-benchmark-tolerance)
  => ()
   let result1 = result1 | read-report(path1);

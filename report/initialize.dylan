@@ -62,14 +62,14 @@ define method display-run-options
     end;
     format-out("\n    Report function: %s\n",
                select (report-function by \=)
-                 diff-full-report-function    => "full-diff";
-                 diff-report-function         => "diff";
-                 diff-summary-report-function => "diff-summary";
-                 benchmark-diff-report-function => "benchmark-diff";
-                 summary-report-function      => "summary";
-                 failures-report-function     => "failures";
-                 full-report-function         => "full";
-                 otherwise                    => "*** unrecognised ***";
+                 print-diff-full-report      => "full-diff";
+                 print-diff-report           => "diff";
+                 print-diff-summary-report   => "diff-summary";
+                 print-benchmark-diff-report => "benchmark-diff";
+                 print-summary-report        => "summary";
+                 print-failures-report       => "failures";
+                 print-full-report           => "full";
+                 otherwise                   => "*** unrecognised ***";
                end);
     print-elements(tests,          prefix: "              Tests: ");
     print-elements(suites,         prefix: "             Suites: ");
@@ -185,13 +185,13 @@ define method parse-arguments
           := begin
                let function-name = pop(arguments);
                select (function-name by \=)
-                 "full"         => full-report-function;
-                 "summary"      => summary-report-function;
-                 "failures"     => failures-report-function;
-                 "diff"         => diff-report-function;
-                 "full-diff"    => diff-full-report-function;
-                 "diff-summary" => diff-summary-report-function;
-                 "benchmark-diff" => benchmark-diff-report-function;
+                 "full"         => print-full-report;
+                 "summary"      => print-summary-report;
+                 "failures"     => print-failures-report;
+                 "diff"         => print-diff-report;
+                 "full-diff"    => print-diff-full-report;
+                 "diff-summary" => print-diff-summary-report;
+                 "benchmark-diff" => print-benchmark-diff-report;
                  otherwise =>
                    invalid-argument("Report function '%s' not supported.\n",
                                     function-name);
@@ -233,21 +233,21 @@ define method parse-arguments
   end;
   unless (report-function)
     report-function := if (log2)
-                         diff-report-function
+                         print-diff-report
                        else
-                         failures-report-function
+                         print-failures-report
                        end;
   end;
-  if (log2 & member?(report-function, vector(full-report-function,
-                                             failures-report-function,
-                                             summary-report-function)))
+  if (log2 & member?(report-function, vector(print-full-report,
+                                             print-failures-report,
+                                             print-summary-report)))
     invalid-argument("The report function specified is not meaningful "
                      "when two report files are specified.\n");
   end if;
-  if (~log2 & member?(report-function, vector(diff-report-function,
-                                              diff-full-report-function,
-                                              diff-summary-report-function,
-                                              benchmark-diff-report-function)))
+  if (~log2 & member?(report-function, vector(print-diff-report,
+                                              print-diff-full-report,
+                                              print-diff-summary-report,
+                                              print-benchmark-diff-report)))
     invalid-argument("The report function specified is only meaningful "
                      "when two report files are specified.\n");
   end if;
