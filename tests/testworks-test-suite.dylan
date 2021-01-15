@@ -430,6 +430,20 @@ define constant test-expected-to-fail-maybe
          expected-to-fail?: method () #t end,
          expected-to-fail-reason: "because of assert-true(#f)");
 
+define constant test-expected-to-crash-always
+  = make(<test>,
+         name: "test-expected-to-crash-always",
+         function: curry(error, "test-expected-to-crash-always"),
+         expected-to-fail?: method () #t end,
+         expected-to-fail-reason: "because of error(...)");
+
+define constant expected-to-fail-suite
+  = make(<suite>,
+         name: "expected-to-fail-suite",
+         components: vector(test-expected-to-fail-always,
+                            test-expected-to-fail-maybe,
+                            test-expected-to-crash-always));
+
 define constant test-unexpected-success
   = make(<test>,
          name: "test-unexpected-success",
@@ -437,40 +451,35 @@ define constant test-unexpected-success
          expected-to-fail?: #t,
          expected-to-fail-reason: "because of assert-true(#t)");
 
-define constant expected-to-fail-suite
-  = make(<suite>,
-         name: "expected-to-fail-suite",
-         components: vector(test-expected-to-fail-always,
-                            test-expected-to-fail-maybe));
-
 define constant unexpected-success-suite
   = make(<suite>,
          name: "unexpected-success-suite",
          components: vector(test-unexpected-success));
 
 define test test-run-tests-expect-failure/suite ()
-  let suite-to-check = expected-to-fail-suite;
   let runner = make(<test-runner>, progress: #f);
-  let suite-results = run-tests(runner, suite-to-check);
-  assert-equal($passed, suite-results.result-status);
 
-  let suite-to-check = unexpected-success-suite;
-  let suite-results = run-tests(runner, suite-to-check);
-  assert-equal($failed, suite-results.result-status);
-end test test-run-tests-expect-failure/suite;
+  let suite-results = run-tests(runner, expected-to-fail-suite);
+  assert-equal($passed, suite-results.result-status,
+               "expected-to-fail-suite should pass because all of its tests"
+                 " fail and are expected to fail");
+
+  let suite-results = run-tests(runner, unexpected-success-suite);
+  assert-equal($failed, suite-results.result-status,
+               "unexpected-success-suite should fail because its tests"
+                 " pass but are expected to fail");
+end test;
 
 define test test-run-tests-expect-failure/test ()
-  let test-to-check = test-expected-to-fail-always;
   let runner = make(<test-runner>, progress: #f);
-  let test-results = run-tests(runner, test-to-check);
+
+  let test-results = run-tests(runner, test-expected-to-fail-always);
   assert-equal($expected-failure, test-results.result-status);
 
-  let test-to-check = test-expected-to-fail-maybe;
-  let test-results = run-tests(runner, test-to-check);
+  let test-results = run-tests(runner, test-expected-to-fail-maybe);
   assert-equal($expected-failure, test-results.result-status);
 
-  let test-to-check = test-unexpected-success;
-  let test-results = run-tests(runner, test-to-check);
+  let test-results = run-tests(runner, test-unexpected-success);
   assert-equal($unexpected-success, test-results.result-status);
   assert-true(find-substring(test-results.result-reason, "because of assert-true(#t)"));
 end test;

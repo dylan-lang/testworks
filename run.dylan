@@ -260,20 +260,21 @@ define method execute-component
  => (result :: <component-result>)
   let subresults = make(<stretchy-vector>);
   let (seconds, microseconds, bytes) = values(0, 0, 0);
+  local
+    method record-check (result :: <result>)
+      add!(subresults, result);
+      if (*runner*.runner-progress)
+        show-progress(*runner*, #f, result);
+      end;
+      result
+    end,
+    method record-benchmark (result :: <result>)
+      add!(subresults, result);
+      result
+    end;
   let (status, reason)
-    = dynamic-bind (*check-recording-function* =
-                      method (result :: <result>)
-                        add!(subresults, result);
-                        if (*runner*.runner-progress)
-                          show-progress(*runner*, #f, result);
-                        end;
-                        result
-                      end,
-                    *benchmark-recording-function* =
-                      method (result :: <result>)
-                        add!(subresults, result);
-                        result
-                      end)
+    = dynamic-bind (*check-recording-function* = record-check,
+                    *benchmark-recording-function* = record-benchmark)
         let cond
           = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
               maybe-trap-errors(test.test-function());
@@ -282,29 +283,7 @@ define method execute-component
               microseconds := cpu-time-microseconds;
               bytes := allocation;
             end profiling;
-        case
-          instance?(cond, <serious-condition>)
-            => values($crashed, format-to-string("%s", cond));
-          empty?(subresults) & test.test-requires-assertions?
-            => $not-implemented;
-          every?(method (result :: <unit-result>) => (passed? :: <boolean>)
-                   result.result-status == $passed
-                 end,
-                 subresults)
-            => if (test.expected-to-fail?)
-                 let reason = format-to-string("test passed but was expected to fail due to %=",
-                                               test.expected-to-fail-reason);
-                 values($unexpected-success, reason)
-               else
-                 $passed
-               end if;
-          otherwise
-            => if (test.expected-to-fail?)
-                 $expected-failure
-               else
-                 $failed
-               end if;
-        end case
+        decide-status(test, subresults, cond)
       end dynamic-bind;
   make(component-result-type(test),
        name: test.component-name,
@@ -315,6 +294,40 @@ define method execute-component
        microseconds: microseconds,
        bytes: bytes)
 end method execute-component;
+
+define function decide-status
+    (test :: <runnable>, subresults, condition)
+ => (status :: <result-status>, reason)
+  let benchmark? = ~test.test-requires-assertions?;
+  case
+    instance?(condition, <serious-condition>)
+      => if (test.expected-to-fail?)
+           $expected-failure
+         else
+           values($crashed, format-to-string("%s", condition))
+         end;
+    empty?(subresults) & ~benchmark?
+      => $not-implemented;
+    every?(method (result :: <unit-result>) => (passed? :: <boolean>)
+             result.result-status == $passed
+           end,
+           subresults)
+      => if (test.expected-to-fail?)
+           let reason = format-to-string("%s passed but was expected to fail due to %=",
+                                         test.component-type-name,
+                                         test.expected-to-fail-reason);
+           values($unexpected-success, reason)
+         else
+           $passed
+         end if;
+    otherwise
+      => if (test.expected-to-fail?)
+           $expected-failure
+         else
+           $failed
+         end if;
+  end case
+end function;
 
 define method list-component
     (test :: <runnable>, runner :: <test-runner>)
