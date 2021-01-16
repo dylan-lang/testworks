@@ -1,7 +1,7 @@
 Module: testworks-test-suite
 
 define interface-specification-suite testworks-interface-specification-suite ()
-  function run-test-application (#"rest") => (false-or(<result>));
+  function run-test-application (#"rest") => ();
   function test-output (<string>, #"rest") => ();
   function test-temp-directory () => (false-or(<directory-locator>));
   open generic function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));

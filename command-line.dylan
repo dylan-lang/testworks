@@ -122,11 +122,12 @@ define function parse-args
   parser
 end function parse-args;
 
-define function do-loads(parser :: <command-line-parser>)
-  for (library-file in get-option-value(parser, "load"))
-    format(*standard-output*, "Loading library %s\n", library-file);
+define function do-loads
+    (library-files :: <collection>)
+  for (file in library-files)
+    format(*standard-output*, "Loading library %s\n", file);
     force-output(*standard-output*);
-    os/load-library(library-file);
+    os/load-library(file);
   end for;
 end function;
 
@@ -169,7 +170,8 @@ define function make-runner-from-command-line
   for (option in parser.positional-options)
     let (key, val) = apply(values, split(option, '=', count: 2));
     if (~val)
-      usage-error("%= is not a valid test run option; must be in key=value form.", option);
+      usage-error("%= is not a valid test run option; must be in key=value form.",
+                  option);
     end;
     runner.runner-options[key] := val;
   end for;
@@ -205,53 +207,80 @@ end function make-runner-from-command-line;
 // compatibility and must be a single test, benchmark, or test suite.
 //
 // TODO(cgay): update callers to pass no args, then remove `components` arg.
-define function run-test-application (#rest components)
-  // Parse command line.
+define function run-test-application
+    (#rest components) => ()
+  block ()
+    if (components.size > 1)
+      format(*standard-error*,
+             "run-test-application takes 0 or 1 test components as"
+               " arguments, (got %d)", components.size);
+      exit-application(2);
+    end;
+    let status = process-command-line(components);
+    exit-application(status);
+  exception (error :: <help-requested>)
+    format(*standard-output*, "%s", error);
+    exit-application(0);
+  exception (error :: <usage-error>)
+    // The command-line-parser library prints this error itself (which is
+    // probably a bug) so don't print it here.
+    exit-application(2);
+  exception (error :: <error>)
+    format(*standard-error*, "Error: %s", error);
+    exit-application(2);
+  end;
+end function;
+
+define function process-command-line
+    (components) => (exit-status :: <integer>)
+  // parse-args may signal <help-requested> or <usage-error>.
   let parser = parse-args(application-arguments());
-  do-loads(parser);
 
-  let top
-    = select (components.size)
-        0 =>
-          // Make a suite named after the library, containing all test
-          // components.
-          let app = locator-base(as(<file-locator>, application-name()));
-          make(<suite>,
-               name: app,
-               components: find-root-components());
-        1 =>
-          components[0];
-        otherwise =>
-          format(*standard-error*,
-                 "run-test-application takes 0 or 1 test components as"
-                   " arguments, (got %d)", components.size);
-          exit-application(2);
+  // Load more tests, if requested. Tests share a global namespace so this will
+  // signal on duplicate names.
+  let to-load = get-option-value(parser, "load");
+  if (to-load.size > 0)
+    if (~empty?(components))
+      // We can remove this check (and the components parameter) after all
+      // libraries are updated to pass no args to run-test-application.
+      error("passing a component to run-test-application and using --load"
+              " at the same time is pointless since only the passed component"
+              " will run.");
+    end;
+    do-loads(to-load);
+  end;
+
+  let suite
+    = if (empty?(components))
+        make(<suite>,
+             name: locator-base(as(<file-locator>, application-name())),
+             components: find-root-components())
+      else
+        components[0]
       end;
-
   let (start-suite, runner, report-function)
-    = make-runner-from-command-line(top, parser);
+    = make-runner-from-command-line(suite, parser);
 
-  // List tests and exit.
   let list-opt = get-option-value(parser, "list");
   if (list-opt)
     list-components(runner, start-suite, list-opt.as-lowercase);
-    exit-application(0);
-  end;
-
-  // Run the requested tests.
-  let pathname = get-option-value(parser, "report-file");
-  let result = run-tests(runner, start-suite);
-  if (pathname)
-    fs/with-open-file(stream = pathname,
-                      direction: #"output",
-                      if-exists: #"overwrite")
-      report-function(result, stream);
-    end;
+    0
   else
-    report-function(result, *standard-output*);
-  end;
-  exit-application(if (result.result-status == $passed) 0 else 1 end);
-end function run-test-application;
+    // Run the requested tests.
+    let pathname = get-option-value(parser, "report-file");
+    let result = run-tests(runner, start-suite);
+    if (pathname)
+      fs/with-open-file(stream = pathname,
+                        direction: #"output",
+                        if-exists: #"overwrite")
+        report-function(result, stream);
+      end;
+    else
+      report-function(result, *standard-output*);
+    end;
+    if (result.result-status == $passed) 0 else 1 end
+  end
+end function;
 
 define function list-components
     (runner :: <test-runner>, start-suite :: <component>, what :: <string>)

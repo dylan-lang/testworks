@@ -280,8 +280,8 @@ define function find-root-components () => (components :: <sequence>)
   let roots = make(<stretchy-vector>);
   for (count keyed-by c in refs)
     if (count = 0)
-     add!(roots, c);
+      add!(roots, c);
     end;
   end;
   roots
-end;
+end function;
