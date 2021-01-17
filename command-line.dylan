@@ -275,6 +275,8 @@ define function process-command-line
                         if-exists: #"overwrite")
         report-function(result, stream);
       end;
+      // Always display the summary on the console.
+      print-summary-report(result, *standard-output*);
     else
       report-function(result, *standard-output*);
     end;
