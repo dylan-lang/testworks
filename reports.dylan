@@ -451,11 +451,11 @@ end function;
 /// JSON report
 
 define function print-json-report (result :: <result>, stream :: <stream>) => ()
-  encode-json(stream, result);
+  print-json(result, stream, indent: 2);
 end;
 
-define method encode-json (stream :: <stream>, result :: <result>)
-  encode-json(stream, result-to-table(result));
+define method do-print-json (result :: <result>, stream :: <stream>)
+  do-print-json(result-to-table(result), stream);
 end;
 
 // It's easier to convert to <table> and let the json library do the actual

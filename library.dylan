@@ -107,7 +107,7 @@ define module %testworks
     prefix: "fs/";
   use format;
   use json,
-    import: { encode-json };
+    import: { print-json, do-print-json };
   use locators,
     import: { <directory-locator>,
               <file-locator>,
