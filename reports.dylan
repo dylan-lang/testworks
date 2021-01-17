@@ -58,18 +58,26 @@ define method count-results
   values(pass, fail, crash, skip, nyi, expected-failures)
 end method;
 
+define function count-results-of-type
+    (result :: <result>, type :: subclass(<result>)) => (n :: <integer>)
+  let n = 0;
+  do-results(method (r) n := n + 1 end,
+             result,
+             test: method (r) instance?(r, type) end);
+  n
+end function;
+
 
 /// Summary generation
 
 // Output lines like these, one per call. `kind` is "suite", "test", "benchmark", or "check".
-//    Ran 10 suites: FAILED
-//    Ran 37 tests: FAILED (1 crashed, 1 failed, 3 not implemented, 1 skipped, 1 expected failure)
-//    Ran 1 benchmark: PASSED
 //    Ran 1455 checks: 22 crashed 1 failed
+//    Ran 37 tests: FAILED (1 crashed, 1 failed, 3 not implemented, 1 skipped, 1 expected failure)
 define method print-result-summary
     (result :: <result>, kind :: <string>, stream :: <stream>,
      #key test = always(#t))
  => ()
+  // Unexpected success is currently lumped in with failures.
   let (passed, failed, crashed, skipped, nyi, expected-failures)
     = count-results(result, test: test);
   let total = passed + failed + crashed + skipped + nyi + expected-failures;
@@ -225,10 +233,20 @@ define method print-summary-report
           print-result-summary(result, name, stream, test: rcurry(instance?, class))
         end;
   write(stream, "\n");
-  print-class-summary(result, "suite", <suite-result>);
-  print-class-summary(result, "test", <test-result>);
-  print-class-summary(result, "benchmark", <benchmark-result>);
   print-class-summary(result, "check", <check-result>);
+
+  // The expectation is that tests and benchmarks should be in different
+  // libraries so we try to print only one or the other here. If there are
+  // neither tests nor benchmarks something is wrong so print both.
+  let benches = count-results-of-type(result, <benchmark-result>);
+  let tests = count-results-of-type(result, <test-result>);
+  if (benches > 0 | tests = 0)
+    print-class-summary(result, "benchmark", <benchmark-result>);
+  end;
+  if (tests > 0 | benches = 0)
+    print-class-summary(result, "test", <test-result>);
+  end;
+
   let result-status = result.result-status;
   format(stream, "%=%s%= in %s seconds\n",
          result-status-to-text-attributes(result-status),
