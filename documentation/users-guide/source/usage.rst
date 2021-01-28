@@ -94,8 +94,8 @@ Assertions
 ----------
 
 An assertion accepts an expression to evaluate and report back on,
-saying if the expression passed, failed, or signaled an
-error.  As an example, in
+saying if the expression passed, failed, or crashed (i.e., signaled an
+error).  As an example, in
 
 .. code-block:: dylan
 
@@ -119,7 +119,7 @@ assertion macros:
   * :func:`assert-instance?`
   * :func:`assert-not-instance?`
 
-Each of these takes an optional description string, after the required
+Each of these takes an optional description, after the required
 arguments, which will be displayed if the assertion fails.  If the
 description isn't provided, Testworks makes one from the expressions
 passed to the assertion macro. For example, ``assert-true(2 > 3)``
@@ -127,12 +127,21 @@ produces this failure message::
 
   (2 > 3) is true failed [expression "(2 > 3)" evaluates to #f]
 
-In general, Testworks should be pretty good at reporting the actual
-values that caused the failure so it shouldn't be necessary to include
-them in the description all the time.
+In general, Testworks should be pretty good at reporting the actual values that
+caused the failure so it shouldn't be necessary to include them in the
+description all the time. Usually if your test iterates over various inputs
+it's a good idea to provide a description so the failing input can be easily
+identified.
 
-In the future, there will be support for failures to include the
-source file line number for the assertion.
+If you do provide a description it may either be a single value to display, as
+with ``format-to-string("%s", v)``, or a format string and corresponding format
+arguments. These are all valid:
+
+.. code-block:: dylan
+
+   assert-equal(a, b);     // auto-generated description
+   assert-equal(a, b, a);  // a used as description
+   assert-equal(a, b, "does %= = %=?", a, b);  // formatted description
 
   *Note: You may also find check-\* macros in Testworks test suites.
   These are a deprecated form of assertion.  The only real difference

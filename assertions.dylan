@@ -9,6 +9,7 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 // TODO(cgay): Try and figure out a good way to remove some of the
 // duplicate code in the do-check* functions.
 
+define constant $invalid-description = "*** invalid description ***";
 
 /// Assertion macros
 
@@ -19,6 +20,20 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 // Note that these macros wrap up the real macro arguments inside
 // methods to delay their evaluation until they are within the scope
 // of whatever condition handling is required.
+
+define function eval-check-description
+    (thunk :: <function>) => (description :: <string>)
+  let (description, #rest args) = thunk();
+  if (empty?(args))
+    if (instance?(description, <string>))
+      description
+    else
+      format-to-string("%s", description)
+    end
+  else
+    apply(format-to-string, description, args)
+  end
+end function;
 
 define macro check
   { check (?check-name:expression,
@@ -44,9 +59,9 @@ define macro assert-equal
   } => {
     assert-equal(?expr1, ?expr2, ?"expr1" " = " ?"expr2")
   }
-  { assert-equal (?expr1:expression, ?expr2:expression, ?description:expression)
+  { assert-equal (?expr1:expression, ?expr2:expression, ?description:*)
   } => {
-    do-check-equal(method () ?description end,
+    do-check-equal(method () values(?description) end,
                    method ()
                      values(?expr1, ?expr2, ?"expr1", ?"expr2")
                    end,
@@ -59,9 +74,9 @@ define macro assert-not-equal
   } => {
     assert-not-equal(?expr1, ?expr2, ?"expr1" " ~= " ?"expr2")
   }
-  { assert-not-equal (?expr1:expression, ?expr2:expression, ?description:expression)
+  { assert-not-equal (?expr1:expression, ?expr2:expression, ?description:*)
   } => {
-    do-check-equal(method () ?description end,
+    do-check-equal(method () values(?description) end,
                    method ()
                      values(?expr1, ?expr2, ?"expr1", ?"expr2")
                    end,
@@ -70,22 +85,22 @@ define macro assert-not-equal
 end macro assert-not-equal;
 
 define function do-check-equal
-    (get-name :: <function>, get-arguments :: <function>, negate? :: <boolean>)
+    (description-thunk :: <function>, get-arguments :: <function>, negate? :: <boolean>)
  => (result :: <result>)
   let phase = "evaluating assertion description";
-  let name = #f;
+  let description :: false-or(<string>) = #f;
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
             if (debug?())
               next-handler()  // decline to handle it
             else
-              return(record-check(name | "*** Invalid description ***",
+              return(record-check(description | $invalid-description,
                                   $crashed,
                                   format-to-string("Error %s: %s", phase, condition)));
             end;
           end method;
-    name := get-name();
+    description := eval-check-description(description-thunk);
     phase := "evaluating assertion expressions";
     let (val1, val2, expr1, expr2) = get-arguments();
     phase := format-to-string("while comparing %s and %s for %sequality",
@@ -110,7 +125,7 @@ define function do-check-equal
                                   if (detail) "  " else "" end,
                                   detail | ""))
         end;
-    record-check(name, status, reason)
+    record-check(description, status, reason)
   end block
 end function do-check-equal;
 
@@ -186,9 +201,9 @@ define macro assert-instance?
   } => {
     assert-instance? (?type, ?value, ?"value" " is an instance of " ?"type")
   }
-  { assert-instance? (?type:expression, ?value:expression, ?description:expression)
+  { assert-instance? (?type:expression, ?value:expression, ?description:*)
   } => {
-    do-check-instance?(method () ?description end,
+    do-check-instance?(method () values(?description) end,
                        method ()
                          values(?type, ?value, ?"value")
                        end,
@@ -201,9 +216,9 @@ define macro assert-not-instance?
   } => {
     assert-not-instance? (?type, ?value, ?"value" " is not an instance of " ?"type")
   }
-  { assert-not-instance? (?type:expression, ?value:expression, ?description:expression)
+  { assert-not-instance? (?type:expression, ?value:expression, ?description:*)
   } => {
-    do-check-instance?(method () ?description end,
+    do-check-instance?(method () values(?description) end,
                        method ()
                          values(?type, ?value, ?"value")
                        end,
@@ -212,22 +227,22 @@ define macro assert-not-instance?
 end macro assert-not-instance?;
 
 define function do-check-instance?
-    (get-name :: <function>, get-arguments :: <function>, negate? :: <boolean>)
+    (description-thunk :: <function>, get-arguments :: <function>, negate? :: <boolean>)
  => (result :: <result>)
   let phase = "evaluating assertion description";
-  let name = #f;
+  let description :: false-or(<string>) = #f;
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
             if (debug?())
               next-handler()  // decline to handle it
             else
-              return(record-check(name | "*** Invalid description ***",
+              return(record-check(description | $invalid-description,
                                   $crashed,
                                   format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
-    name := get-name();
+    description := eval-check-description(description-thunk);
     phase := "evaluating assertion expressions";
     let (type :: <type>, value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= is %=an instance of %s",
@@ -240,7 +255,7 @@ define function do-check-instance?
                  format-to-string("%s (from expression %=) is not an instance of %s.",
                                   value, value-expr, type))
         end;
-    record-check(name, status, reason)
+    record-check(description, status, reason)
   end block
 end function do-check-instance?;
 
@@ -260,30 +275,30 @@ define macro assert-true
     assert-true(?expr, ?"expr" " is true")
   }
 
-  { assert-true (?expr:expression, ?description:expression)
+  { assert-true (?expr:expression, ?description:*)
   } => {
-    do-check-true(method () ?description end,
+    do-check-true(method () values(?description) end,
                   method () values(?expr, ?"expr") end)
   }
 end macro assert-true;
 
 define function do-check-true
-    (get-name :: <function>, get-arguments :: <function>)
+    (description-thunk :: <function>, get-arguments :: <function>)
  => (result :: <result>)
   let phase = "evaluating assertion description";
-  let name = #f;
+  let description :: false-or(<string>) = #f;
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
             if (debug?())
               next-handler()  // decline to handle it
             else
-              return(record-check(name | "*** Invalid description ***",
+              return(record-check(description | $invalid-description,
                                   $crashed,
                                   format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
-    name := get-name();
+    description := eval-check-description(description-thunk);
     phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= evaluates to true", value-expr);
@@ -294,7 +309,7 @@ define function do-check-true
           values($failed,
                  format-to-string("expression %= evaluates to #f.", value-expr))
         end;
-    record-check(name, status, reason)
+    record-check(description, status, reason)
   end block
 end function do-check-true;
 
@@ -314,9 +329,9 @@ define macro assert-false
     assert-false(?expr, ?"expr" " evaluates to #f")
   }
 
-  { assert-false (?expr:expression, ?description:expression)
+  { assert-false (?expr:expression, ?description:*)
   } => {
-    do-check-false(method () ?description end,
+    do-check-false(method () values(?description) end,
                    method ()
                      values(?expr, ?"expr")
                    end)
@@ -324,22 +339,22 @@ define macro assert-false
 end macro assert-false;
 
 define function do-check-false
-    (get-name :: <function>, get-arguments :: <function>)
+    (description-thunk :: <function>, get-arguments :: <function>)
  => (result :: <result>)
   let phase = "evaluating assertion description";
-  let name = #f;
+  let description :: false-or(<string>) = #f;
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
             if (debug?())
               next-handler()  // decline to handle it
             else
-              return(record-check(name | "*** Invalid description ***",
+              return(record-check(description | $invalid-description,
                                   $crashed,
                                   format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
-    name := get-name();
+    description := eval-check-description(description-thunk);
     phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= evaluates to #f", value-expr);
@@ -351,7 +366,7 @@ define function do-check-false
                  format-to-string("expression %= evaluates to %=; expected #f.",
                                   value-expr, value))
         end;
-    record-check(name, status, reason)
+    record-check(description, status, reason)
   end block
 end function do-check-false;
 
@@ -372,9 +387,9 @@ define macro assert-signals
     assert-signals(?condition, ?expr, ?"expr" " signals condition " ?"condition")
   }
 
-  { assert-signals(?condition:expression, ?expr:expression, ?description:expression)
+  { assert-signals(?condition:expression, ?expr:expression, ?description:*)
   } => {
-    do-check-condition(method () ?description end,
+    do-check-condition(method () values(?description) end,
                        method ()
                          values(?condition, method () ?expr end, ?"expr")
                        end)
@@ -382,22 +397,22 @@ define macro assert-signals
 end macro assert-signals;
 
 define function do-check-condition
-    (get-name :: <function>, get-arguments :: <function>)
+    (description-thunk :: <function>, get-arguments :: <function>)
  => (result :: <result>)
   let phase = "evaluating assertion description";
-  let name = #f;
+  let description :: false-or(<string>) = #f;
   block (return)
     let handler <serious-condition>
         = method (condition, next-handler)
             if (debug?())
               next-handler()  // decline to handle it
             else
-              return(record-check(name | "*** Invalid description ***",
+              return(record-check(description | $invalid-description,
                                   $crashed,
                                   format-to-string("Error %s: %s", phase, condition)))
             end;
           end method;
-    name := get-name();
+    description := eval-check-description(description-thunk);
     phase := "evaluating assertion expression";
     let (condition-class, thunk :: <function>, expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= signals a condition of class %s",
@@ -416,7 +431,7 @@ define function do-check-condition
                                              "The error was: %s",
                                            ex.object-class, condition-class, ex))
         end;
-    record-check(name, status, reason)
+    record-check(description, status, reason)
   end block
 end function do-check-condition;
 
@@ -442,7 +457,7 @@ define macro assert-no-errors
     assert-no-errors(?expr, ?"expr" " doesn't signal an error ")
   }
 
-  { assert-no-errors(?expr:expression, ?description:expression)
+  { assert-no-errors(?expr:expression, ?description:*)
   } => {
     assert-true(begin ?expr; #t end, ?description)
   }

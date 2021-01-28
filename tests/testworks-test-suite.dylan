@@ -628,3 +628,69 @@ define test test-included-in-suite-multiple-times ()
                                                    name: "suite 4",
                                                    components: list(test1)))));
 end test;
+
+define test test-assertion-description ()
+  local method check-description (test-function, want-string)
+          let test = make(<test>,
+                          name: "no name",
+                          function: test-function);
+          let result = run-tests(make(<test-runner>, progress: #f), test);
+          let report = with-output-to-string (stream)
+                         print-full-report(result, stream)
+                       end;
+          assert-true(find-substring(report, want-string),
+                      "find %= in %=", want-string, report);
+        end;
+  // assert-equal
+  check-description(method () assert-equal(#t, #t);            end, "#t = #t");
+  check-description(method () assert-equal(#t, #t, 123);       end, "123");
+  check-description(method () assert-equal(#t, #t, "abc");     end, "abc");
+  check-description(method () assert-equal(#t, #t, "%d", 456); end, "456");
+
+  // assert-true
+  check-description(method () assert-true(#t);            end, "#t is true");
+  check-description(method () assert-true(#t, 123);       end, "123");
+  check-description(method () assert-true(#t, "abc");     end, "abc");
+  check-description(method () assert-true(#t, "%d", 456); end, "456");
+
+  // assert-false
+  check-description(method () assert-false(#f);            end, "#f evaluates to #f");
+  check-description(method () assert-false(#f, 123);       end, "123");
+  check-description(method () assert-false(#f, "abc");     end, "abc");
+  check-description(method () assert-false(#f, "%d", 456); end, "456");
+
+  // assert-instance?
+  check-description(method ()
+                      assert-instance?(<boolean>, #t);
+                    end,
+                    "#t is an instance of <boolean>");
+  check-description(method ()
+                      assert-instance?(<boolean>, #t, 123);
+                    end,
+                    "123");
+  check-description(method ()
+                      assert-instance?(<boolean>, #t, "abc");
+                    end, "abc");
+  check-description(method ()
+                      assert-instance?(<boolean>, #t, "%d", 456);
+                    end,
+                    "456");
+
+  // assert-signals
+  check-description(method ()
+                      assert-signals(<error>, error("x"));
+                    end,
+                    "signals condition <error>");
+  check-description(method ()
+                      assert-signals(<error>, error("x"), 123);
+                    end,
+                    "123");
+  check-description(method ()
+                      assert-signals(<error>, error("x"), "abc");
+                    end,
+                    "abc");
+  check-description(method ()
+                      assert-signals(<error>, error("x"), "%d", 456);
+                    end,
+                    "456");
+end test;

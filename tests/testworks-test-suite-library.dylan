@@ -12,7 +12,7 @@ define library testworks-test-suite
   use command-line-parser;
   use common-dylan;
   use io,
-    import: { format };
+    import: { format, streams };
   use strings;
   use system,
     import: { file-system, locators };
@@ -29,6 +29,8 @@ define module testworks-test-suite
   use format;
   use locators,
     import: { <directory-locator> };
+  use streams,
+    import: { with-output-to-string };
   use strings;
   use table-extensions,
     import: { tabling };
