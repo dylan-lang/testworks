@@ -6,14 +6,10 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
-// TODO(cgay): Try and figure out a good way to remove some of the
-// duplicate code in the do-check* functions.
-
 define constant $invalid-description = "*** invalid description ***";
 
 /// Assertion macros
 
-// The check-* macros are deprecated.
 // The check-* macros require the caller to provide a name.
 // The assert-* macros auto-generate a name by default.
 
@@ -89,17 +85,7 @@ define function do-check-equal
  => (result :: <result>)
   let phase = "evaluating assertion description";
   let description :: false-or(<string>) = #f;
-  block (return)
-    let handler <serious-condition>
-        = method (condition, next-handler)
-            if (debug?())
-              next-handler()  // decline to handle it
-            else
-              return(record-check(description | $invalid-description,
-                                  $crashed,
-                                  format-to-string("Error %s: %s", phase, condition)));
-            end;
-          end method;
+  block ()
     description := eval-check-description(description-thunk);
     phase := "evaluating assertion expressions";
     let (val1, val2, expr1, expr2) = get-arguments();
@@ -126,6 +112,10 @@ define function do-check-equal
                                   detail | ""))
         end;
     record-check(description, status, reason)
+  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+    record-check(description | $invalid-description,
+                 $crashed,
+                 format-to-string("Error %s: %s", phase, err));
   end block
 end function do-check-equal;
 
@@ -231,17 +221,7 @@ define function do-check-instance?
  => (result :: <result>)
   let phase = "evaluating assertion description";
   let description :: false-or(<string>) = #f;
-  block (return)
-    let handler <serious-condition>
-        = method (condition, next-handler)
-            if (debug?())
-              next-handler()  // decline to handle it
-            else
-              return(record-check(description | $invalid-description,
-                                  $crashed,
-                                  format-to-string("Error %s: %s", phase, condition)))
-            end;
-          end method;
+  block ()
     description := eval-check-description(description-thunk);
     phase := "evaluating assertion expressions";
     let (type :: <type>, value, value-expr :: <string>) = get-arguments();
@@ -256,6 +236,10 @@ define function do-check-instance?
                                   value, value-expr, type))
         end;
     record-check(description, status, reason)
+  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+    record-check(description | $invalid-description,
+                 $crashed,
+                 format-to-string("Error %s: %s", phase, err));
   end block
 end function do-check-instance?;
 
@@ -287,17 +271,7 @@ define function do-check-true
  => (result :: <result>)
   let phase = "evaluating assertion description";
   let description :: false-or(<string>) = #f;
-  block (return)
-    let handler <serious-condition>
-        = method (condition, next-handler)
-            if (debug?())
-              next-handler()  // decline to handle it
-            else
-              return(record-check(description | $invalid-description,
-                                  $crashed,
-                                  format-to-string("Error %s: %s", phase, condition)))
-            end;
-          end method;
+  block ()
     description := eval-check-description(description-thunk);
     phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
@@ -310,6 +284,10 @@ define function do-check-true
                  format-to-string("expression %= evaluates to #f.", value-expr))
         end;
     record-check(description, status, reason)
+  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+    record-check(description | $invalid-description,
+                 $crashed,
+                 format-to-string("Error %s: %s", phase, err));
   end block
 end function do-check-true;
 
@@ -343,17 +321,7 @@ define function do-check-false
  => (result :: <result>)
   let phase = "evaluating assertion description";
   let description :: false-or(<string>) = #f;
-  block (return)
-    let handler <serious-condition>
-        = method (condition, next-handler)
-            if (debug?())
-              next-handler()  // decline to handle it
-            else
-              return(record-check(description | $invalid-description,
-                                  $crashed,
-                                  format-to-string("Error %s: %s", phase, condition)))
-            end;
-          end method;
+  block ()
     description := eval-check-description(description-thunk);
     phase := "evaluating assertion expression";
     let (value, value-expr :: <string>) = get-arguments();
@@ -367,6 +335,10 @@ define function do-check-false
                                   value-expr, value))
         end;
     record-check(description, status, reason)
+  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+    record-check(description | $invalid-description,
+                 $crashed,
+                 format-to-string("Error %s: %s", phase, err));
   end block
 end function do-check-false;
 
@@ -401,17 +373,7 @@ define function do-check-condition
  => (result :: <result>)
   let phase = "evaluating assertion description";
   let description :: false-or(<string>) = #f;
-  block (return)
-    let handler <serious-condition>
-        = method (condition, next-handler)
-            if (debug?())
-              next-handler()  // decline to handle it
-            else
-              return(record-check(description | $invalid-description,
-                                  $crashed,
-                                  format-to-string("Error %s: %s", phase, condition)))
-            end;
-          end method;
+  block ()
     description := eval-check-description(description-thunk);
     phase := "evaluating assertion expression";
     let (condition-class, thunk :: <function>, expr :: <string>) = get-arguments();
@@ -432,6 +394,10 @@ define function do-check-condition
                                            ex.object-class, condition-class, ex))
         end;
     record-check(description, status, reason)
+  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+    record-check(description | $invalid-description,
+                 $crashed,
+                 format-to-string("Error %s: %s", phase, err));
   end block
 end function do-check-condition;
 
