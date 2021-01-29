@@ -133,23 +133,6 @@ end class <test-runner>;
 define thread variable *runner* :: false-or(<test-runner>) = #f;
 
 
-///*** Generic Classes, Helper Functions, and Helper Macros ***///
-
-// TODO(cgay): Use let handler instead.
-define macro maybe-trap-errors
-  { maybe-trap-errors (?body:body) }
-    => { local method maybe-trap-errors-body () ?body end;
-         if (debug?())
-           maybe-trap-errors-body();
-         else
-           block ()
-             maybe-trap-errors-body();
-           exception (cond :: <serious-condition>)
-             cond
-           end;
-         end; }
-end macro maybe-trap-errors;
-
 define function run-tests
     (runner :: <test-runner>, component :: <component>)
  => (component-result :: <component-result>)
@@ -277,7 +260,12 @@ define method execute-component
                     *benchmark-recording-function* = record-benchmark)
         let cond
           = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
-              maybe-trap-errors(test.test-function());
+              block ()
+                test.test-function();
+              exception (err :: <serious-condition>,
+                         test: method (c) ~debug?() end)
+                err
+              end;
             results
               seconds := cpu-time-seconds;
               microseconds := cpu-time-microseconds;
