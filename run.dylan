@@ -262,6 +262,12 @@ define method execute-component
           = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
               block ()
                 test.test-function();
+              exception (err :: <assertion-failure>,
+                         test: method (c) ~debug?() end)
+                // An assertion failure causes the remainder of a test to be
+                // skipped (by jumping here) to prevent cascading failures.
+                // The failure has already been recorded so nothing to do.
+                #f
               exception (err :: <serious-condition>,
                          test: method (c) ~debug?() end)
                 err
