@@ -104,10 +104,12 @@ error).  As an example, in
     assert-true(foo > bar)
 
 the expression ``foo > bar`` is compared to ``#f``, and the result is recorded
-by the test harness.  Failing (or crashing) assertions do not cause the test to
-terminate; all assertions are run unless the test itself signals an
-error. (**NOTE:** See https://github.com/dylan-lang/testworks/issues/86 for
-plans to change this behavior.)
+by the test harness.  Failing (or crashing) cause the test to terminate and
+skip the remaining assertions in that test.
+
+.. note:: You may also find ``check-*`` macros in existing test suites.  These
+          are deprecated assertions that do not cause the test to terminate and
+          require a description of the assertion as the first argument.
 
 See the :doc:`reference` for detailed documentation on the available
 assertion macros:
@@ -144,12 +146,6 @@ arguments. These are all valid:
    assert-equal(a, b);     // auto-generated description
    assert-equal(a, b, a);  // a used as description
    assert-equal(a, b, "does %= = %=?", a, b);  // formatted description
-
-.. note:: You may also find ``check-*`` macros in Testworks test suites.  These
-          are a deprecated form of assertion.  The only real difference between
-          them and the ``assert-*`` macros is that they require a description
-          of the assertion as the first argument.
-
 
 Tests
 -----
