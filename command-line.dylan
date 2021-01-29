@@ -278,9 +278,7 @@ define function run-or-list-tests
     let pathname = get-option-value(parser, "report-file");
     let result = run-tests(runner, start-suite);
     if (pathname)
-      fs/with-open-file(stream = pathname,
-                        direction: #"output",
-                        if-exists: #"overwrite")
+      fs/with-open-file(stream = pathname, direction: #"output", if-exists: #"replace")
         report-function(result, stream);
       end;
       // Always display the summary on the console.
