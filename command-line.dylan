@@ -209,6 +209,7 @@ end function make-runner-from-command-line;
 // TODO(cgay): update callers to pass no args, then remove `components` arg.
 define function run-test-application
     (#rest components) => ()
+  let test-runner = #f;
   block ()
     if (components.size > 1)
       format(*standard-error*,
@@ -216,7 +217,10 @@ define function run-test-application
                " arguments, (got %d)", components.size);
       exit-application(2);
     end;
-    let status = process-command-line(components);
+    let parser = parse-args(application-arguments());
+    let (suite, runner, reporter) = process-command-line(parser, components);
+    test-runner := runner;
+    let status = run-or-list-tests(suite, runner, reporter, parser);
     exit-application(status);
   exception (error :: <help-requested>)
     format(*standard-output*, "%s", error);
@@ -225,17 +229,18 @@ define function run-test-application
     // The command-line-parser library prints this error itself (which is
     // probably a bug) so don't print it here.
     exit-application(2);
-  exception (error :: <error>)
+  exception (error :: <error>,
+             test: method (cond)
+                     test-runner & ~test-runner.debug-runner?
+                   end)
     format(*standard-error*, "Error: %s", error);
     exit-application(2);
   end;
 end function;
 
 define function process-command-line
-    (components) => (exit-status :: <integer>)
-  // parse-args may signal <help-requested> or <usage-error>.
-  let parser = parse-args(application-arguments());
-
+    (parser :: <command-line-parser>, components)
+ => (suite :: <component>, runner :: <test-runner>, reporter :: <function>)
   // Load more tests, if requested. Tests share a global namespace so this will
   // signal on duplicate names.
   let to-load = get-option-value(parser, "load");
@@ -258,9 +263,12 @@ define function process-command-line
       else
         components[0]
       end;
-  let (start-suite, runner, report-function)
-    = make-runner-from-command-line(suite, parser);
+  make-runner-from-command-line(suite, parser)
+end function;
 
+define function run-or-list-tests
+    (start-suite, runner, report-function, parser)
+ => (exit-status :: <integer>)
   let list-opt = get-option-value(parser, "list");
   if (list-opt)
     list-components(runner, start-suite, list-opt.as-lowercase);
@@ -270,9 +278,7 @@ define function process-command-line
     let pathname = get-option-value(parser, "report-file");
     let result = run-tests(runner, start-suite);
     if (pathname)
-      fs/with-open-file(stream = pathname,
-                        direction: #"output",
-                        if-exists: #"overwrite")
+      fs/with-open-file(stream = pathname, direction: #"output", if-exists: #"replace")
         report-function(result, stream);
       end;
       // Always display the summary on the console.

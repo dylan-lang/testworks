@@ -280,16 +280,16 @@ These are the available assertion macros:
    Assert that an expression evaluates to a true value.  Importantly,
    this does not mean the expression is exactly ``#t``, but rather
    that it is *not* ``#f``.  If you want to explicitly test for
-   equality to ``#t`` use ``assert-equal(#t, ...)`` or
-   ``assert-true(#t = ...)``.
+   equality to ``#t`` use ``assert-equal(#t, ...)`` .
 
    :signature: assert-true *expression* [ *description* ]
 
    :parameter expression: any expression
-   :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "two is less
-      than three".  If no description is supplied one will be
-      automatically generated based on the text of the expression.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "two is less
+      than three".  If no description is supplied one is automatically
+      generated based on the text of the expression.
 
    :example:
 
@@ -305,10 +305,11 @@ These are the available assertion macros:
    :signature: assert-false *expression* [ *description* ]
 
    :parameter expression: any expression
-   :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "three is less
-      than two".  If no description is supplied one will be
-      automatically generated based on the text of the expression.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "two is less
+      than three".  If no description is supplied one is automatically
+      generated based on the text of the expression.
 
    :example:
 
@@ -328,10 +329,11 @@ These are the available assertion macros:
 
    :parameter expression1: any expression
    :parameter expression2: any expression
-   :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "two equals
-      two".  If no description is supplied one will be automatically
-      generated based on the text of the two expressions.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "two is less
+      than three".  If no description is supplied one is automatically
+      generated based on the text of the expression.
 
    :example:
 
@@ -351,11 +353,11 @@ These are the available assertion macros:
 
    :parameter expression1: any expression
    :parameter expression2: any expression
-   :parameter description: A description of what the assertion tests.
-      This should be stated so as to express what the correct result
-      would be, for example "two does not equal three".  If no
-      description is supplied one will be automatically generated
-      based on the text of the two expressions.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "two is less
+      than three".  If no description is supplied one is automatically
+      generated based on the text of the expression.
 
    :example:
 
@@ -372,10 +374,11 @@ These are the available assertion macros:
 
    :parameter condition: an expression that yields a condition class
    :parameter expression: any expression
-   :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "two is less
-      than three".  If no description is supplied one will be
-      automatically generated based on the text of the expression.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "f() signals
+      <error>".  If no description is supplied one is automatically generated
+      based on the text of the expression.
 
    The assertion succeeds if the expected *condition* is signaled by
    the evaluation of *expression*.
@@ -395,10 +398,11 @@ These are the available assertion macros:
    :signature: assert-no-errors *expression* [ *description* ]
 
    :parameter expression: any expression 
-   :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "two is less
-      than three".  If no description is supplied one will be
-      automatically generated based on the text of the expression.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "f(3) does not
+      signal <error>".  If no description is supplied one is automatically
+      generated based on the text of the expression.
 
    The assertion succeeds if no error is signaled by the evaluation of
    *expression*.
@@ -428,10 +432,11 @@ These are the available assertion macros:
 
    :parameter type: The expected type.
    :parameter expression: An expression.
-   :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "two is less
-      than three".  If no description is supplied one will be
-      automatically generated based on the text of the expression.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "f() returns an
+      instance of <foo>".  If no description is supplied one is automatically
+      generated based on the text of the expression.
 
    :description:
 
@@ -459,10 +464,11 @@ These are the available assertion macros:
 
    :parameter type: The type.
    :parameter expression: An expression.
-   :parameter description: A description of what the assertion tests.
-      This should be stated in positive form, such as "two is less
-      than three".  If no description is supplied one will be
-      automatically generated based on the text of the expression.
+   :parameter description: An optional description of what the assertion tests.
+      This may be a single value of any type or a format string and format
+      arguments. It should be stated in positive form, such as "f() does not
+      return a <string>".  If no description is supplied one is automatically
+      generated based on the text of the expression.
 
    :description:
 
@@ -485,9 +491,13 @@ These are the available assertion macros:
 Checks
 ------
 
-Checks are deprecated; use `Assertions`_ instead.  The main difference
-between checks and assertions is that the check macros require a
-description as their first argument, whereas assertions do not.
+Checks are deprecated; use `Assertions`_ instead.  The main difference between
+checks and assertions is that the check macros do not cause termination of the
+current test when they fail or crash. This can result in cascading failures and
+is therefore not considered best practice.
+
+Checks also differ from the ``assert-*`` macros in that they require a
+description (or "name") as their first argument.
 
 These are the available checks:
 
@@ -630,7 +640,7 @@ Test Execution
    calls :func:`run-tests` with the runner and *suite-or-test*.
 
 .. function:: test-option
- 
+
    Return an option value passed on the test-application command line.
 
    :signature: test-option *name* #key *default* => *value*

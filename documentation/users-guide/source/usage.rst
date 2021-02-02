@@ -25,16 +25,16 @@ Tests contain arbitrary code and at least one assertion:
 
    define test test-fn1 ()
      let v = do-something();
-     assert-equal(fn1(v), "expected-value");
-     assert-equal(fn1(v, key: 7), "seven", "regression test for bug/12345");
+     assert-equal("expected-value", fn1(v));
+     assert-signals(<error>, fn1(v, key: 7), "regression test for bug 12345");
    end;
 
 If there are no assertions in a test it is considered "not implemented", which
 is displayed in the output (as a reminder to implement it) but is not
 considered a failure.
 
-See also: :func:`assert-true`, :func:`assert-false`, :func:`assert-signals`,
-and :func:`assert-no-errors`.  Each of these takes an optional *description*
+See also: :macro:`assert-true`, :macro:`assert-false`, :macro:`assert-signals`,
+and :macro:`assert-no-errors`.  Each of these takes an optional *description*
 argument, which can be used to indicate the intent of the assertion if it isn't
 clear.
 
@@ -48,7 +48,7 @@ Benchmarks do not require any assertions and are automatically given the
      fn1()
    end;
 
-See also, :func:`benchmark-repeat`.
+See also, :macro:`benchmark-repeat`.
 
 If you have a large or complex test library, "suites" may be used to organize
 tests into groups (for example one suite per module) and may be nested
@@ -62,8 +62,8 @@ arbitrarily.
      test some-other-test;
    end;
 
-**Note:** Suites must be defined textually *after* the other suites and tests
-they contain.
+.. note:: Suites must be defined textually *after* the other suites and tests
+          they contain.
 
 To run your tests of course you need an executable and there are two ways to
 accomplish this:
@@ -74,8 +74,10 @@ accomplish this:
 
     If you prefer to manually organize your tests with suites, pass your
     top-level suite to :func:`run-test-application` and that determines the
-    initial set of tests that are filtered by the command line. **Note:**
-    if you forget to add a test to any suite, the test will not be run.
+    initial set of tests that are filtered by the command line.
+
+    .. note:: If you forget to add a test to any suite, the test will not be
+              run.
 
 1.  Compile your test library as a shared library and run it with the
     ``testworks-run`` application. For example, for the `foo-test` library::
@@ -94,32 +96,34 @@ Assertions
 ----------
 
 An assertion accepts an expression to evaluate and report back on,
-saying if the expression passed, failed, or signaled an
-error.  As an example, in
+saying if the expression passed, failed, or crashed (i.e., signaled an
+error).  As an example, in
 
 .. code-block:: dylan
 
     assert-true(foo > bar)
 
 the expression ``foo > bar`` is compared to ``#f``, and the result is recorded
-by the test harness.  Failing (or crashing) assertions do not cause the test to
-terminate; all assertions are run unless the test itself signals an
-error. (**NOTE:** See https://github.com/dylan-lang/testworks/issues/86 for
-plans to change this behavior.)
+by the test harness.  Failing (or crashing) cause the test to terminate and
+skip the remaining assertions in that test.
+
+.. note:: You may also find ``check-*`` macros in existing test suites.  These
+          are deprecated assertions that do not cause the test to terminate and
+          require a description of the assertion as the first argument.
 
 See the :doc:`reference` for detailed documentation on the available
 assertion macros:
 
-  * :func:`assert-true`
-  * :func:`assert-false`
-  * :func:`assert-equal`
-  * :func:`assert-not-equal`
-  * :func:`assert-signals`
-  * :func:`assert-no-errors`
-  * :func:`assert-instance?`
-  * :func:`assert-not-instance?`
+  * :macro:`assert-true`
+  * :macro:`assert-false`
+  * :macro:`assert-equal`
+  * :macro:`assert-not-equal`
+  * :macro:`assert-signals`
+  * :macro:`assert-no-errors`
+  * :macro:`assert-instance?`
+  * :macro:`assert-not-instance?`
 
-Each of these takes an optional description string, after the required
+Each of these takes an optional description, after the required
 arguments, which will be displayed if the assertion fails.  If the
 description isn't provided, Testworks makes one from the expressions
 passed to the assertion macro. For example, ``assert-true(2 > 3)``
@@ -127,18 +131,21 @@ produces this failure message::
 
   (2 > 3) is true failed [expression "(2 > 3)" evaluates to #f]
 
-In general, Testworks should be pretty good at reporting the actual
-values that caused the failure so it shouldn't be necessary to include
-them in the description all the time.
+In general, Testworks should be pretty good at reporting the actual values that
+caused the failure so it shouldn't be necessary to include them in the
+description all the time. Usually if your test iterates over various inputs
+it's a good idea to provide a description so the failing input can be easily
+identified.
 
-In the future, there will be support for failures to include the
-source file line number for the assertion.
+If you do provide a description it may either be a single value to display, as
+with ``format-to-string("%s", v)``, or a format string and corresponding format
+arguments. These are all valid:
 
-  *Note: You may also find check-\* macros in Testworks test suites.
-  These are a deprecated form of assertion.  The only real difference
-  between them and the assert-\* macros is that they require a
-  description of the assertion as the first argument.*
+.. code-block:: dylan
 
+   assert-equal(a, b);     // auto-generated description
+   assert-equal(a, b, a);  // a used as description
+   assert-equal(a, b, "does %= = %=?", a, b);  // formatted description
 
 Tests
 -----
@@ -163,21 +170,23 @@ For example:
       assert-true(identity(#t), "Check identity function");
     end;
 
-*Note: if a test doesn't execute any assertions then it is marked as
-"not implemented" in the test results.*
-
 The result looks like this::
 
-    $ _build/bin/my-test 
+    $ _build/bin/my-test-suite
+    Running suite my-test-suite:
     Running test my-test:
-      2 = 3: [2 (from expression "2") and 3 (from expression "3") are not =.]
-       FAILED in 0.000256s
+      2 = 3: [2 and 3 are not =.]
+       FAILED in 0.000257s and 17KiB
 
-    my-test FAILED in 0.000256 seconds:
-      Ran 0 suites: 0 passed (100.00000%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
-      Ran 1 test: 0 passed (0.0%), 1 failed, 0 skipped, 0 not implemented, 0 crashed
-      Ran 0 benchmarks: 0 passed (0.0%), 0 failed, 0 skipped, 0 not implemented, 0 crashed
-      Ran 3 checks: 2 passed (66.666672%), 1 failed, 0 skipped, 0 not implemented, 0 crashed
+    my-test failed
+      #f = #f passed
+      2 = 3 failed [2 and 3 are not =.]
+    Ran 2 checks: FAILED (1 failed)
+    Ran 1 test: FAILED (1 failed)
+    FAILED in 0.000257 seconds
+
+Note that the third assertion was not executed since the second one failed and
+terminated ``my-test``.
 
 Tests may be tagged with arbitrary strings, providing a way to select
 or filter out tests to run:
@@ -221,10 +230,10 @@ can be made aware of this:
     end test;
 
 A test that is expected to fail and then fails is considered to be a passing
-test. If the test succeeds unexpectedly, it is considered a failing
-test. ``expected-to-fail-reason:`` **must** be supplied if
-``expected-to-fail?:`` is true. An example of a good reason is a bug URL or
-other bug reference.
+test. If the test succeeds unexpectedly, it is considered a failing test. When
+marking a test as expected to fail, ``expected-to-fail-reason:`` is
+**required** and ``expected-to-fail?:`` is optional, and normally
+unnecessary. An example of a good reason is a bug URL or other bug reference.
 
 Test setup and teardown is accomplished with normal Dylan code using
 ``block () ... cleanup ... end;``...
@@ -265,20 +274,10 @@ Benchmarks may be added to suites:
      benchmark my-benchmark;
    end;
 
-Benchmarks and tests may be combined in the same suite.  If you do
-that, tags may be used to run only the benchmarks (with
-``--tag=benchmark``) or only the tests (with ``--tag=-benchmark``).
-If you are using suites anyway, you may wish to put benchmarks into a
-suite of their own.  Example:
-
-.. code-block:: dylan
-
-   define suite strings-tests () ...only tests... end;
-   define suite strings-benchmarks () ...only benchmarks... end;
-   define suite strings-test-suite ()
-     suite strings-tests;
-     suite strings-benchmarks;
-   end;
+Benchmarks and tests may be combined in the same suite, but this is
+discouraged. It is preferable to have separate libraries for the two since
+benchmarks often take longer to run and may not necessarily need to be run for
+every commit.
 
 See also, :macro:`benchmark-repeat`.
 
@@ -306,7 +305,6 @@ For example:
       test my-test;
       test example-test;
       test my-test-2;
-      benchmark my-benchmark;
     end;
 
     define suite second-suite ()
@@ -328,12 +326,6 @@ suite:
       suite http-server-test-suite;
       suite http-client-test-suite;
     end;
-
-Suites can be run via :func:`run-test-application`.  It should be
-called as the main function in an executable and will parse
-command-line args, execute tests and benchmarks, and generate reports.
-See the next section for details.
-
 
 Interface Specification Suites
 ------------------------------
@@ -398,9 +390,9 @@ component suite in combined test suites that cover multiple related
 libraries. (The alternative to this approach is running each library's
 tests as a separate executable.)
 
-**Note:** It is an error for a test to be included in a suite multiple times,
-even transitively. Doing so would result in a misleading pass/fail ratio, and
-it is more likely to be a mistake than to be intentional.
+.. note:: It is an error for a test to be included in a suite multiple times,
+          even transitively. Doing so would result in a misleading pass/fail
+          ratio, and it is more likely to be a mistake than to be intentional.
 
 The overall structure of a test library that is intended to be
 included in a combined test library may look something like this:
@@ -442,24 +434,22 @@ included in a combined test library may look something like this:
       ...
     end;
 
-Running Your Tests As A Stand-alone Application
-===============================================
+Running Tests As A Stand-alone Application
+==========================================
 
 If you don't need to export any suites so they can be included in a
 higher-level combined test suite library (i.e., if you're happy
 running your test suite library as an executable) then you can simply
-call ``run-test-application`` to parse the standard testworks
+call :func:`run-test-application` to parse the standard testworks
 command-line options and run the specified tests::
 
-  run-test-application();          // if not using suites
-  run-test-application(my-suite);  // if using suites
+  run-test-application();
 
 and you can skip the rest of this section.
 
-If you need to export a suite for use by another library, then you
-must also define a separate executable library, traditionally named
-"xxx-test-suite-app", which calls
-``run-test-application(xxx-test-suite)``.
+If you need to export a suite for use by another library, then you must also
+define a separate executable library, traditionally named "xxx-test-suite-app",
+which calls ``run-test-application()``.
 
 Here's an example of such an application library:
 
@@ -481,18 +471,17 @@ exports the test suite, and ``testworks``:
       use testworks;
     end;
 
-2. The file ``xxx-test-suite-app.dylan`` which simply contains a call
-to the method :func:`run-test-application` with the suite-name as an
-argument:
+2. The file ``xxx-test-suite-app.dylan`` which simply contains a call to the
+   method :func:`run-test-application`:
 
 .. code-block:: dylan
 
     Module: xxx-test-suite-app
 
-    run-test-application(xxx-test-suite);
+    run-test-application();
 
-3. The file ``xxx-test-suite-app.lid`` which specifies the names of
-the source files:
+3. The file ``xxx-test-suite-app.lid`` which specifies the names of the source
+   files:
 
 .. code-block:: dylan
 
