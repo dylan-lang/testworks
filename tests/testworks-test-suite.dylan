@@ -681,9 +681,3 @@ define test test-assertion-description ()
                     end,
                     "456");
 end test;
-
-define test test-xxx ()
-  check-false("abc", #t);
-  assert-false(#f);
-  assert-true(#t);
-end;
