@@ -31,13 +31,14 @@ define table $report-functions :: <string-table>
 
 define function parse-args
     (args :: <sequence>) => (parser :: <command-line-parser>)
-  let parser = make(<command-line-parser>);
+  let parser = make(<command-line-parser>,
+                    help: "Run tests.");
   add-option(parser,
              // TODO: When <choice-option> supports having an optional
              // value then this can be made optional where no value
              // means "failures".
              make(<choice-option>,
-                  names: #("debug"),
+                  names: "debug",
                   choices: #("no", "crashes", "failures"),
                   default: "no",
                   variable: "WHAT",
@@ -51,7 +52,7 @@ define function parse-args
                   help: "Show output as the test run progresses: none|DEFAULT|verbose"));
   add-option(parser,
              make(<choice-option>,
-                  names: #("report"),
+                  names: "report",
                   choices: key-sequence($report-functions),
                   default: "failures",
                   variable: "TYPE",
@@ -59,8 +60,10 @@ define function parse-args
                                          join(sort(key-sequence($report-functions)), "|"))));
   add-option(parser,
              make(<choice-option>,
-                  names: #("order"),
-                  choices: map(method (key) as-lowercase(as(<string>, key)) end,
+                  names: "order",
+                  choices: map(method (key)
+                                 as-lowercase(as(<string>, key))
+                               end,
                                list($source-order, $lexical-order, $random-order)),
                   default: as-lowercase(as(<string>, $default-order)),
                   help: "Order in which to run tests. Note that when suites are being used"
@@ -71,15 +74,16 @@ define function parse-args
   // and we could use it here as the default location of the report file.
   add-option(parser,
              make(<parameter-option>,
-                  names: #("report-file"),
+                  names: "report-file",
                   variable: "FILE",
                   help: "File in which to store the report."));
 
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("load"),
+                  names: "load",
                   variable: "FILE",
-                  help: "Load the given shared library file before searching for test suites. May be repeated."));
+                  help: "Load the given shared library file before searching for"
+                    " test suites. May be repeated."));
 
   // TODO(cgay): Replace these 4 options with --skip and --match (or
   // --include?).  Because Dylan is a Lisp-1 suites, tests, and
@@ -87,20 +91,20 @@ define function parse-args
   // be unambiguous.
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("suite"),
+                  names: "suite",
                   help: "Run (or list) only these named suites. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("test"),
+                  names: "test",
                   help: "Run (or list) only these named tests. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("skip-suite"),
+                  names: "skip-suite",
                   variable: "SUITE",
                   help: "Skip these named suites. May be repeated."));
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: #("skip-test"),
+                  names: "skip-test",
                   variable: "TEST",
                   help: "Skip these named tests. May be repeated."));
   add-option(parser,
@@ -118,7 +122,12 @@ define function parse-args
                     " with '-', the test will only run if it does NOT have the tag."
                     " May be repeated. Ex: --tag=-slow,-benchmark means don't run"
                     " benchmarks or tests tagged as slow."));
-  parse-command-line(parser, args, description: "Run test suites.");
+  add-option(parser,
+             make(<keyed-option>,
+                  names: #("options", "O"),
+                  default: make(<string-table>),
+                  help: "Key/value pairs that may be used to pass context to tests."));
+  parse-command-line(parser, args);
   parser
 end function parse-args;
 
@@ -163,18 +172,8 @@ define function make-runner-from-command-line
                     report: report,
                     progress: if (progress = $none) #f else progress end,
                     tags: parse-tags(get-option-value(parser, "tag")),
-                    order: as(<symbol>, get-option-value(parser, "order")));
-
-  // Options seem useful, but why are they positional rather than --option?
-  // i.e., what makes them so special?
-  for (option in parser.positional-options)
-    let (key, val) = apply(values, split(option, '=', count: 2));
-    if (~val)
-      usage-error("%= is not a valid test run option; must be in key=value form.",
-                  option);
-    end;
-    runner.runner-options[key] := val;
-  end for;
+                    order: as(<symbol>, get-option-value(parser, "order")),
+                    options: get-option-value(parser, "options"));
 
   // TODO(cgay): So...the --suite and --test options may specify
   // something disjoint from `top`. This begs the question why do we
@@ -222,19 +221,15 @@ define function run-test-application
     test-runner := runner;
     let status = run-or-list-tests(suite, runner, reporter, parser);
     exit-application(status);
-  exception (error :: <help-requested>)
-    format(*standard-output*, "%s", error);
-    exit-application(0);
-  exception (error :: <usage-error>)
-    // The command-line-parser library prints this error itself (which is
-    // probably a bug) so don't print it here.
-    exit-application(2);
+  exception (err :: <abort-command-error>)
+    format(*standard-error*, "%s", err);
+    exit-application(err.exit-status);
   exception (error :: <error>,
              test: method (cond)
                      test-runner & ~test-runner.debug-runner?
                    end)
     format(*standard-error*, "Error: %s", error);
-    exit-application(2);
+    exit-application(1);
   end;
 end function;
 
