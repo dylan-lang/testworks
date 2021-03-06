@@ -9,7 +9,7 @@ define test command-line-options-test ()
                   list("--debug=crashes", debug-runner?, #"crashes", #f),
                   list("--debug=failures", debug-runner?, #t, #f),
                   list("--debug=foo", debug-runner?, #f, #t),
-                  list("key1=val1 key2=val2", runner-options,
+                  list("--options key1 = val1 --options key2 = val2", runner-options,
                        tabling(<string-table>, "key1" => "val1", "key2" => "val2"),
                        #f),
                   list("key", runner-options, #f, #t)  // error, not key=val form
