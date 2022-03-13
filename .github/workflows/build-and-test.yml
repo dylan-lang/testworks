@@ -1,0 +1,33 @@
+name: build-and-test
+
+on:
+  push:
+    # all branches
+  pull_request:
+    branches:
+      - main
+      - master
+
+  # This enables the Run Workflow button on the Actions tab.
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: dylan-lang/install-opendylan@v2
+
+      - name: Build testworks-test-suite-app
+        run: ./dylan-compiler -build -jobs 3 testworks-test-suite-app
+
+      - name: Run testworks-test-suite-app
+        run: _build/bin/testworks-test-suite-app
