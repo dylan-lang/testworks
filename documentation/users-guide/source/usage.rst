@@ -235,6 +235,15 @@ marking a test as expected to fail, ``expected-to-fail-reason:`` is
 **required** and ``expected-to-fail?:`` is optional, and normally
 unnecessary. An example of a good reason is a bug URL or other bug reference.
 
+.. note:: When providing a value for ``expected-to-fail?:`` always provide a
+          method of no arguments. For example, instead of ``expected-to-fail?:
+          $os-name == #"win32"`` use ``expected-to-fail?: method () $os-name ==
+          #"win32" end``. The former is equivalent to ``expected-to-fail?: #f``
+          on non-Windows platforms and results in an ``UNEXPECTED SUCCESS``
+          result. This is because the (required) reason string is used as
+          shorthand to indicate that failure is expected even when
+          ``expected-to-fail?:`` is ``#f``.
+
 Test setup and teardown is accomplished with normal Dylan code using
 ``block () ... cleanup ... end;``...
 

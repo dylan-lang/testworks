@@ -392,22 +392,22 @@ define constant test-expected-to-fail-always
   = make(<test>,
          name: "test-expected-to-fail-always",
          function: method () assert-true(#f) end,
-         // Intentionally not passing `expected-to-fail?: #t` here. It should
-         // be set to `#t` because a reason is provided below.
+         // Intentionally not passing `expected-to-fail-test:` here. The test
+         // should be expected to fail because a reason is provided.
          expected-to-fail-reason: "because of assert-true(#f)");
 
 define constant test-expected-to-fail-maybe
   = make(<test>,
          name: "test-expected-to-fail-maybe",
          function: method () assert-true(#f) end,
-         expected-to-fail?: method () #t end,
+         expected-to-fail-test: method () #t end,
          expected-to-fail-reason: "because of assert-true(#f)");
 
 define constant test-expected-to-crash-always
   = make(<test>,
          name: "test-expected-to-crash-always",
          function: curry(error, "test-expected-to-crash-always"),
-         expected-to-fail?: method () #t end,
+         expected-to-fail-test: method () #t end,
          expected-to-fail-reason: "because of error(...)");
 
 define constant expected-to-fail-suite
@@ -421,7 +421,7 @@ define constant test-unexpected-success
   = make(<test>,
          name: "test-unexpected-success",
          function: method () assert-true(#t) end,
-         expected-to-fail?: #t,
+         expected-to-fail-test: always(#t),
          expected-to-fail-reason: "because of assert-true(#t)");
 
 define constant unexpected-success-suite

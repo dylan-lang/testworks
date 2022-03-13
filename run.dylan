@@ -309,7 +309,8 @@ define function decide-status
       => if (test.expected-to-fail?)
            let reason = format-to-string("%s passed but was expected to fail due to %=",
                                          test.component-type-name,
-                                         test.expected-to-fail-reason);
+                                         test.expected-to-fail-reason
+                                           | "<no reason supplied>");
            values($unexpected-success, reason)
          else
            $passed

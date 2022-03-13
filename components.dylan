@@ -77,8 +77,10 @@ define generic test-requires-assertions? (r :: <runnable>) => (required? :: <boo
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
     required-init-keyword: function:;
-  constant slot %expected-to-fail? :: type-union(<boolean>, <function>) = #f,
-    init-keyword: expected-to-fail?:;
+  // A test is expected to fail if this function returns true or if
+  // expected-to-fail-reason is true.
+  constant slot expected-to-fail-test :: false-or(<function>) = #f,
+    init-keyword: expected-to-fail-test:;
   constant slot expected-to-fail-reason :: false-or(<string>) = #f,
     init-keyword: expected-to-fail-reason:;
   // Benchmarks don't require assertions.  Needs to be an instance variable,
@@ -92,9 +94,7 @@ define abstract class <runnable> (<component>)
 end class <runnable>;
 
 define method make
-    (class :: subclass(<runnable>),
-     #rest args,
-     #key name, tags, expected-to-fail?, expected-to-fail-reason)
+    (class :: subclass(<runnable>), #rest args, #key name, tags)
  => (runnable :: <runnable>)
   let tags = map(make-tag, tags | #[]);
   let negative = choose(tag-negated?, tags);
@@ -102,25 +102,16 @@ define method make
     error("tags associated with tests or benchmarks may not be negated."
             " test = %s, tags = %s", name, negative);
   end;
-  if (expected-to-fail-reason & ~expected-to-fail?)
-    expected-to-fail? := #t;
-  end;
-  if (expected-to-fail? & ~expected-to-fail-reason)
-    error("the expected-to-fail-reason init argument must be supplied for"
-            " tests that are expected to fail. test = %s", name);
-  end;
-  apply(next-method, class,
-        tags: tags,
-        expected-to-fail?: expected-to-fail?,
-        expected-to-fail-reason: expected-to-fail-reason,
-        args)
+  apply(next-method, class, tags: tags, args)
 end method;
 
-define method expected-to-fail? (r :: <runnable>)
-  select (r.%expected-to-fail? by instance?)
-    <boolean> => r.%expected-to-fail?;
-    <function> => r.%expected-to-fail?();
-  end select
+define method expected-to-fail? (runnable :: <runnable>)
+  let test = runnable.expected-to-fail-test;
+  if (test)
+    test()
+  else
+    runnable.expected-to-fail-reason
+  end
 end method;
 
 define class <test> (<runnable>)
