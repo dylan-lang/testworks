@@ -10,7 +10,12 @@ define test command-line-options-test ()
                   list("--debug=failures", debug-runner?, #t, #f),
                   list("--debug=foo", debug-runner?, #f, #t),
                   list("--options key1 = val1 --options key2 = val2", runner-options,
-                       tabling(<string-table>, "key1" => "val1", "key2" => "val2"),
+                       begin
+                         let t = make(<string-table>);
+                         t["key1"] := "val1";
+                         t["key2"] := "val2";
+                         t
+                       end,
                        #f),
                   list("key", runner-options, #f, #t)  // error, not key=val form
                   );

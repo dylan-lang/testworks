@@ -20,32 +20,39 @@ Suites, Tests, and Benchmarks
 
    Define a new test.
 
-   :signature: define test *test-name* (#key *expected-to-fail?, expected-to-fail-reason, tags*) *body* end
+   :signature: define test *test-name*
+                   (#key *expected-to-fail-reason, expected-to-fail-test, tags*)
+                 *body*
+               end
    :parameter test-name: Name of the test; a Dylan variable name.
-   :parameter #key expected-to-fail?: An instance of either :drm:`<boolean>` or
-      :drm:`<function>`. This indicates whether or not the test is expected to
-      fail.
-   :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``. Must
-      be supplied if ``expected-to-fail?`` is true. A good reason usually
-      references a bug.
+   :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``.
+      The reason this test is expected to fail.
+   :parameter #key expected-to-fail-test: An instance of :drm:`<function>`.
+      A function to decide whether the test is expected to fail.
    :parameter #key tags: A list of strings to tag this test.
 
-   Tests may contain arbitrary code, plus any number of assertions.
-   If any assertion fails the test will fail, but any remaining
-   assertions in the test will still be executed.  If code outside of
-   an assertion signals an error, the test is marked as "crashed" and
-   remaining assertions are skipped.
+   Tests may contain arbitrary code, and must have at least one assertion. That
+   is they must call one of the ``assert-*`` or ``check-*`` macros. If they
+   have no assertions they are given a ``NOT IMPLEMENTED`` result. If any
+   assertion fails the test fails, but any remaining assertions in the test are
+   still executed.  If code outside of an assertion signals an error, the test
+   is marked as ``CRASHED`` and the rest of the test is skipped.
 
-   If *expected-to-fail?* is set to ``#t`` or a function that when executed
-   returns a true value, then the test will be expected to fail. Such a failure
-   is treated as a successful test run. If the test passes rather than failing,
-   it is considered a test failure. This option has no effect on tests which
-   are *not implemented* or which have *crashed*.
+   *expected-to-fail-test*, if supplied, is a function of no arguments that
+   returns a true value if the test is expected to fail. Such a failure is then
+   classified as an ``EXPECTED FAILURE`` result (which is a passing result). If
+   the test passes rather than failing, it has an ``UNEXPECTED SUCCESS`` result
+   (which is a type of failure). A common usage is to make expected failure
+   conditional on the OS: ``method () $os-name == #"win32" end``.  This option
+   has no effect on tests which are ``NOT IMPLEMENTED`` or ``CRASHED``.
 
-   *expected-to-fail-reason* is required if the test is expected to
-   fail. Normally it should reference a bug (a URL or at least a bug number).
-   If *expected-to-fail-reason* is supplied, *expected-to-fail?* may be
-   omitted because it is implied to be ``#t``.
+   *expected-to-fail-reason* should be supplied if the test is expected to
+   fail. It is good practice to reference a bug (a URL or at least a bug
+   number).
+
+   .. note:: If *expected-to-fail-reason* is supplied without
+             *expected-to-fail-test* the test is implicitly always expected to
+             fail.
 
    *tags* provide a way to select or filter out specific tests during a test
    run.  The Testworks command-line (provided by :func:`run-test-application`)
@@ -56,17 +63,21 @@ Suites, Tests, and Benchmarks
 
    Define a new benchmark.
 
-   :signature: define benchmark *name* (#key *expected-to-fail?, tags*) *body* end
-   :parameter name: Name of the benchmark; a Dylan variable name.
-   :parameter #key expected-to-fail?: An instance of either :drm:`<boolean>` or
-      :drm:`<function>`. This indicates whether or not the test is expected to
-      fail.
+   :signature: define benchmark *benchmark-name*
+                   (#key *expected-to-fail-reason, expected-to-fail-test, tags*)
+                 *body*
+               end
+   :parameter benchmark-name: Name of the benchmark; a Dylan variable name.
+   :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``.
+      The reason this benchmark is expected to fail.
+   :parameter #key expected-to-fail-test: An instance of :drm:`<function>`.
+      A function to decide whether the benchmark is expected to fail.
    :parameter #key tags: A list of strings to tag this benchmark.
 
-   Benchmarks may contain arbitrary code and do not require any
-   assertions.  If the benchmark signals an error it is marked as
-   "crashed". Other than this, and some differences in how the results
-   are displayed, benchmarks are the same as tests.
+   Benchmarks may contain arbitrary code and do not require any assertions.  If
+   the benchmark signals an error it is marked as ``CRASHED``. Other than this,
+   and minor differences in how the results are displayed, benchmarks are the
+   same as tests.
 
 .. macro:: benchmark-repeat
 
