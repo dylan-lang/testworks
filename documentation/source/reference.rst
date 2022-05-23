@@ -1,3 +1,4 @@
+*******************
 Testworks Reference
 *******************
 
@@ -9,12 +10,10 @@ Testworks Reference
 
 See also: :doc:`usage`
 
-
-The Testworks Module
-====================
+The *testworks* library exports a single module named *testworks*.
 
 Suites, Tests, and Benchmarks
------------------------------
+=============================
 
 .. macro:: test-definer
 
@@ -252,7 +251,7 @@ Suites, Tests, and Benchmarks
        ``expected-to-fail-reason: "foo"``.
 
 Assertions
-----------
+==========
 
 Assertions are the smallest unit of verification in Testworks.  They
 must appear within the body of a test.
@@ -500,7 +499,7 @@ These are the available assertion macros:
 
 
 Checks
-------
+======
 
 Checks are deprecated; use `Assertions`_ instead.  The main difference between
 checks and assertions is that the check macros do not cause termination of the
@@ -630,7 +629,7 @@ These are the available checks:
 
 
 Test Execution
---------------
+==============
 
 .. function:: run-test-application
 

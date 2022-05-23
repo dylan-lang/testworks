@@ -1,5 +1,6 @@
-Testworks User Guide
-====================
+*********
+Testworks
+*********
 
 .. toctree::
    :maxdepth: 3
