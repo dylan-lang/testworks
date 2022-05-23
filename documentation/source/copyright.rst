@@ -2,7 +2,7 @@ Copyright
 *********
 
 
-Copyright © 2011-2012 Dylan Hackers.
+Copyright © 2011-2022 Dylan Hackers.
 
 Portions copyright © 1995-2000 Functional Objects, Inc.
 

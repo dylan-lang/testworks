@@ -10,3 +10,6 @@
 [submodule "ext/strings"]
 	path = ext/strings
 	url = https://github.com/dylan-lang/strings
+[submodule "ext/sphinx-extensions"]
+	path = ext/sphinx-extensions
+	url = https://github.com/dylan-lang/sphinx-extensions
