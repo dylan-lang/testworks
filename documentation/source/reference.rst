@@ -19,10 +19,8 @@ Suites, Tests, and Benchmarks
 
    Define a new test.
 
-   :signature: define test *test-name*
-                   (#key *expected-to-fail-reason, expected-to-fail-test, tags*)
-                 *body*
-               end
+   :signature:
+      define test *test-name* (#key *expected-to-fail-reason, expected-to-fail-test, tags*) *body* end
    :parameter test-name: Name of the test; a Dylan variable name.
    :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``.
       The reason this test is expected to fail.
@@ -62,10 +60,8 @@ Suites, Tests, and Benchmarks
 
    Define a new benchmark.
 
-   :signature: define benchmark *benchmark-name*
-                   (#key *expected-to-fail-reason, expected-to-fail-test, tags*)
-                 *body*
-               end
+   :signature:
+      define benchmark *benchmark-name* (#key *expected-to-fail-reason, expected-to-fail-test, tags*) *body* end
    :parameter benchmark-name: Name of the benchmark; a Dylan variable name.
    :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``.
       The reason this benchmark is expected to fail.
