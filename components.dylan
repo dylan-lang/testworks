@@ -208,7 +208,7 @@ end macro suite-definer;
 define macro test-definer
   { define test ?test-name:name (?keyword-args:*) ?test-body:body end
   } => {
-    define function "%%" ## ?test-name () ?test-body end;
+    define function "%%" ## ?test-name () => () ?test-body end;
     define constant ?test-name = make(<test>,
                                       name: ?"test-name",
                                       function: "%%" ## ?test-name,
@@ -220,7 +220,7 @@ end macro test-definer;
 define macro benchmark-definer
   { define benchmark ?test-name:name (?keyword-args:*) ?test-body:body end
   } => {
-    define function "%%" ## ?test-name () ?test-body end;
+    define function "%%" ## ?test-name () => () ?test-body end;
     define constant ?test-name :: <benchmark>
       = make(<benchmark>,
              name: ?"test-name",
