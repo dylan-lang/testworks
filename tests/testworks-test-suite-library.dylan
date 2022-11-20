@@ -28,7 +28,7 @@ define module testworks-test-suite
     prefix: "fs/";
   use format;
   use locators,
-    import: { <directory-locator> };
+    import: { <directory-locator>, locator-name };
   use streams,
     import: { with-output-to-string };
   use strings;
