@@ -678,5 +678,8 @@ Test Execution
    and is rooted at ``$DYLAN``, if defined, or in the current directory
    otherwise.
 
+   .. note:: In the ``<test-name>`` component of the directory both slash
+             (``/``) and backslash (``\``) are replaced by underscore (``_``).
+
 
 .. TODO(cgay): document the remaining exported names.

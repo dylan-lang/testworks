@@ -13,7 +13,7 @@ define thread variable *component* :: false-or(<component>) = #f;
 // Return a temporary directory unique to the current test or benchmark. The
 // directory is created the first time this is called for a given test.
 // The directory is _test/<user>-<yyyymmdd-hhmmss>/<full-test-name>/, relative
-// to ${DYLAN}/, if defined, or fs/working-directory() otherwise.
+// to ${DYLAN}/, if defined, or relative to fs/working-directory() otherwise.
 define function test-temp-directory () => (d :: false-or(<directory-locator>))
   if (instance?(*component*, <runnable>))
     let dylan = os/environment-variable("DYLAN");
@@ -25,8 +25,12 @@ define function test-temp-directory () => (d :: false-or(<directory-locator>))
     let uniquifier
       = format-to-string("%s-%s", os/login-name() | "unknown",
                          date/format("%Y%m%d-%H%M%S", date/now()));
+    let safe-name = map(method (c)
+                          if (c == '\\' | c == '/') '_' else c end
+                        end,
+                        full-component-name(*component*));
     let test-directory
-      = subdirectory-locator(base, "_test", uniquifier, full-component-name(*component*));
+      = subdirectory-locator(base, "_test", uniquifier, safe-name);
     fs/ensure-directories-exist(test-directory);
     test-directory
   end

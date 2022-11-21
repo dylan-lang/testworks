@@ -552,6 +552,12 @@ define test test-test-temp-directory () // yes that's a lot of "test"
   assert-true(fs/file-exists?(dir));
 end;
 
+define test test-test-temp-directory/slash-replaced? ()
+  let dir = test-temp-directory();
+  assert-equal("test-test-temp-directory_slash-replaced?",
+               locator-name(dir));
+end;
+
 define test test-register-component--duplicate-test-name-causes-error ()
   let n = size($components);
   let test = make(<test>, name: "t", function: method() end);
