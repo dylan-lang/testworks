@@ -33,10 +33,7 @@ If there are no assertions in a test it is considered "not implemented", which
 is displayed in the output (as a reminder to implement it) but is not
 considered a failure.
 
-See also: :macro:`assert-true`, :macro:`assert-false`, :macro:`assert-signals`,
-and :macro:`assert-no-errors`.  Each of these takes an optional *description*
-argument, which can be used to indicate the intent of the assertion if it isn't
-clear.
+See also: `Assertions`_ and `Checks`_ for others kinds of assertions.
 
 Benchmarks do not require any assertions and are automatically given the
 "benchmark" tag:
@@ -68,7 +65,7 @@ arbitrarily.
 To run your tests of course you need an executable and there are two ways to
 accomplish this:
 
-1.  Have your library call :func:`run-test-application` and compile it as an
+#.  Have your library call :func:`run-test-application` and compile it as an
     executable. With no arguments :func:`run-test-application` runs all tests
     and benchmarks, as filtered by the Testworks command-line options.
 
@@ -79,7 +76,7 @@ accomplish this:
     .. note:: If you forget to add a test to any suite, the test will not be
               run.
 
-1.  Compile your test library as a shared library and run it with the
+#.  Compile your test library as a shared library and run it with the
     ``testworks-run`` application. For example, for the `foo-test` library::
 
       _build/bin/testworks-run --load libfoo-test.so
