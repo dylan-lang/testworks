@@ -668,7 +668,8 @@ Test Execution
 
    Retrieve a unique temporary directory for the current test to use.
 
-   :signature: test-temp-directory => (directory :: <directory-locator>)
+   :signature: test-temp-directory => *directory*
+   :value directory: An instance of type ``<directory-locator>``.
 
    Returns a directory (a ``<directory-locator>``) that may be used for
    temporary files created by the test or benchmark. The directory is created
@@ -681,5 +682,24 @@ Test Execution
    .. note:: In the ``<test-name>`` component of the directory both slash
              (``/``) and backslash (``\``) are replaced by underscore (``_``).
 
+.. function:: write-test-file
+
+   Writes a file in the current test's temp directory.
+
+   :signature: write-test-file *filename* #key *contents* => *locator*
+   :parameter filename: An instance of ``<pathname>`` (i.e., a string or a
+                        locator). The name may be a relative path and if it
+                        contains the path separator character, subdirectories
+                        will be created.
+   :parameter #key contents: An instance of :drm:`<string>` to be written to
+                             the file. Defaults to the empty string.
+   :value locator: An instance of ``<file-locator>`` which is the full,
+                   absolute pathname of the created file.
+
+   When your test requires files to be present this is a handy utility to
+   create them. Examples::
+
+     write-test-file("x.txt");
+     let locator = write-test-file("a/b/c.log", contents: "abc");
 
 .. TODO(cgay): document the remaining exported names.

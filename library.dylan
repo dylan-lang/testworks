@@ -78,7 +78,8 @@ define module testworks
   // Output
   create
     test-output,
-    test-temp-directory;
+    test-temp-directory,
+    write-test-file;
 
   // Options
   create
@@ -108,11 +109,7 @@ define module %testworks
   use format;
   use json,
     import: { print-json, do-print-json };
-  use locators,
-    import: { <directory-locator>,
-              <file-locator>,
-              locator-base,
-              subdirectory-locator };
+  use locators;
   use operating-system,
     prefix: "os/";
   use print, import: { print-object };

@@ -36,6 +36,25 @@ define function test-temp-directory () => (d :: false-or(<directory-locator>))
   end
 end function;
 
+// Create a file in the current test's temp directory with the given contents.
+// If the file already exists an error is signaled. `filename` is assumed to be
+// a relative pathname; if it contains the path separator, subdirectories are
+// created. File contents may be provided with the `contents` parameter,
+// otherwise an empty file is created. Returns the full, absolute file path as
+// a `<file-locator>`.
+define function write-test-file
+    (filename :: fs/<pathname>, #key contents :: <string> = "")
+ => (full-pathname :: <file-locator>)
+  let locator = merge-locators(as(<file-locator>, filename),
+                               test-temp-directory());
+  fs/ensure-directories-exist(locator);
+  fs/with-open-file (stream = locator,
+                     direction: #"output", if-exists: #"signal")
+    write(stream, contents);
+  end;
+  locator
+end function;
+
 define inline function debug-failures?
     () => (debug-failures? :: <boolean>)
   debug-runner?(*runner*) == #t

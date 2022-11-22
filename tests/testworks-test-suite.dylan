@@ -558,6 +558,20 @@ define test test-test-temp-directory/slash-replaced? ()
                locator-name(dir));
 end;
 
+define test test-write-test-file ()
+  let x = write-test-file("x");
+  assert-instance?(<file-locator>, x);
+  assert-equal("x", locator-name(x));
+  assert-equal("", fs/with-open-file (stream = x)
+                     read-to-end(stream)
+                   end);
+
+  let y = write-test-file("y", contents: "abc");
+  assert-equal("abc", fs/with-open-file (stream = y)
+                        read-to-end(stream)
+                      end);
+end test;
+
 define test test-register-component--duplicate-test-name-causes-error ()
   let n = size($components);
   let test = make(<test>, name: "t", function: method() end);

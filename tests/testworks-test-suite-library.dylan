@@ -27,10 +27,8 @@ define module testworks-test-suite
   use file-system,
     prefix: "fs/";
   use format;
-  use locators,
-    import: { <directory-locator>, locator-name };
-  use streams,
-    import: { with-output-to-string };
+  use locators;
+  use streams;
   use strings;
   use table-extensions,
     import: { tabling };
