@@ -33,7 +33,7 @@ If there are no assertions in a test it is considered "not implemented", which
 is displayed in the output (as a reminder to implement it) but is not
 considered a failure.
 
-See also: `Assertions`_ and `Checks`_ for others kinds of assertions.
+See also: `Assertions`_ for other assertion macros.
 
 Benchmarks do not require any assertions and are automatically given the
 "benchmark" tag:
