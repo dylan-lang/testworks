@@ -1,0 +1,43 @@
+name: Build testworks documentation
+
+on:
+  push:
+    # all branches
+    paths:
+      - 'documentation/**'
+  pull_request:
+    # all branches
+    paths:
+      - 'documentation/**'
+      
+  # This enables the Run Workflow button on the Actions tab.
+  workflow_dispatch:
+
+jobs:
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dylan tool
+        uses: dylan-lang/install-dylan-tool@v2
+
+      - name: Install sphinx-extensions dependencies
+        run: |
+          dylan install -v 0.2.0 sphinx-extensions
+          cp -r /home/runner/dylan/pkg/sphinx-extensions/0.2.0/src/ /home/runner/work/testworks/testworks/sphinx-extensions
+     
+      - name: Build docs
+        uses: ammaraskar/sphinx-action@master
+        with:
+          pre-build-command: "echo furo >> documentation/requirements.txt"
+          docs-folder: "documentation/"
+
+
+      - name: Deploy documents to GH pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: documentation/build/html

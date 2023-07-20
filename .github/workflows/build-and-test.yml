@@ -20,14 +20,17 @@ jobs:
         os: [ ubuntu-latest, macos-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
 
-      - uses: dylan-lang/install-opendylan@v2
+      - uses: dylan-lang/install-opendylan@v3
+        with:
+          version: 2023.1
+          tag: v2023.1.0
 
       - name: Build testworks-test-suite-app
-        run: ./dylan-compiler -build -jobs 3 testworks-test-suite-app
+        run: dylan-compiler -build -jobs 3 testworks-test-suite-app
 
       - name: Run testworks-test-suite-app
         run: _build/bin/testworks-test-suite-app
