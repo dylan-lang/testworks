@@ -10,6 +10,8 @@
         "json@1.0",
         "strings@1.1"
     ],
-    "dev-dependencies": [],
+    "dev-dependencies": [
+	"sphinx-extensions@0.2.0"
+    ],
     "url": "https://github.com/dylan-lang/testworks"
 }
