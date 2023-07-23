@@ -13,6 +13,11 @@ on:
   # This enables the Run Workflow button on the Actions tab.
   workflow_dispatch:
 
+# Set DYLAN environment variable to GITHUB_WORKSPACE so packages are
+# installed in ../../_packages relative to documentation's Makefile
+env:
+  DYLAN: ${{ github.workspace }}
+
 jobs:
 
   build-and-deploy:
@@ -22,20 +27,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install dylan tool
-        uses: dylan-lang/install-dylan-tool@v2
+      # Until dylan-lang/install-dylan-tool
+      # updates the version
+      - name: Install Open Dylan
+        uses: dylan-lang/install-opendylan@v3
+        with:
+          version: 2023.1
+          tag: v2023.1.0
 
       - name: Install sphinx-extensions dependencies
         run: |
-          dylan install -v 0.2.0 sphinx-extensions
-          cp -r /home/runner/dylan/pkg/sphinx-extensions/0.2.0/src/ /home/runner/work/testworks/testworks/sphinx-extensions
-     
+          dylan update 
+
       - name: Build docs
         uses: ammaraskar/sphinx-action@master
         with:
           pre-build-command: "echo furo >> documentation/requirements.txt"
           docs-folder: "documentation/"
-
 
       - name: Deploy documents to GH pages
         uses: JamesIves/github-pages-deploy-action@v4
