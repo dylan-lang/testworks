@@ -13,13 +13,14 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../ext/sphinx-extensions/sphinxcontrib'))
+# Substitute version '0.2.0' for 'current' when available
+sys.path.insert(0, os.path.abspath('../../_packages/sphinx-extensions/0.2.0/src/sphinxcontrib'))
 import dylan.themes as dylan_themes
 
 # -- Project information -----------------------------------------------------
 
 project = 'dylan-libraries'
-copyright = '2022, Dylan Hackers'
+copyright = '2023, Dylan Hackers'
 author = 'Dylan Hackers'
 
 
@@ -54,7 +55,7 @@ exclude_patterns = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = dylan_themes.get_html_theme_default()
+html_theme = 'furo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -108,4 +109,4 @@ texinfo_documents = [
 epub_title = u'Testworks'
 epub_author = u'Dylan Hackers'
 epub_publisher = u'Dylan Hackers'
-epub_copyright = u'2022, Dylan Hackers'
+epub_copyright = u'2023, Dylan Hackers'
