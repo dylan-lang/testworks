@@ -258,11 +258,13 @@ end method;
 define method print-failures-report
     (result :: <result>, stream :: <stream>) => ()
   if (result.result-status ~= $passed)
-    print-result-info (result, stream,
-                       test: method (result)
-                               let status = result.result-status;
-                               status ~== $passed & status ~== $skipped
-                             end);
+    print-result-info(result, stream,
+                      test: method (result)
+                              select (result.result-status)
+                                $passed, $skipped, $expected-failure => #f;
+                                otherwise => #t;
+                              end
+                            end);
     format(stream, "\n");
   end;
   print-summary-report(result, stream);
