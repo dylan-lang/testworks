@@ -143,7 +143,7 @@ define method print-result-info
   let show-result? = if (test) test(result) else #t end;
   let reason = result.result-reason;
   if (show-result? & reason)
-    format(stream, " [%s]", reason);
+    format(stream, "%s", reason);
   end;
   let subindent = concatenate(indent, "  ");
   for (subresult in result-subresults(result))
@@ -159,7 +159,7 @@ define method print-result-info
   let show-result? = if (test) test(result) else #t end;
   let reason = result.result-reason;
   if (show-result? & reason)
-    format(stream, " [%s]", reason);
+    format(stream, "%s", reason);
   end;
 end method print-result-info;
 

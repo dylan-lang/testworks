@@ -636,18 +636,19 @@ define test test-included-in-suite-multiple-times ()
                                                    components: list(test1)))));
 end test;
 
+define function check-description (test-function, want-string)
+  let test = make(<test>,
+                  name: "no name",
+                  function: test-function);
+  let result = run-tests(make(<test-runner>, progress: #f), test);
+  let report = with-output-to-string (stream)
+                 print-full-report(result, stream)
+               end;
+  check-true(format-to-string("find %= in %=", want-string, report),
+             find-substring(report, want-string));
+end function;
+
 define test test-assertion-description ()
-  local method check-description (test-function, want-string)
-          let test = make(<test>,
-                          name: "no name",
-                          function: test-function);
-          let result = run-tests(make(<test-runner>, progress: #f), test);
-          let report = with-output-to-string (stream)
-                         print-full-report(result, stream)
-                       end;
-          assert-true(find-substring(report, want-string),
-                      "find %= in %=", want-string, report);
-        end;
   // assert-equal
   check-description(method () assert-equal(#t, #t);            end, "#t = #t");
   check-description(method () assert-equal(#t, #t, 123);       end, "123");
@@ -701,3 +702,85 @@ define test test-assertion-description ()
                     end,
                     "456");
 end test;
+
+define class <test-object> (<object>) end;
+
+define test test-check-equal-failure-detail ()
+  check-description(method ()
+                      check-equal("list, same size, different elements",
+                                  #("a", "b", "c", "d"),
+                                  #("a", "b", "x", "d"));
+                    end,
+                    "element 2 is the first mismatch");
+  check-description(method ()
+                      check-equal("list, different sizes",
+                                  #("a", "b", "c", "d"),
+                                  #("a", "b", "c", "d", "e"));
+                    end,
+                    "sizes differ (4 and 5)");
+  check-description(method ()
+                      check-equal("integer, different", 123, 456);
+                    end,
+                    "want: 123"); // no detail in this case
+  check-description(method ()
+                      check-equal("table, same size, different elements",
+                                  tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3),
+                                  tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3));
+                    end,
+                    "table1 is missing keys \"x\"; table2"); // could be better
+  check-description(method ()
+                      check-equal("table, different sizes",
+                                  tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3),
+                                  tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3, "d" => 4));
+                    end,
+                    "table1 is missing keys"); // needs regex to match more
+  check-description(method ()
+                      check-equal("table, different typed keys and (unsortable) values",
+                                  tabling(1 => 1, "b" => "b",
+                                          make(<test-object>) => make(<test-object>)),
+                                  tabling(1 => 1, "b" => "b", #() => #f));
+                    end,
+                    "table2 is missing keys {<test-object>");
+  check-description(method ()
+                      check-equal("string, same size different elements",
+                                  "abcd", "axcd");
+                    end,
+                    "element 1 is the first mismatch");
+  check-description(method ()
+                      check-equal("string, different sizes",
+                                  "abcd", "abcde");
+                    end,
+                    "sizes differ (4 and 5)");
+end test;
+
+/* Leaving this here because actually running these failing checks makes it
+ much easier to debug, compared to running the above test, and there's more
+ work to be done in this area so I expect to use these more.
+
+define test test-assert-equal-output ()
+  check-equal("list, same size, different elements",
+              #("a", "b", "c", "d"),
+              #("a", "b", "x", "d"));
+  check-equal("list, different sizes",
+              #("a", "b", "c", "d"),
+              #("a", "b", "c", "d", "e"));
+  check-equal("integer, different",
+              123, 456);
+  let t1 = tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3);
+  let t2 = tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3);
+  check-equal("table, same size, different elements",
+              t1, t2);
+  let t1 = tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3);
+  let t2 = tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3, "d" => 4);
+  check-equal("table, different sizes",
+              t1, t2);
+  check-equal("string, same size different elements",
+              "abcd", "axcd");
+  check-equal("string, different sizes",
+              "abcd", "abcde");
+  check-equal("table, different typed keys and (unsortable) values",
+              tabling(1 => 1, "b" => "b",
+                      make(<test-object>) => make(<test-object>)),
+              tabling("a" => 1, "x" => 2, "c" => 3));
+end test;
+*/

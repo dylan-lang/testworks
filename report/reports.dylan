@@ -36,7 +36,7 @@ define method print-result-reason
   format-out("%s  %s %s%s\n",
              indent, name, status-name(result.result-status),
              if (result.result-reason)
-               format-to-string(" [%s]", result.result-reason)
+               format-to-string(" %s", result.result-reason)
              else
                ""
              end);
@@ -259,7 +259,7 @@ define method print-benchmark-result-footer
     format-out("\n    [*] %d benchmark%s crashed.\n", crashes, plural(crashes));
   end if;
 end method;
-                                        
+
 define method print-benchmark-diff-report
     (top-result :: <comparison-result>, #key show-all? :: <boolean>)
  => ()

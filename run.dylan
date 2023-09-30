@@ -369,9 +369,7 @@ define method list-component
   end if;
   sublist
 end method list-component;
-    
 
-// TODO(cgay): Use indentation to show suite nesting.
 
 // Show some output during the test run.  For each component this is
 // called both before and after it has been run.  If before, result
@@ -455,9 +453,9 @@ define method show-progress
                 status.status-name.as-uppercase,
                 $reset-text-attributes,
                 result.result-name,
-                reason & concatenate(" [", reason, "]") | "");
+                reason & concatenate(" ", reason) | "");
   elseif (reason)
-    test-output("\n  %s: [%s]\n  ", result.result-name, reason);
+    test-output("\n  %s: %s", result.result-name, reason);
   end;
 end method show-progress;
 
