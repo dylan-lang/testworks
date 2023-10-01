@@ -13,8 +13,14 @@ define class <assertion-failure> (<condition>) end;
 
 /// Assertion macros
 
-// The check-* macros require the caller to provide a name.
-// The assert-* macros auto-generate a name by default.
+// The check-* macros are non-terminating, require the caller to provide a
+// name, and are DEPRECATED. Use expect-* instead in new code.
+//
+// The expect-* macros are non-terminating and auto-generate a description if
+// none is provided.
+//
+// The assert-* macros are terminating (they cause the remainder of a test to
+// be skipped when they fail) and they auto-generate a description by default.
 
 // Note that these macros wrap up the real macro arguments inside
 // methods to delay their evaluation until they are within the scope
@@ -24,35 +30,35 @@ define function eval-check-description
     (thunk :: <function>) => (description :: <string>)
   let (description, #rest args) = thunk();
   if (empty?(args))
-    if (instance?(description, <string>))
-      description
-    else
-      format-to-string("%s", description)
-    end
+    format-to-string("%s", description)
   else
     apply(format-to-string, description, args)
   end
 end function;
 
+// Deprecated; use expect.
 define macro check
-  { check (?check-name:expression,
-           ?check-function:expression, ?check-args:*)
-  } => {
-    check-true(?check-name, apply(?check-function, vector(?check-args)))
-  }
-end macro check;
+    { check(?description:expression, ?fun:expression, ?args:*) }
+ => { expect(?fun(?args), ?description) }
+end macro;
 
-define macro check-equal
-  { check-equal (?name:expression, ?want:expression, ?got:expression)
-  } => {
-    do-check-equal(method () ?name end,
-                   method ()
-                     values(?want, ?got, ?"want", ?"got")
-                   end,
-                   "check-equal",
-                   terminate?: #f)
+define macro expect
+    { expect(?expr:expression) }
+ => { expect(?expr, ?"expr" " is true") }
+
+    { expect(?expr:expression, ?description:*) }
+ => { do-check-true(method () values(?description) end,
+                    method () values(?expr, ?"expr") end,
+                    "expect",
+                    terminate?: #f)
   }
-end macro check-equal;
+end macro;
+
+// Deprecated; use expect-equal.
+define macro check-equal
+    { check-equal(?description:expression, ?want:expression, ?got:expression) }
+ => { expect-equal(?want, ?got, ?description) }
+end macro;
 
 define macro assert-equal
   { assert-equal (?want:expression, ?got:expression)
@@ -70,15 +76,26 @@ define macro assert-equal
   }
 end macro assert-equal;
 
+define macro expect-equal
+    { expect-equal(?want:expression, ?got:expression) }
+ => { expect-equal(?want, ?got, ?"want" " = " ?"got") }
+
+    { expect-equal(?want:expression, ?got:expression, ?description:*) }
+ => { do-check-equal(method () values(?description) end,
+                     method () values(?want, ?got, ?"want", ?"got") end,
+                     "expect-equal",
+                     terminate?: #f) }
+end macro;
+
 define function do-check-equal
-    (description-thunk :: <function>, arguments-thunk :: <function>,
-     caller :: <string>, #key terminate? :: <boolean>)
+    (description-thunk :: <function>, arguments-thunk :: <function>, caller :: <string>,
+     #key terminate? :: <boolean>)
  => ()
-  let phase = "evaluating assertion description";
+  let phase = format-to-string("evaluating %s description", caller);
   let description :: false-or(<string>) = #f;
   block ()
     description := eval-check-description(description-thunk);
-    phase := "evaluating assertion expressions";
+    phase := format-to-string("evaluating %s expressions", caller);
     let (want, got, want-expr, got-expr) = arguments-thunk();
     phase := format-to-string("while comparing %s and %s for equality",
                               want-expr, got-expr);
@@ -106,6 +123,17 @@ define function do-check-equal
   end block
 end function;
 
+define macro expect-not-equal
+    { expect-not-equal(?expr1:expression, ?expr2:expression) }
+ => { expect-not-equal(?expr1, ?expr2, ?"expr1" " ~= " ?"expr2") }
+
+    { expect-not-equal(?expr1:expression, ?expr2:expression, ?description:*) }
+ => { do-check-not-equal(method () values(?description) end,
+                         method () values(?expr1, ?expr2, ?"expr1", ?"expr2") end,
+                         "expect-not-equal",
+                         terminate?: #f) }
+end macro;
+
 define macro assert-not-equal
   { assert-not-equal (?expr1:expression, ?expr2:expression)
   } => {
@@ -117,26 +145,27 @@ define macro assert-not-equal
                        method ()
                          values(?expr1, ?expr2, ?"expr1", ?"expr2")
                        end,
+                       "assert-not-equal",
                        terminate?: #t)
   }
 end macro assert-not-equal;
 
 define function do-check-not-equal
-    (description-thunk :: <function>, arguments-thunk :: <function>,
+    (description-thunk :: <function>, arguments-thunk :: <function>, caller :: <string>,
      #key terminate? :: <boolean>)
  => ()
-  let phase = "evaluating assertion description";
+  let phase = format-to-string("evaluating %s description", caller);
   let description :: false-or(<string>) = #f;
   block ()
     description := eval-check-description(description-thunk);
-    phase := "evaluating assertion expressions";
+    phase := format-to-string("evaluating %s expressions", caller);
     let (val1, val2, expr1, expr2) = arguments-thunk();
     phase := format-to-string("while comparing %s and %s for inequality",
                               expr1, expr2);
     if (val1 ~= val2)
       record-check(description, $passed, #f);
     else
-      phase := "getting assert-not-equal failure detail";
+      phase := format-to-string("getting %s failure detail", caller);
       record-check(description, $failed,
                    format-to-string("%= and %= are =.", val1, val2));
       terminate? & signal(make(<assertion-failure>));
@@ -206,17 +235,23 @@ define method check-equal-failure-detail
   join(choose(identity, vector(detail1, detail2, detail3)), "; ")
 end method;
 
+// Deprecated; use expect-instance?.
 define macro check-instance?
-  { check-instance? (?check-name:expression, ?type:expression, ?value:expression)
-  } => {
-    do-check-instance?(method () ?check-name end,
-                       method ()
-                         values(?type, ?value, ?"value")
-                       end,
-                       negate?: #f,
-                       terminate?: #f)
-  }
-end macro check-instance?;
+    { check-instance?(?description:expression, ?type:expression, ?value:expression) }
+ => { expect-instance?(?type, ?value, ?description) }
+end macro;
+
+define macro expect-instance?
+    { expect-instance?(?type:expression, ?value:expression) }
+ => { expect-instance?(?type, ?value, ?"value" " is an instance of " ?"type") }
+
+    { expect-instance?(?type:expression, ?value:expression, ?description:*) }
+ => { do-check-instance?(method () values(?description) end,
+                         method () values(?type, ?value, ?"value") end,
+                         "expect-instance?",
+                         terminate?: #f)
+    }
+end macro;
 
 define macro assert-instance?
   { assert-instance? (?type:expression, ?value:expression)
@@ -229,10 +264,24 @@ define macro assert-instance?
                        method ()
                          values(?type, ?value, ?"value")
                        end,
+                       "assert-instance?",
                        negate?: #f,
                        terminate?: #t)
   }
 end macro assert-instance?;
+
+define macro expect-not-instance?
+    { expect-not-instance?(?type:expression, ?value:expression) }
+ => { expect-not-instance?(?type, ?value, ?"value" " is not an instance of " ?"type") }
+
+    { expect-not-instance?(?type:expression, ?value:expression, ?description:*) }
+ => { do-check-instance?(method () values(?description) end,
+                         method () values(?type, ?value, ?"value") end,
+                         "expect-not-instance?",
+                         negate?: #t,
+                         terminate?: #f)
+    }
+end macro;
 
 define macro assert-not-instance?
   { assert-not-instance? (?type:expression, ?value:expression)
@@ -245,21 +294,22 @@ define macro assert-not-instance?
                        method ()
                          values(?type, ?value, ?"value")
                        end,
+                       "assert-not-instance?",
                        negate?: #t,
                        terminate?: #t)
   }
 end macro assert-not-instance?;
 
 define function do-check-instance?
-    (description-thunk :: <function>, get-arguments :: <function>,
+    (description-thunk :: <function>, get-arguments :: <function>, caller :: <string>,
      #key negate? :: <boolean>,
           terminate? :: <boolean>)
  => ()
-  let phase = "evaluating assertion description";
+  let phase = format-to-string("evaluating %s description", caller);
   let description :: false-or(<string>) = #f;
   block ()
     description := eval-check-description(description-thunk);
-    phase := "evaluating assertion expressions";
+    phase := format-to-string("evaluating %s expressions", caller);
     let (type :: <type>, value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= is %=an instance of %s",
                               value-expr, if (negate?) "not " else "" end, type);
@@ -279,16 +329,11 @@ define function do-check-instance?
   end block
 end function do-check-instance?;
 
+// Deprecated; use expect.
 define macro check-true
-  { check-true (?check-name:expression, ?expr:expression)
-  } => {
-    do-check-true(method () ?check-name end,
-                  method ()
-                    values(?expr, ?"expr")
-                  end,
-                  terminate?: #f)
-  }
-end macro check-true;
+    { check-true(?description:expression, ?expr:expression) }
+ => { expect(?expr, ?description) }
+end macro;
 
 define macro assert-true
   { assert-true (?expr:expression)
@@ -300,19 +345,20 @@ define macro assert-true
   } => {
     do-check-true(method () values(?description) end,
                   method () values(?expr, ?"expr") end,
+                  "assert-true",
                   terminate?: #t)
   }
 end macro assert-true;
 
 define function do-check-true
-    (description-thunk :: <function>, get-arguments :: <function>,
+    (description-thunk :: <function>, get-arguments :: <function>, caller :: <string>,
      #key terminate? :: <boolean>)
  => ()
-  let phase = "evaluating assertion description";
+  let phase = format-to-string("evaluating %s description", caller);
   let description :: false-or(<string>) = #f;
   block ()
     description := eval-check-description(description-thunk);
-    phase := "evaluating assertion expression";
+    phase := format-to-string("evaluating %s expression", caller);
     let (value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= evaluates to true", value-expr);
     if (value)
@@ -330,16 +376,23 @@ define function do-check-true
   end block
 end function do-check-true;
 
+// Deprecated; use expect-false.
 define macro check-false
-   { check-false (?check-name:expression, ?expr:expression)
-   } => {
-     do-check-false(method () ?check-name end,
-                    method ()
-                      values(?expr, ?"expr")
-                    end,
-                    terminate?: #f)
-   }
-end macro check-false;
+    { check-false(?description:expression, ?expr:expression) }
+ => { expect-false(?expr, ?description) }
+end macro;
+
+define macro expect-false
+    { expect-false(?expr:expression) }
+ => { expect-false(?expr, ?"expr" " evaluates to #f") }
+
+    { expect-false (?expr:expression, ?description:*) }
+ => { do-check-false(method () values(?description) end,
+                     method () values(?expr, ?"expr") end,
+                     "expect-false",
+                     terminate?: #f)
+    }
+end macro;
 
 define macro assert-false
   { assert-false (?expr:expression)
@@ -353,19 +406,20 @@ define macro assert-false
                    method ()
                      values(?expr, ?"expr")
                    end,
+                   "assert-false",
                    terminate?: #t)
   }
 end macro assert-false;
 
 define function do-check-false
-    (description-thunk :: <function>, get-arguments :: <function>,
+    (description-thunk :: <function>, get-arguments :: <function>, caller :: <string>,
      #key terminate? :: <boolean>)
  => ()
-  let phase = "evaluating assertion description";
+  let phase = format-to-string("evaluating %s description", caller);
   let description :: false-or(<string>) = #f;
   block ()
     description := eval-check-description(description-thunk);
-    phase := "evaluating assertion expression";
+    phase := format-to-string("evaluating %s expression", caller);
     let (value, value-expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= evaluates to #f", value-expr);
     if (~value)
@@ -384,18 +438,24 @@ define function do-check-false
   end block
 end function do-check-false;
 
+// Deprecated; use expect-condition.
 define macro check-condition
-  { check-condition(?check-name:expression, ?condition:expression,
-                    ?expr:expression)
-  } => {
-    do-check-condition(method () ?check-name end,
-                       method ()
-                         values(?condition, method () ?expr end, ?"expr")
-                       end,
-                       terminate?: #f)
-  }
-end macro check-condition;
+    { check-condition(?description:expression, ?condition:expression, ?expr:expression) }
+ => { expect-condition(?condition, ?expr, ?description) }
+end macro;
 
+define macro expect-condition
+    { expect-condition(?condition:expression, ?expr:expression) }
+ => { expect-condition(?condition, ?expr, ?"expr" " signals condition " ?"condition") }
+
+    { expect-condition(?condition:expression, ?expr:expression, ?description:*) }
+ => { do-check-condition(method () values(?description) end,
+                         method () values(?condition, method () ?expr end, ?"expr") end,
+                         "expect-condition",
+                         terminate?: #f) }
+end macro;
+
+// Deprecated; use assert-condition.
 define macro assert-signals
   { assert-signals(?condition:expression, ?expr:expression)
   } => {
@@ -408,19 +468,31 @@ define macro assert-signals
                        method ()
                          values(?condition, method () ?expr end, ?"expr")
                        end,
+                       "assert-signals",
                        terminate?: #t)
   }
 end macro assert-signals;
 
+define macro assert-condition
+    { assert-condition(?condition:expression, ?expr:expression) }
+ => { assert-condition(?condition, ?expr, ?"expr" " signals condition " ?"condition") }
+
+    { assert-condition(?condition:expression, ?expr:expression, ?description:*) }
+ => { do-check-condition(method () values(?description) end,
+                         method () values(?condition, method () ?expr end, ?"expr") end,
+                         "assert-condition",
+                         terminate?: #t) }
+end macro;
+
 define function do-check-condition
-    (description-thunk :: <function>, get-arguments :: <function>,
+    (description-thunk :: <function>, get-arguments :: <function>, caller :: <string>,
      #key terminate? :: <boolean>)
  => ()
-  let phase = "evaluating assertion description";
+  let phase = format-to-string("evaluating %s description", caller);
   let description :: false-or(<string>) = #f;
   block ()
     description := eval-check-description(description-thunk);
-    phase := "evaluating assertion expression";
+    phase := format-to-string("evaluating %s expression", caller);
     let (condition-class, thunk :: <function>, expr :: <string>) = get-arguments();
     phase := format-to-string("checking if %= signals a condition of class %s",
                               expr, condition-class);
@@ -449,21 +521,28 @@ define function do-check-condition
 end function do-check-condition;
 
 
+// Deprecated; use expect-no-condition.
 // Same as check-no-errors, for symmetry with check-condition...
 define macro check-no-condition
-  { check-no-condition(?check-name:expression, ?check-body:expression)
-  } => {
-    check-true(?check-name, begin ?check-body; #t end)
-  }
-end macro check-no-condition;
+    { check-no-condition(?description:expression, ?expr:expression) }
+ => { expect-no-condition(?expr, ?description) }
+end macro;
 
+// Deprecated; use expect-no-condition.
 define macro check-no-errors
-  { check-no-errors(?check-name:expression, ?check-body:expression)
-  } => {
-    check-true(?check-name, begin ?check-body; #t end)
-  }
-end macro check-no-errors;
+    { check-no-errors(?description:expression, ?expr:expression) }
+ => { expect-no-condition(?expr, ?description) }
+end macro;
 
+define macro expect-no-condition
+    { expect-no-condition(?expr:expression) }
+ => { expect(begin ?expr; #t end) }
+
+    { expect-no-condition(?expr:expression, ?description:*) }
+ => { expect(begin ?expr; #t end, ?description) }
+end macro;
+
+// Deprecated; use assert-no-condition.
 define macro assert-no-errors
   { assert-no-errors(?expr:expression)
   } => {
@@ -476,6 +555,13 @@ define macro assert-no-errors
   }
 end macro assert-no-errors;
 
+define macro assert-no-condition
+    { assert-no-condition(?expr:expression) }
+ => { assert-no-condition(?expr, ?"expr" " doesn't signal an error ") }
+
+    { assert-no-condition(?expr:expression, ?description:*) }
+ => { assert-true(begin ?expr; #t end, ?description) }
+end macro;
 
 /// Check recording
 

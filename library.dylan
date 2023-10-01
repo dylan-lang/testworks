@@ -42,13 +42,12 @@ define module testworks
     runner-skip,
     runner-tags;
 
-  // Checks (deprecated, use assertions)
+  // Checks (deprecated, use assert-* or expect-*)
   create
     check,
     check-condition,
     check-no-condition,
     check-equal,
-    check-equal-failure-detail,
     check-false,
     check-no-errors,
     check-instance?,
@@ -58,12 +57,25 @@ define module testworks
   create
     assert-equal,
     assert-not-equal,
-    assert-signals,
+    assert-condition,
+    assert-signals,             // Deprecated; use assert-condition.
     assert-no-errors,
     assert-instance?,
     assert-not-instance?,
     assert-true,
-    assert-false;
+    assert-false,
+    expect,
+    expect-equal,
+    expect-not-equal,
+    expect-false,
+    expect-instance?,
+    expect-not-instance?,
+    expect-condition,
+    expect-no-condition;
+
+  create
+    // Implement this to give detail to expect-equal failures for your own types.
+    check-equal-failure-detail;
 
   // Components
   create
