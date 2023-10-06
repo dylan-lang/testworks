@@ -153,7 +153,7 @@ end method print-result-info;
 
 // This 'after' method prints the reason for the result's failure
 define method print-result-info
-    (result :: <unit-result>, stream :: <stream>, #key indent = "", test) => ()
+    (result :: <check-result>, stream :: <stream>, #key indent = "", test) => ()
   ignore(indent);
   next-method();
   let show-result? = if (test) test(result) else #t end;
@@ -424,11 +424,7 @@ define function emit-surefire-test
     $not-implemented =>
       format(stream, "\n      <failure message=\"Not implemented\" />\n");
     otherwise =>
-      // If this test failed then we know at least one of the checks
-      // failed.  Note that (due to testworks-specs) a <test-result>
-      // may contain <test-unit-result>s and we flatten those into
-      // this result because they don't (apparently?) match Surefire's
-      // format.
+      // If this test failed then we know at least one of the checks failed.
       format(stream, "\n      <failure>\n");
       do-results(rcurry(emit-surefire-check, stream), test,
                  test: rcurry(instance?, <check-result>));

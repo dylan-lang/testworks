@@ -81,13 +81,7 @@ end;
 define class <suite-result> (<component-result>)
 end;
 
-define class <unit-result> (<result>)
-end;
-
-define class <check-result> (<unit-result>)
-end;
-
-define class <test-unit-result> (<test-result>, <unit-result>)
+define class <check-result> (<result>)
 end;
 
 
@@ -117,11 +111,6 @@ end;
 define method result-type-name
     (result :: <check-result>) => (name :: <string>)
   "check"
-end;
-
-define method result-type-name
-    (result :: <test-unit-result>) => (name :: <string>)
-  "test-unit"
 end;
 
 

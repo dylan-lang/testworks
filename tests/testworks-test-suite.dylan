@@ -372,18 +372,6 @@ define test test-run-tests/suite ()
               "run-tests sub-results are in a vector");
 end test test-run-tests/suite;
 
-// This simply exercises the with-test-unit macro.  It'll catch
-// compile time warnings at least, but doesn't actually verify
-// anything else.
-define test test-with-test-unit ()
-  with-test-unit ("foo-unit")
-    assert-equal(2, 2);
-  end;
-  with-test-unit ("bar-unit")
-    assert-equal(3, 3);
-  end;
-end test test-with-test-unit;
-
 // The following tests and suites are defined without using their
 // respective -definer macros so that they don't get registered and
 // then run as normal tests (which would fail).

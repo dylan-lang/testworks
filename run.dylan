@@ -325,7 +325,7 @@ define function decide-status
          end;
     empty?(subresults) & ~benchmark?
       => $not-implemented;
-    every?(method (result :: <unit-result>) => (passed? :: <boolean>)
+    every?(method (result :: <result>) => (passed? :: <boolean>)
              result.result-status == $passed
            end,
            subresults)

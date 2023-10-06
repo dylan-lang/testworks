@@ -53,5 +53,4 @@ define suite testworks-test-suite ()
   test test-test-temp-directory;
   test test-that-not-implemented-is-not-a-failure;
   test test-that-not-implemented-plus-passed-is-passed;
-  test test-with-test-unit;
 end suite;

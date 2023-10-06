@@ -68,8 +68,7 @@ define module testworks
   create
     suite-definer,
     test-definer,
-    benchmark-definer,
-    with-test-unit;
+    benchmark-definer;
 
   // Benchmarks
   create
@@ -147,7 +146,6 @@ define module %testworks
     <runnable>,
     <benchmark>,
     <test>,
-    <test-unit>,
     test-function,
     test-requires-assertions?,
     test-tags;
@@ -181,12 +179,9 @@ define module %testworks
     <benchmark-result>,
     <benchmark-iteration-result>,
     <suite-result>,
-    <unit-result>,
     result-reason,
     do-results,
-
-    <check-result>,
-    <test-unit-result>;
+    <check-result>;
 
   // Report functions
   export

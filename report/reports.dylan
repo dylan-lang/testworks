@@ -111,7 +111,7 @@ define method print-comparison-info
   print-status-line(result, indent: indent, test: test);
   let result1 = result.comparison-result1;
   let result2 = result.comparison-result2;
-  if (instance?(result1 | result2, <unit-result>))
+  if (instance?(result1 | result2, <check-result>))
     print-reason(result, indent: indent, test: test);
   end;
   let subindent = concatenate-as(<byte-string>, indent, "  ");
