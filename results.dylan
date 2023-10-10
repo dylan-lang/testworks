@@ -43,13 +43,14 @@ end method status-name;
 define generic result-name   (result :: <result>) => (name :: <string>);
 define generic result-status (result :: <result>) => (status :: <result-status>);
 define generic result-reason (result :: <result>) => (reason :: false-or(<string>));
+define generic result-passing? (result :: <result>) => (passing? :: <boolean>);
 
 define class <result> (<object>)
   constant slot result-name :: <string>,
     required-init-keyword: name:;
   constant slot result-status :: <result-status>,
     required-init-keyword: status:;
-  // This is #f if the test passed; otherwise a string.
+  // This is #f if the test passed.
   constant slot result-reason :: false-or(<string>) = #f,
     required-init-keyword: reason:;
 end class <result>;
@@ -63,7 +64,6 @@ define class <metered-result> (<result>)
     required-init-keyword: seconds:;
   constant slot result-microseconds :: false-or(<integer>),
     required-init-keyword: microseconds:;
-  // Hopefully nothing will allocate more than 536MB haha...
   constant slot result-bytes :: false-or(<integer>),
     required-init-keyword: bytes:;
 end class <metered-result>;
@@ -84,7 +84,6 @@ end;
 define class <check-result> (<result>)
 end;
 
-
 // I believe this is for testworks-report.  --cgay
 define method \=
     (result1 :: <result>, result2 :: <result>)
@@ -94,6 +93,11 @@ define method \=
      | result1.result-reason = result2.result-reason)
 end;
 
+
+define method result-passing?
+    (result :: <result>) => (passing? :: <boolean>)
+  member?(result.result-status, $passing-statuses)
+end method;
 
 define open generic result-type-name
     (result :: <result>) => (name :: <string>);

@@ -188,7 +188,7 @@ define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
   if (runner.runner-progress ~== $progress-none)
-    show-progress(runner, component, #f);
+    show-progress-start(runner, component);
   end;
   let result
     = if (execute-component?(component, runner))
@@ -207,7 +207,7 @@ define method maybe-execute-component
   force-output(*standard-error*);
   force-output(*standard-output*);
   if (runner.runner-progress ~== $progress-none)
-    show-progress(runner, component, result);
+    show-progress-done(runner, component, result);
   end;
   result
 end method maybe-execute-component;
@@ -219,11 +219,15 @@ define method execute-component
   let seconds :: <integer> = 0;
   let microseconds :: <integer> = 0;
   let bytes :: <integer> = 0;
+  let indent = next-indent();
   let status
     = block ()
         suite.suite-setup-function();
         for (component in sort-components(suite.suite-components, runner.runner-order))
-          let subresult = maybe-execute-component(component, runner);
+          let subresult
+            = dynamic-bind (*indent* = indent)
+                maybe-execute-component(component, runner);
+              end;
           add!(subresults, subresult);
           if (instance?(subresult, <component-result>)
               & subresult.result-seconds
@@ -247,10 +251,7 @@ define method execute-component
                  end,
                  subresults)
             => $not-implemented;
-          every?(method (subresult)
-                   member?(subresult.result-status, $passing-statuses)
-                 end,
-                 subresults)
+          every?(result-passing?, subresults)
             => $passed;
           otherwise
             => $failed;
@@ -276,8 +277,8 @@ define method execute-component
   local
     method record-check (result :: <result>)
       add!(subresults, result);
-      if (*runner*.runner-progress == $progress-all)
-        show-progress(*runner*, #f, result);
+      if (runner.runner-progress ~== $progress-none)
+        show-progress-done(runner, #f, result);
       end;
       result
     end,
@@ -287,7 +288,8 @@ define method execute-component
     end;
   let (status, reason)
     = dynamic-bind (*check-recording-function* = record-check,
-                    *benchmark-recording-function* = record-benchmark)
+                    *benchmark-recording-function* = record-benchmark,
+                    *indent* = next-indent())
         let cond
           = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
               block ()
@@ -378,91 +380,63 @@ define method list-component
 end method list-component;
 
 
-// Show some output during the test run.  For each component this is
-// called both before and after it has been run.  If before, result
-// will be #f.  This function is only called if runner.runner-progress
-// is not $progress-none.
-define generic show-progress
-    (runner :: <test-runner>,
-     component :: false-or(<component>),
-     result :: false-or(<result>))
+// Show progress output during the test run. These are only called if
+// runner.runner-progress ~== $progress-none.
+define generic show-progress-start
+    (runner :: <test-runner>, component :: <component>)
+ => ();
+define generic show-progress-done
+    (runner :: <test-runner>, component :: false-or(<component>), result :: <result>)
  => ();
 
-// Default does nothing.
-define method show-progress
-    (runner :: <test-runner>,
-     component :: false-or(<component>),
-     result :: false-or(<result>))
- => ()
-end;
+// suites, tests, benchmarks
+define method show-progress-start
+    (runner :: <test-runner>, component :: <component>) => ()
+  test-output("%s%s %=%s%=:\n",
+              *indent*,
+              capitalize(component.component-type-name),
+              $component-name-text-attributes,
+              component.component-name,
+              $reset-text-attributes);
+end method;
 
-define method show-progress
-    (runner :: <test-runner>, suite :: <suite>, result :: false-or(<result>))
- => ()
-  if (result)
-    let result-status = result.result-status;
-    test-output("Completed suite %=%s%=: %=%s%= in %ss\n",
-                $component-name-text-attributes,
-                suite.component-name,
-                $reset-text-attributes,
-                result-status-to-text-attributes(result-status),
-                result-status.status-name.as-uppercase,
-                $reset-text-attributes,
-                result.result-time)
-  else
-    test-output("Running suite %=%s%=:\n",
-                $component-name-text-attributes,
-                suite.component-name,
-                $reset-text-attributes);
-  end;
-end method show-progress;
-
-// Tests and benchmarks are displayed before and after being run.
-define method show-progress
-    (runner :: <test-runner>, test :: <runnable>, result :: false-or(<result>))
- => ()
-  let verbose? = runner.runner-progress == $progress-all;
-  if (result)
-    let reason = result.result-reason;
-    let result-status = result.result-status;
-    test-output("%s%=%s%= in %ss and %s\n",
-                if (verbose?)
-                  format-to-string("  %s ", test.component-type-name)
-                else
-                  " "
-                end,
-                result-status-to-text-attributes(result-status),
-                result-status.status-name.as-uppercase,
-                $reset-text-attributes,
-                result.result-time,
-                format-bytes(result.result-bytes));
-    reason & test-output("    %s\n", reason);
-  else
-    test-output("Running %s %=%s%=:%s",
-                test.component-type-name,
-                $component-name-text-attributes,
-                test.component-name,
-                $reset-text-attributes,
-                verbose? & "\n" | "");
-  end;
-end method show-progress;
-
-// `component == #f` means this is an assertion, only displayed when they fail
-// or when --progress=all.
-define method show-progress
-    (runner :: <test-runner>, component == #f, result :: <result>)
- => ()
+// suites, tests, benchmarks
+define method show-progress-done
+    (runner :: <test-runner>, component :: <component>, result :: <result>) => ()
   let status = result.result-status;
-  let reason = result.result-reason;
-  if (runner.runner-progress == $progress-all)
-    test-output("  %=%s%=: %s%s\n",
+  let bytes = result.result-bytes;
+  test-output("%s%s %=%s%= %=%s%= in %ss%s\n",
+              *indent*,
+              capitalize(component.component-type-name),
+              $component-name-text-attributes,
+              component.component-name,
+              $reset-text-attributes,
+              result-status-to-text-attributes(status),
+              status.status-name.as-uppercase,
+              $reset-text-attributes,
+              result.result-time,
+              if (bytes)
+                format-to-string(" and %s", format-bytes(bytes))
+              else
+                ""
+              end);
+end method;
+
+// assertions
+define method show-progress-done
+    (runner :: <test-runner>, component == #f, result :: <result>) => ()
+  if (~result-passing?(result)
+        | runner.runner-progress == $progress-all)
+    let status = result.result-status;
+    test-output("%s%=%s%=: %s\n%s%s%s\n",
+                *indent*,
                 result-status-to-text-attributes(status),
                 status.status-name.as-uppercase,
                 $reset-text-attributes,
                 result.result-name,
-                reason & concatenate(" ", reason) | "");
-  elseif (reason & ~member?(status, $passing-statuses))
-    test-output("\n  %s: %s", result.result-name, reason);
+                *indent*,
+                $indent-step,
+                result.result-reason);
   end;
 end method;
 

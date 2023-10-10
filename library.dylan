@@ -202,8 +202,7 @@ define module %testworks
     $progress-none,
     $progress-minimal,
     $progress-all,
-    <progress-option>,
-    show-progress;
+    <progress-option>;
 
   // Command line handling
   export

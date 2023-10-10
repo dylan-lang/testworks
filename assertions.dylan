@@ -87,14 +87,15 @@ define function do-check-equal
     else
       phase := format-to-string("getting %s failure detail", caller);
       let detail = check-equal-failure-detail(want, got);
+      let detail = if (detail)
+                     format-to-string("\n%s%sdetail: %s",
+                                      *indent*, $indent-step, detail)
+                   else
+                     ""
+                   end;
       record-check(description, $failed,
-                   format-to-string("\n      want: %=\n      got:  %=%s",
-                                    want, got,
-                                    if (detail)
-                                      format-to-string("\n      detail: %s", detail)
-                                    else
-                                      ""
-                                    end));
+                   format-to-string("want: %=\n%s%sgot:  %=%s",
+                                    want, *indent*, $indent-step, got, detail));
       terminate? & signal(make(<assertion-failure>));
     end;
   exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
