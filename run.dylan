@@ -55,16 +55,6 @@ define function write-test-file
   locator
 end function;
 
-define inline function debug-failures?
-    () => (debug-failures? :: <boolean>)
-  debug-runner?(*runner*) == #t
-end;
-
-define inline function debug?
-    () => (debug? :: <boolean>)
-  debug-runner?(*runner*) ~= #f
-end;
-
 // For tests to do debugging output.
 // TODO(cgay): Collect this and stdio into a log file per test run
 // or per test.  The Surefire report has a place for stdout, too.
@@ -81,15 +71,32 @@ define method test-output
   end;
 end method test-output;
 
-// These are terrible (e.g. what does #f or default mean here?). Use enums or something.
-define constant <progress-option> = one-of(#f, $default, $verbose);
-define constant <debug-option> = one-of(#f, #"crashes", #t);
+define constant $progress-none    = #"progress-none";
+define constant $progress-minimal = #"progress-minimal"; // Hide assertions unless they fail.
+define constant $progress-all     = #"progress-all";     // Display all assertions.
+define constant <progress-option>
+  = one-of($progress-none, $progress-minimal, $progress-all);
+
+define constant $debug-none    = #"debug-none";
+define constant $debug-crashes = #"debug-crashes";
+define constant $debug-all     = #"debug-all";
+define constant <debug-option>
+  = one-of($debug-none, $debug-crashes, $debug-all);
+
+define inline function debug-failures?
+    () => (debug-failures? :: <boolean>)
+  runner-debug(*runner*) == $debug-all
+end function;
+
+define inline function debug?
+    () => (debug? :: <boolean>)
+  runner-debug(*runner*) ~= $debug-none
+end function;
 
 define constant $source-order  = #"source"; // order they appear in the source code.
 define constant $lexical-order = #"lexical";
 define constant $random-order  = #"random";
 define constant $default-order = $source-order;
-
 define constant <order> = one-of($source-order, $lexical-order, $random-order);
 
 define generic sort-components (components :: <sequence>, order :: <order>)
@@ -112,7 +119,7 @@ end;
 
 define generic runner-tags     (runner :: <test-runner>) => (tags :: <sequence>);
 define generic runner-progress (runner :: <test-runner>) => (progress :: <progress-option>);
-define generic debug-runner?   (runner :: <test-runner>) => (debug? :: <debug-option>);
+define generic runner-debug    (runner :: <test-runner>) => (debug :: <debug-option>);
 define generic runner-skip     (runner :: <test-runner>) => (skip :: <sequence> /* of <component> */);
 define generic runner-order    (runner :: <test-runner>) => (order :: <order>);
 define generic runner-output-stream (runner :: <test-runner>) => (stream :: <stream>);
@@ -126,10 +133,10 @@ define open class <test-runner> (<object>)
   //  init-keyword: report:;
   constant slot runner-tags :: <sequence> = #[],
     init-keyword: tags:;
-  constant slot runner-progress :: <progress-option>,
+  constant slot runner-progress :: <progress-option> = $progress-minimal,
     init-keyword: progress:;
-  constant slot debug-runner? :: <debug-option> = #f,
-    init-keyword: debug?:;
+  constant slot runner-debug :: <debug-option> = $debug-none,
+    init-keyword: debug:;
   constant slot runner-skip :: <sequence> = #[],   // of components
     init-keyword: skip:;
   constant slot runner-order :: <order> = $default-order,
@@ -180,7 +187,7 @@ end;
 define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
-  if (runner.runner-progress)
+  if (runner.runner-progress ~== $progress-none)
     show-progress(runner, component, #f);
   end;
   let result
@@ -199,7 +206,7 @@ define method maybe-execute-component
       end;
   force-output(*standard-error*);
   force-output(*standard-output*);
-  if (runner.runner-progress)
+  if (runner.runner-progress ~== $progress-none)
     show-progress(runner, component, result);
   end;
   result
@@ -269,7 +276,7 @@ define method execute-component
   local
     method record-check (result :: <result>)
       add!(subresults, result);
-      if (*runner*.runner-progress)
+      if (*runner*.runner-progress == $progress-all)
         show-progress(*runner*, #f, result);
       end;
       result
@@ -374,7 +381,7 @@ end method list-component;
 // Show some output during the test run.  For each component this is
 // called both before and after it has been run.  If before, result
 // will be #f.  This function is only called if runner.runner-progress
-// ~= #f.
+// is not $progress-none.
 define generic show-progress
     (runner :: <test-runner>,
      component :: false-or(<component>),
@@ -414,7 +421,7 @@ end method show-progress;
 define method show-progress
     (runner :: <test-runner>, test :: <runnable>, result :: false-or(<result>))
  => ()
-  let verbose? = runner.runner-progress = $verbose;
+  let verbose? = runner.runner-progress == $progress-all;
   if (result)
     let reason = result.result-reason;
     let result-status = result.result-status;
@@ -440,24 +447,24 @@ define method show-progress
   end;
 end method show-progress;
 
-// Assertions are only displayed when they fail or the verbose option
-// is set.
+// `component == #f` means this is an assertion, only displayed when they fail
+// or when --progress=all.
 define method show-progress
     (runner :: <test-runner>, component == #f, result :: <result>)
  => ()
   let status = result.result-status;
   let reason = result.result-reason;
-  if (runner.runner-progress = $verbose)
+  if (runner.runner-progress == $progress-all)
     test-output("  %=%s%=: %s%s\n",
                 result-status-to-text-attributes(status),
                 status.status-name.as-uppercase,
                 $reset-text-attributes,
                 result.result-name,
                 reason & concatenate(" ", reason) | "");
-  elseif (reason)
+  elseif (reason & ~member?(status, $passing-statuses))
     test-output("\n  %s: %s", result.result-name, reason);
   end;
-end method show-progress;
+end method;
 
 define function test-option
     (name :: <string>, #key default = unsupplied())

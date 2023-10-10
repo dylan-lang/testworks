@@ -34,10 +34,11 @@ define module testworks
     run-tests,
     *runner*,
     <test-runner>,
-    debug-runner?,
+    runner-debug,
     runner-options,
     runner-output-stream,
     runner-progress,
+    runner-debug,
     runner-skip,
     runner-tags;
 
@@ -116,7 +117,7 @@ define module %testworks
     import: { random };
   use standard-io;
   use streams;
-  use strings, import: { char-compare-ic, starts-with?, string-equal? };
+  use strings;
   use testworks;
   use threads,
     import: { dynamic-bind };
@@ -124,6 +125,10 @@ define module %testworks
 
   // Debugging options
   export
+    <debug-option>,
+    $debug-none,
+    $debug-crashes,
+    $debug-all,
     debug-failures?,
     debug?;
 
@@ -194,8 +199,11 @@ define module %testworks
 
   // Progress
   export
-    show-progress,
-    $default, $verbose;
+    $progress-none,
+    $progress-minimal,
+    $progress-all,
+    <progress-option>,
+    show-progress;
 
   // Command line handling
   export

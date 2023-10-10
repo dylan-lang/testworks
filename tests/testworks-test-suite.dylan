@@ -15,7 +15,8 @@ define function do-with-result
   let test = make(<test>,
                   name: "anonymous",
                   function: thunk);
-  let result = run-tests(make(<test-runner>, progress: #f), test);
+  let result = run-tests(make(<test-runner>, progress: $progress-none),
+                         test);
   let subresults = result.result-subresults;
   assert-equal(1, subresults.size,
                "assertion-status thunk had exactly one assertion?");
@@ -346,7 +347,7 @@ end;
 /// Verify the result objects
 
 define test test-run-tests/test ()
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let test-results = run-tests(runner, testworks-check-test);
   assert-true(instance?(test-results, <test-result>),
               "run-tests returns <test-result> when running a <test>");
@@ -362,7 +363,7 @@ end test test-run-tests/test;
 
 define test test-run-tests/suite ()
   let suite-to-check = testworks-assertion-macros-suite;
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let suite-results = run-tests(runner, suite-to-check);
   assert-true(instance?(suite-results, <suite-result>),
               "run-tests returns <suite-result> when running a <suite>");
@@ -418,7 +419,7 @@ define constant unexpected-success-suite
          components: vector(test-unexpected-success));
 
 define test test-run-tests-expect-failure/suite ()
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
 
   let suite-results = run-tests(runner, expected-to-fail-suite);
   assert-equal($passed, suite-results.result-status,
@@ -432,7 +433,7 @@ define test test-run-tests-expect-failure/suite ()
 end test;
 
 define test test-run-tests-expect-failure/test ()
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
 
   let test-results = run-tests(runner, test-expected-to-fail-always);
   assert-equal($expected-failure, test-results.result-status);
@@ -578,7 +579,7 @@ define test test-that-not-implemented-is-not-a-failure ()
   let suite = make(<suite>,
                    name: "not-implemented-suite",
                    components: vector(test));
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let result = run-tests(runner, suite);
   assert-equal($not-implemented, result.result-status);
 end;
@@ -593,7 +594,7 @@ define test test-that-not-implemented-plus-passed-is-passed ()
   let suite = make(<suite>,
                    name: "not-implemented-suite",
                    components: vector(test1, test2));
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let result = run-tests(runner, suite);
   assert-equal($passed, result.result-status);
 end;
@@ -628,7 +629,8 @@ define function check-description (test-function, want-string)
   let test = make(<test>,
                   name: "no name",
                   function: test-function);
-  let result = run-tests(make(<test-runner>, progress: #f), test);
+  let result = run-tests(make(<test-runner>, progress: $progress-none),
+                         test);
   let report = with-output-to-string (stream)
                  print-full-report(result, stream)
                end;
@@ -746,6 +748,11 @@ end test;
  work to be done in this area so I expect to use these more.
 
 define test test-assert-equal-output ()
+  check-instance?("b", <string>, 1);
+  check-true("d", 3 < 2);
+  check-false("e", 3 == 3);
+  check-condition("f", <error>, "no error");
+  check-no-condition("g", error("foo"));
   check-equal("list, same size, different elements",
               #("a", "b", "c", "d"),
               #("a", "b", "x", "d"));
