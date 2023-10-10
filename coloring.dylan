@@ -14,7 +14,6 @@ define constant $crashed-text-attributes            = text-attributes(foreground
 define constant $expected-to-fail-text-attributes   = text-attributes(foreground: $color-cyan);
 define constant $unexpected-success-text-attributes = text-attributes(foreground: $color-red);
 define constant $component-name-text-attributes     = text-attributes(intensity: $bright-intensity);
-define constant $total-text-attributes              = text-attributes(intensity: $bright-intensity);
 
 define function result-status-to-text-attributes
     (result :: <result-status>)

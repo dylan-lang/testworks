@@ -67,59 +67,6 @@ define function count-results-of-type
   n
 end function;
 
-
-/// Summary generation
-
-// Output lines like these, one per call. `kind` is "suite", "test", "benchmark", or "check".
-//    Ran 1455 checks: 22 crashed 1 failed
-//    Ran 37 tests: FAILED (1 crashed, 1 failed, 3 not implemented, 1 skipped, 1 expected failure)
-define method print-result-summary
-    (result :: <result>, kind :: <string>, stream :: <stream>,
-     #key test = always(#t))
- => ()
-  // Unexpected success is currently lumped in with failures.
-  let (passed, failed, crashed, skipped, nyi, expected-failures)
-    = count-results(result, test: test);
-  let total = passed + failed + crashed + skipped + nyi + expected-failures;
-  let did-paren? = #f;
-  let did-comma? = #f;
-  local method print-count (count, label, #key plural = "")
-          if (count > 0)
-            if (~did-paren?)
-              did-paren? := #t;
-              write(stream, " (");
-            end;
-            if (did-comma?)
-              write(stream, ", ");
-            end;
-            format(stream, "%d %s%s", count, label, if (count = 1) "" else plural end);
-            did-comma? := #t;
-          end;
-        end method;
-  // "Ran 10 suites: " etc
-  format(stream, "Ran %=%s%= %s%s:",
-         $total-text-attributes,
-         total,
-         $reset-text-attributes,
-         kind,
-         if (total == 1) "" else "s" end);
-  let passed? = crashed = 0 & failed = 0;
-  if (passed?)
-    format(stream, " %=PASSED%=", $passed-text-attributes, $reset-text-attributes);
-  else
-    format(stream, " %=FAILED%=", $failed-text-attributes, $reset-text-attributes);
-  end;
-  print-count(failed, "failed");
-  print-count(crashed, "crashed");
-  print-count(skipped, "skipped");
-  print-count(nyi, "not implemented");
-  print-count(expected-failures, "expected failure", plural: "s");
-  if (did-paren?)
-    write(stream, ")");
-  end;
-  write(stream, "\n");
-end method print-result-summary;
-
 define method print-result-info
     (result :: <result>, stream :: <stream>, #key indent = "", test)
  => ()
@@ -226,31 +173,58 @@ define method print-null-report
     (result :: <result>, stream :: <stream>) => ()
 end;
 
+// Example output:
+//   Ran 437 tests with 4 expected failures and 117 not implemented
+//   PASSED in 88.278782 seconds
 define method print-summary-report
     (result :: <result>, stream :: <stream>) => ()
-  let stream = colorize-stream(stream);
-  local method print-class-summary (result, name, class) => ()
-          print-result-summary(result, name, stream, test: rcurry(instance?, class))
+  local method pluralize (count :: <integer>) => (s :: <string>)
+          if (count == 1) "" else "s" end
         end;
-  write(stream, "\n");
-  print-class-summary(result, "check", <check-result>);
-
-  // The expectation is that tests and benchmarks should be in different
-  // libraries so we try to print only one or the other here. If there are
-  // neither tests nor benchmarks something is wrong so print both.
+  let stream = colorize-stream(stream);
+  let (_, failed, crashed, skipped, nyi, expected-failures)
+    = count-results(result,
+                    test: method (result)
+                            instance?(result, <test-result>)
+                              | instance?(result, <benchmark-result>)
+                          end);
+  let assertions = count-results-of-type(result, <check-result>);
   let benches = count-results-of-type(result, <benchmark-result>);
   let tests = count-results-of-type(result, <test-result>);
-  if (benches > 0 | tests = 0)
-    print-class-summary(result, "benchmark", <benchmark-result>);
+  let kinds = make(<stretchy-vector>);
+  if (tests > 0)
+    add!(kinds, format-to-string("%d test%s", tests, pluralize(tests)));
   end;
-  if (tests > 0 | benches = 0)
-    print-class-summary(result, "test", <test-result>);
+  if (benches > 0)
+    add!(kinds, format-to-string("%d benchmark%s", benches, pluralize(benches)));
   end;
-
-  let result-status = result.result-status;
-  format(stream, "%=%s%= in %s seconds\n",
-         result-status-to-text-attributes(result-status),
-         result-status.status-name.as-uppercase,
+  let breakdown = make(<stretchy-vector>);
+  if (crashed > 0)
+    add!(breakdown, format-to-string("%d crashed", crashed));
+  end;
+  if (failed > 0)
+    add!(breakdown, format-to-string("%d failed", failed));
+  end;
+  if (expected-failures > 0)
+    add!(breakdown,
+         format-to-string("%d expected failure%s",
+                          expected-failures, pluralize(expected-failures)));
+  end;
+  if (nyi > 0)
+    add!(breakdown, format-to-string("%d not implemented", nyi));
+  end;
+  if (skipped > 0)
+    add!(breakdown, format-to-string("%d skipped", skipped));
+  end;
+  format(stream, "Ran %d assertion%s\n", assertions, pluralize(assertions));
+  format(stream, "Ran %s", join(kinds, " and "));
+  if (breakdown.size > 0)
+    format(stream, ": %s", join(breakdown, ", ", conjunction: " and "));
+  end;
+  let status = result.result-status;
+  format(stream, "\n%=%s%= in %s seconds\n",
+         result-status-to-text-attributes(status),
+         status.status-name.as-uppercase,
          $reset-text-attributes,
          result.result-time);
 end method;
