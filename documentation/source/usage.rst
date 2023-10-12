@@ -504,19 +504,20 @@ xxx-test-suite-app.lid`` and run with ``xxx-test-suite-app --help``.
 Reports
 =======
 
-The ``--report`` and ``--report-file`` options can be used to write a full
-report of test run results so that those results can be compared with
-subsequent test runs, for example to find regressions. These are the available
-report types:
+The ``--report`` option can be used to generate a full report of test run
+results. These are the available report types:
 
-failures
-  Prints out only the list of failures and a summary.
+failures (the default)
+  Prints out only the list of failures and a summary, in readable text format.
+
+full
+  Like ``failures`` but prints results whether passing or failing.
 
 json
   Outputs JSON objects that match the suite/test/assertion tree structure,
   with full detail.
 
-summary (the default)
+summary
   Prints out only a summary of how many assertions, tests and suites
   were executed, passed, failed or crashed.
 
