@@ -68,47 +68,36 @@ define function count-results-of-type
 end function;
 
 define method print-result-info
-    (result :: <result>, stream :: <stream>, #key indent = "", test)
- => ()
-  let result-status = result.result-status;
-  let show-result? = if (test) test(result) else #t end;
-  if (show-result?)
-    format(stream, "\n%s%s %s",
-           indent, result.result-name, status-name(result-status));
-    if (result-status == $passed
-        & instance?(result, <metered-result>))
-      format(stream, " in %s seconds with %s bytes allocated.",
-             result-time(result), result-bytes(result) | "?");
-    end if
+    (result :: <result>, stream :: <stream>, #key test) => ()
+  if (~test | test(result))
+    let reason = result.result-reason;
+    let status = result.result-status;
+    format(stream, "%s%s: %s%s\n",
+           *indent*,
+           status.status-name.as-uppercase,
+           result.result-name,
+           if (status == $passed & instance?(result, <metered-result>))
+             format-to-string(" in %ss and %s",
+                              result.result-time,
+                              format-bytes(result.result-bytes))
+           else
+             ""
+           end);
+    if (reason)
+      format(stream, "%s%s%s\n", *indent*, $indent-step, reason);
+    end;
   end;
-end method print-result-info;
+end method;
 
 define method print-result-info
-    (result :: <component-result>, stream :: <stream>, #key indent = "", test)
- => ()
+    (result :: <component-result>, stream :: <stream>, #key test) => ()
   next-method();
-  let show-result? = if (test) test(result) else #t end;
-  let reason = result.result-reason;
-  if (show-result? & reason)
-    format(stream, "%s", reason);
+  dynamic-bind (*indent* = next-indent())
+    for (subresult in result-subresults(result))
+      print-result-info(subresult, stream, test: test)
+    end;
   end;
-  let subindent = concatenate(indent, "  ");
-  for (subresult in result-subresults(result))
-    print-result-info(subresult, stream, indent: subindent, test: test)
-  end
-end method print-result-info;
-
-// This 'after' method prints the reason for the result's failure
-define method print-result-info
-    (result :: <check-result>, stream :: <stream>, #key indent = "", test) => ()
-  ignore(indent);
-  next-method();
-  let show-result? = if (test) test(result) else #t end;
-  let reason = result.result-reason;
-  if (show-result? & reason)
-    format(stream, "%s", reason);
-  end;
-end method print-result-info;
+end method;
 
 define function stats-summary
     (v :: limited(<vector>, of: <double-float>))
@@ -132,15 +121,9 @@ define function stats-summary
 end function;
 
 define method print-result-info
-    (result :: <benchmark-result>, stream :: <stream>, #key indent = "", test) => ()
+    (result :: <benchmark-result>, stream :: <stream>, #key test) => ()
   if (~test | test(result))
-    let result-status = result.result-status;
-    format(stream, "\n%s%s %s",
-           indent, result.result-name, status-name(result-status));
-    if (result-status == $passed)
-      format(stream, " in %s seconds with %s bytes allocated.",
-             result-time(result), result-bytes(result) | "?");
-    end if;
+    next-method();
     let iteration-results
       = choose(rcurry(instance?, <benchmark-iteration-result>),
                result-subresults(result));
@@ -155,16 +138,16 @@ define method print-result-info
       let (min-value :: <double-float>, max-value :: <double-float>,
            mean-value :: <double-float>, median-value :: <double-float>)
         = stats-summary(iteration-times);
-      format(stream, "\n%s  %d iterations, per iteration min %s seconds, mean %s seconds,"
-               " median %s seconds, max %s seconds",
-             indent, iteration-times.size,
+      format(stream, "%s%s%d iterations, per iteration min %ss, mean %ss,"
+               " median %ss, max %ss\n",
+             *indent*, $indent-step, iteration-times.size,
              float-time-to-string(min-value),
              float-time-to-string(mean-value),
              float-time-to-string(median-value),
              float-time-to-string(max-value));
     end unless;
   end if;
-end method print-result-info;
+end method;
 
 
 /// Report functions
@@ -232,13 +215,7 @@ end method;
 define method print-failures-report
     (result :: <result>, stream :: <stream>) => ()
   if (result.result-status ~= $passed)
-    print-result-info(result, stream,
-                      test: method (result)
-                              select (result.result-status)
-                                $passed, $skipped, $expected-failure => #f;
-                                otherwise => #t;
-                              end
-                            end);
+    print-result-info(result, stream, test: compose(\~, result-passing?));
     format(stream, "\n");
   end;
   print-summary-report(result, stream);
