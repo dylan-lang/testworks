@@ -1,12 +1,12 @@
 # Testworks
 
-Testworks is a Dylan unit testing library.
+Testworks is a Dylan unit testing library, also with simple benchmarking
+support.
 
-Testworks is included by
-[dylan-tool](https://opendylan.org/package/dylan-tool/) as a developer
-dependency in every project created.
+Testworks is included as a developer dependency in every project created by
+[dylan-tool](https://opendylan.org/package/dylan-tool/).
 
-Documentation is available in
-[Opendylan.org](https://opendylan.org/package/testworks/). To build
-the documentation locally, you'll need the 
+Documentation is available on
+[opendylan.org](https://opendylan.org/package/testworks/). To build the
+documentation locally, you'll need the
 [furo](https://sphinx-themes.org/sample-sites/furo/) theme.
