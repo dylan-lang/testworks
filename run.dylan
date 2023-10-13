@@ -343,8 +343,7 @@ end method;
 define method show-progress-done
     (runner :: <test-runner>, component :: <component>, result :: <result>) => ()
   let status = result.result-status;
-  let bytes = result.result-bytes;
-  test-output("%s%s %=%s%= %=%s%= in %ss%s\n",
+  test-output("%s%s %=%s%= %=%s%=",
               *indent*,
               capitalize(component.component-type-name),
               $component-name-text-attributes,
@@ -352,13 +351,16 @@ define method show-progress-done
               $reset-text-attributes,
               result-status-to-text-attributes(status),
               status.status-name.as-uppercase,
-              $reset-text-attributes,
-              result.result-time,
-              if (bytes)
-                format-to-string(" and %s", format-bytes(bytes))
-              else
-                ""
-              end);
+              $reset-text-attributes);
+  let elapsed = result.result-time;
+  if (elapsed & status ~== $skipped & status ~== $not-implemented)
+    test-output(" in %ss", elapsed);
+    let bytes = result.result-bytes;
+    if (bytes)
+      test-output(" and %s", format-bytes(bytes));
+    end;
+  end;
+  test-output("\n");
 end method;
 
 // assertions
