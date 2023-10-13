@@ -159,54 +159,61 @@ define method execute-component
   let microseconds :: <integer> = 0;
   let bytes :: <integer> = 0;
   let indent = next-indent();
-  let status
-    = block ()
-        suite.suite-setup-function();
-        for (component in sort-components(suite.suite-components, runner.runner-order))
-          let subresult
-            = dynamic-bind (*indent* = indent)
-                maybe-execute-component(component, runner);
-              end;
-          add!(subresults, subresult);
-          if (instance?(subresult, <component-result>)
-              & subresult.result-seconds
-              & subresult.result-microseconds)
-            let (sec, usec) = add-times(seconds, microseconds,
-                                        subresult.result-seconds,
-                                        subresult.result-microseconds);
-            seconds := sec;
-            microseconds := usec;
-            bytes := bytes + subresult.result-bytes;
-          else
-            test-output("subresult has no profiling info: %s\n",
-                        subresult.result-name);
+  block ()
+    suite.suite-setup-function();
+    for (component in sort-components(suite.suite-components, runner.runner-order))
+      let subresult
+        = dynamic-bind (*indent* = indent)
+            maybe-execute-component(component, runner);
           end;
-        end for;
-        case
-          // If all subcomponents are unimplemented the suite is unimplemented.
-          // Note that this case matches when subresults are empty.
-          every?(method (subresult)
-                   subresult.result-status = $not-implemented
-                 end,
-                 subresults)
-            => $not-implemented;
-          every?(result-passing?, subresults)
-            => $passed;
-          otherwise
-            => $failed;
-        end case
-      cleanup
-        suite.suite-cleanup-function();
-      end block;
+      add!(subresults, subresult);
+      if (instance?(subresult, <component-result>)
+            & subresult.result-seconds
+            & subresult.result-microseconds)
+        let (sec, usec) = add-times(seconds, microseconds,
+                                    subresult.result-seconds,
+                                    subresult.result-microseconds);
+        seconds := sec;
+        microseconds := usec;
+        bytes := bytes + subresult.result-bytes;
+      else
+        test-output("subresult has no profiling info: %s\n",
+                    subresult.result-name);
+      end;
+    end for;
+  cleanup
+    suite.suite-cleanup-function();
+  end block;
   make(component-result-type(suite),
        name: suite.component-name,
-       status: status,
+       status: decide-suite-status(subresults),
        reason: #f,
        subresults: subresults,
        seconds: seconds,
        microseconds: microseconds,
        bytes: bytes)
 end method execute-component;
+
+define function decide-suite-status
+    (subresults :: <sequence>) => (status :: <result-status>)
+  if (empty?(subresults))
+    $not-implemented
+  else
+    let status0 = subresults[0].result-status;
+    if (every?(method (subresult)
+                 subresult.result-status == status0
+               end,
+               subresults))
+      status0
+    elseif (any?(method (r) r.result-status == $crashed end, subresults))
+      $crashed
+    elseif (every?(result-passing?, subresults))
+      $passed
+    else
+      $failed
+    end if
+  end if
+end function;
 
 define method execute-component
     (test :: <runnable>, runner :: <test-runner>)
@@ -248,7 +255,7 @@ define method execute-component
               microseconds := cpu-time-microseconds;
               bytes := allocation;
             end profiling;
-        decide-status(test, subresults, cond)
+        decide-test-status(test, subresults, cond)
       end dynamic-bind;
   make(component-result-type(test),
        name: test.component-name,
@@ -260,7 +267,7 @@ define method execute-component
        bytes: bytes)
 end method execute-component;
 
-define function decide-status
+define function decide-test-status
     (test :: <runnable>, subresults, condition)
  => (status :: <result-status>, reason)
   let benchmark? = ~test.test-requires-assertions?;
