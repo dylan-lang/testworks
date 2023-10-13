@@ -477,10 +477,10 @@ that this be the case:</p>
 <span class="n">assert-instance?</span><span class="p">(</span><span class="nc">&lt;integer&gt;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>All assertion macros accept a description of what is being tested as
-an <em>optional</em> final argument.  The description should be stated in the
-positive sense.  For example:</p>
-<div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2 + 2 equals 2&quot;</span><span class="p">)</span>
+<p>All assertion macros accept a format string and format arguments at the end to
+use as the description of the assertion.  The description should be stated in
+the positive sense.  For example:</p>
+<div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-equal</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2 + 2 equals 4&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>These are the available assertion macros:</p>
@@ -556,18 +556,19 @@ generated based on the text of the expression.</p></li>
 <dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-equal">
 <span class="sig-name descname"><span class="pre">assert-equal</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-equal" title="Permalink to this definition">#</a></dt>
-<dd><p>Assert that two values are equal using <code class="docutils literal notranslate"><span class="pre">=</span></code> as the comparison
-function.  Using this macro is preferable to using <code class="docutils literal notranslate"><span class="pre">assert-true(a</span>
-<span class="pre">=</span> <span class="pre">b)</span></code> because the failure messages are much better when comparing
-certain types of objects, such as collections.</p>
+<dd><p>Assert that two values are equal using <a class="reference external" href="https://opendylan.org/books/drm/Equality_and_Comparison#equal"><code class="xref drm docutils literal notranslate"><span class="pre">=</span></code></a> as the comparison function.
+Using this macro is preferable to using <code class="docutils literal notranslate"><span class="pre">assert-true(a</span> <span class="pre">=</span> <span class="pre">b)</span></code> because the
+failure messages are much better when comparing certain types of objects,
+such as collections.</p>
+<p>The <em>expected</em> value should always be the first expression.</p>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-equal <em>expression1</em> <em>expression2</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-equal <em>want</em> <em>got</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>expression1</strong> – any expression</p></li>
-<li><p><strong>expression2</strong> – any expression</p></li>
+<li><p><strong>want</strong> – any expression; traditionally the expected result</p></li>
+<li><p><strong>got</strong> – any expression; traditionally the test result</p></li>
 <li><p><strong>description</strong> – An optional description of what the assertion tests.
 This may be a single value of any type or a format string and format
 arguments. It should be stated in positive form, such as “two is less
@@ -577,7 +578,7 @@ generated based on the text of the expression.</p></li>
 </dd>
 <dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">my-complicated-method</span><span class="p">())</span>
-<span class="n">assert-equal</span><span class="p">(</span><span class="n">this</span><span class="p">,</span><span class="w"> </span><span class="n">that</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;this and that are the same&quot;</span><span class="p">)</span>
+<span class="n">assert-equal</span><span class="p">(</span><span class="n">want</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;f() returned %=&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">want</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -608,7 +609,7 @@ generated based on the text of the expression.</p></li>
 </dd>
 <dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-not-equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">my-complicated-method</span><span class="p">())</span>
-<span class="n">assert-not-equal</span><span class="p">(</span><span class="n">this</span><span class="p">,</span><span class="w"> </span><span class="n">that</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;this does not equal that&quot;</span><span class="p">)</span>
+<span class="n">assert-not-equal</span><span class="p">(</span><span class="n">want</span><span class="p">,</span><span class="w"> </span><span class="n">got</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;want does not equal got&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -853,7 +854,7 @@ inconsistency in the future.</p>
 </ul>
 </dd>
 <dt class="field-odd">Example<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">check-equal</span><span class="p">(</span><span class="s">&quot;condition-to-string of an error produces correct string&quot;</span><span class="p">,</span>
+<dd class="field-odd"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">check-equal</span><span class="p">(</span><span class="s">&quot;condition-to-string of an error produces the correct string&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="s">&quot;Hello&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="n">condition-to-string</span><span class="p">(</span><span class="nb">make</span><span class="p">(</span><span class="nc">&lt;simple-error&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">format-string:</span><span class="w"> </span><span class="s">&quot;Hello&quot;</span><span class="p">)));</span>
 </pre></div>

@@ -262,13 +262,13 @@ that this be the case:
     assert-not-equal(5, 2 + 2);
     assert-instance?(<integer>, 2 + 2);
 
-All assertion macros accept a description of what is being tested as
-an *optional* final argument.  The description should be stated in the
-positive sense.  For example:
+All assertion macros accept a format string and format arguments at the end to
+use as the description of the assertion.  The description should be stated in
+the positive sense.  For example:
 
 .. code-block:: dylan
 
-    assert-equal(2, 2 + 2, "2 + 2 equals 2")
+    assert-equal(4, 2 + 2, "2 + 2 equals 4")
 
 These are the available assertion macros:
 
@@ -326,15 +326,17 @@ These are the available assertion macros:
 
 .. macro:: assert-equal
 
-   Assert that two values are equal using ``=`` as the comparison
-   function.  Using this macro is preferable to using ``assert-true(a
-   = b)`` because the failure messages are much better when comparing
-   certain types of objects, such as collections.
+   Assert that two values are equal using :drm:`=` as the comparison function.
+   Using this macro is preferable to using ``assert-true(a = b)`` because the
+   failure messages are much better when comparing certain types of objects,
+   such as collections.
 
-   :signature: assert-equal *expression1* *expression2* [ *description* ]
+   The *expected* value should always be the first expression.
 
-   :parameter expression1: any expression
-   :parameter expression2: any expression
+   :signature: assert-equal *want* *got* [ *description* ... ]
+
+   :parameter want: any expression; traditionally the expected result
+   :parameter got: any expression; traditionally the test result
    :parameter description: An optional description of what the assertion tests.
       This may be a single value of any type or a format string and format
       arguments. It should be stated in positive form, such as "two is less
@@ -346,7 +348,7 @@ These are the available assertion macros:
       .. code-block:: dylan
 
          assert-equal(2, my-complicated-method())
-         assert-equal(this, that, "this and that are the same")
+         assert-equal(want, f(), "f() returned %=", want)
 
 .. macro:: assert-not-equal
 
@@ -370,7 +372,7 @@ These are the available assertion macros:
       .. code-block:: dylan
 
          assert-not-equal(2, my-complicated-method())
-         assert-not-equal(this, that, "this does not equal that")
+         assert-not-equal(want, got, "want does not equal got")
 
 .. macro:: assert-signals
 
@@ -565,7 +567,7 @@ These are the available checks:
 
      .. code-block:: dylan
 
-       check-equal("condition-to-string of an error produces correct string",
+       check-equal("condition-to-string of an error produces the correct string",
                    "Hello",
                    condition-to-string(make(<simple-error>, format-string: "Hello")));
 
