@@ -420,14 +420,10 @@ define constant unexpected-success-suite
 
 define test test-run-tests-expect-failure/suite ()
   let runner = make(<test-runner>, progress: $progress-none);
-
-  let suite-results = run-tests(runner, expected-to-fail-suite);
-  assert-equal($passed, suite-results.result-status,
-               "expected-to-fail-suite should pass because all of its tests"
-                 " fail and are expected to fail");
-
-  let suite-results = run-tests(runner, unexpected-success-suite);
-  assert-equal($failed, suite-results.result-status,
+  assert-true(result-passing?(run-tests(runner, expected-to-fail-suite)),
+              "expected-to-fail-suite should pass because all of its tests"
+                " fail and are expected to fail");
+  assert-false(result-passing?(run-tests(runner, unexpected-success-suite)),
                "unexpected-success-suite should fail because its tests"
                  " pass but are expected to fail");
 end test;
@@ -741,6 +737,38 @@ define test test-check-equal-failure-detail ()
                                   "abcd", "abcde");
                     end,
                     "sizes differ (4 and 5)");
+end test;
+
+define test test-decide-suite-status ()
+  assert-equal($not-implemented, decide-suite-status(#[]));
+  let v = vector;
+  for (item in v(// First the simple one-subresult cases...
+                 v($passed,  v($passed)),
+                 v($failed,  v($failed)),
+                 v($crashed, v($crashed)),
+                 v($skipped, v($skipped)),
+                 v($expected-failure,   v($expected-failure)),
+                 v($unexpected-success, v($unexpected-success)),
+                 v($not-implemented, v($not-implemented)),
+                 // Now a few combinations...
+                 v($failed, v($passed, $failed)),
+                 v($failed, v($passed, $unexpected-success)),
+                 v($passed, v($passed, $expected-failure, $skipped, $not-implemented)),
+                 v($crashed, v($crashed, $failed)),
+                 v($failed, v($unexpected-success, $failed))))
+    let (expected-status, subresult-statuses)
+      = apply(values, item);
+    let subresults = map(method (status)
+                           make(<result>,
+                                status: status,
+                                name: status-name(status))
+                         end,
+                         subresult-statuses);
+    assert-equal(expected-status,
+                 decide-suite-status(subresults),
+                 format-to-string("%= == decide-suite-status(%=)",
+                                  expected-status, subresult-statuses));
+  end for;
 end test;
 
 /* Leaving this here because actually running these failing checks makes it

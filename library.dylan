@@ -175,6 +175,8 @@ define module %testworks
     result-microseconds,
     result-time,
     result-bytes,
+    result-reason,
+    result-passing?,
 
     <component-result>,
     result-subresults,
@@ -184,8 +186,8 @@ define module %testworks
     <benchmark-result>,
     <benchmark-iteration-result>,
     <suite-result>,
-    result-reason,
     do-results,
+    decide-suite-status,
     <check-result>;
 
   // Report functions

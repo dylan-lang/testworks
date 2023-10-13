@@ -125,3 +125,64 @@ define constant $indent-step :: <string> = "  ";
 define function next-indent () => (indent :: <string>)
   concatenate(*indent*, $indent-step)
 end function;
+
+// Return a temporary directory unique to the current test or benchmark. The
+// directory is created the first time this is called for a given test.
+// The directory is _test/<user>-<yyyymmdd-hhmmss>/<full-test-name>/, relative
+// to ${DYLAN}/, if defined, or relative to fs/working-directory() otherwise.
+define function test-temp-directory () => (d :: false-or(<directory-locator>))
+  if (instance?(*component*, <runnable>))
+    let dylan = os/environment-variable("DYLAN");
+    let base = if (dylan)
+                 as(<directory-locator>, dylan)
+               else
+                 fs/working-directory()
+               end;
+    let uniquifier
+      = format-to-string("%s-%s", os/login-name() | "unknown",
+                         date/format("%Y%m%d-%H%M%S", date/now()));
+    let safe-name = map(method (c)
+                          if (c == '\\' | c == '/') '_' else c end
+                        end,
+                        full-component-name(*component*));
+    let test-directory
+      = subdirectory-locator(base, "_test", uniquifier, safe-name);
+    fs/ensure-directories-exist(test-directory);
+    test-directory
+  end
+end function;
+
+// Create a file in the current test's temp directory with the given contents.
+// If the file already exists an error is signaled. `filename` is assumed to be
+// a relative pathname; if it contains the path separator, subdirectories are
+// created. File contents may be provided with the `contents` parameter,
+// otherwise an empty file is created. Returns the full, absolute file path as
+// a `<file-locator>`.
+define function write-test-file
+    (filename :: fs/<pathname>, #key contents :: <string> = "")
+ => (full-pathname :: <file-locator>)
+  let locator = merge-locators(as(<file-locator>, filename),
+                               test-temp-directory());
+  fs/ensure-directories-exist(locator);
+  fs/with-open-file (stream = locator,
+                     direction: #"output", if-exists: #"signal")
+    write(stream, contents);
+  end;
+  locator
+end function;
+
+// For tests to do debugging output.
+// TODO(cgay): Collect this and stdio into a log file per test run
+// or per test.  The Surefire report has a place for stdout, too.
+define method test-output
+    (format-string :: <string>, #rest format-args) => ()
+  let stream = if (*runner*)
+                 runner-output-stream(*runner*)
+               else
+                 *standard-output*
+               end;
+  with-stream-locked (stream)
+    apply(format, stream, format-string, format-args);
+    force-output(stream);
+  end;
+end method;

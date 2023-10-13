@@ -10,67 +10,6 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 // test/benchmark execution and while setup/teardown code is running.
 define thread variable *component* :: false-or(<component>) = #f;
 
-// Return a temporary directory unique to the current test or benchmark. The
-// directory is created the first time this is called for a given test.
-// The directory is _test/<user>-<yyyymmdd-hhmmss>/<full-test-name>/, relative
-// to ${DYLAN}/, if defined, or relative to fs/working-directory() otherwise.
-define function test-temp-directory () => (d :: false-or(<directory-locator>))
-  if (instance?(*component*, <runnable>))
-    let dylan = os/environment-variable("DYLAN");
-    let base = if (dylan)
-                 as(<directory-locator>, dylan)
-               else
-                 fs/working-directory()
-               end;
-    let uniquifier
-      = format-to-string("%s-%s", os/login-name() | "unknown",
-                         date/format("%Y%m%d-%H%M%S", date/now()));
-    let safe-name = map(method (c)
-                          if (c == '\\' | c == '/') '_' else c end
-                        end,
-                        full-component-name(*component*));
-    let test-directory
-      = subdirectory-locator(base, "_test", uniquifier, safe-name);
-    fs/ensure-directories-exist(test-directory);
-    test-directory
-  end
-end function;
-
-// Create a file in the current test's temp directory with the given contents.
-// If the file already exists an error is signaled. `filename` is assumed to be
-// a relative pathname; if it contains the path separator, subdirectories are
-// created. File contents may be provided with the `contents` parameter,
-// otherwise an empty file is created. Returns the full, absolute file path as
-// a `<file-locator>`.
-define function write-test-file
-    (filename :: fs/<pathname>, #key contents :: <string> = "")
- => (full-pathname :: <file-locator>)
-  let locator = merge-locators(as(<file-locator>, filename),
-                               test-temp-directory());
-  fs/ensure-directories-exist(locator);
-  fs/with-open-file (stream = locator,
-                     direction: #"output", if-exists: #"signal")
-    write(stream, contents);
-  end;
-  locator
-end function;
-
-// For tests to do debugging output.
-// TODO(cgay): Collect this and stdio into a log file per test run
-// or per test.  The Surefire report has a place for stdout, too.
-define method test-output
-    (format-string :: <string>, #rest format-args) => ()
-  let stream = if (*runner*)
-                 runner-output-stream(*runner*)
-               else
-                 *standard-output*
-               end;
-  with-stream-locked (stream)
-    apply(format, stream, format-string, format-args);
-    force-output(stream);
-  end;
-end method test-output;
-
 define constant $progress-none    = #"progress-none";
 define constant $progress-minimal = #"progress-minimal"; // Hide assertions unless they fail.
 define constant $progress-all     = #"progress-all";     // Display all assertions.
@@ -220,54 +159,61 @@ define method execute-component
   let microseconds :: <integer> = 0;
   let bytes :: <integer> = 0;
   let indent = next-indent();
-  let status
-    = block ()
-        suite.suite-setup-function();
-        for (component in sort-components(suite.suite-components, runner.runner-order))
-          let subresult
-            = dynamic-bind (*indent* = indent)
-                maybe-execute-component(component, runner);
-              end;
-          add!(subresults, subresult);
-          if (instance?(subresult, <component-result>)
-              & subresult.result-seconds
-              & subresult.result-microseconds)
-            let (sec, usec) = add-times(seconds, microseconds,
-                                        subresult.result-seconds,
-                                        subresult.result-microseconds);
-            seconds := sec;
-            microseconds := usec;
-            bytes := bytes + subresult.result-bytes;
-          else
-            test-output("subresult has no profiling info: %s\n",
-                        subresult.result-name);
+  block ()
+    suite.suite-setup-function();
+    for (component in sort-components(suite.suite-components, runner.runner-order))
+      let subresult
+        = dynamic-bind (*indent* = indent)
+            maybe-execute-component(component, runner);
           end;
-        end for;
-        case
-          // If all subcomponents are unimplemented the suite is unimplemented.
-          // Note that this case matches when subresults are empty.
-          every?(method (subresult)
-                   subresult.result-status = $not-implemented
-                 end,
-                 subresults)
-            => $not-implemented;
-          every?(result-passing?, subresults)
-            => $passed;
-          otherwise
-            => $failed;
-        end case
-      cleanup
-        suite.suite-cleanup-function();
-      end block;
+      add!(subresults, subresult);
+      if (instance?(subresult, <component-result>)
+            & subresult.result-seconds
+            & subresult.result-microseconds)
+        let (sec, usec) = add-times(seconds, microseconds,
+                                    subresult.result-seconds,
+                                    subresult.result-microseconds);
+        seconds := sec;
+        microseconds := usec;
+        bytes := bytes + subresult.result-bytes;
+      else
+        test-output("subresult has no profiling info: %s\n",
+                    subresult.result-name);
+      end;
+    end for;
+  cleanup
+    suite.suite-cleanup-function();
+  end block;
   make(component-result-type(suite),
        name: suite.component-name,
-       status: status,
+       status: decide-suite-status(subresults),
        reason: #f,
        subresults: subresults,
        seconds: seconds,
        microseconds: microseconds,
        bytes: bytes)
 end method execute-component;
+
+define function decide-suite-status
+    (subresults :: <sequence>) => (status :: <result-status>)
+  if (empty?(subresults))
+    $not-implemented
+  else
+    let status0 = subresults[0].result-status;
+    if (every?(method (subresult)
+                 subresult.result-status == status0
+               end,
+               subresults))
+      status0
+    elseif (any?(method (r) r.result-status == $crashed end, subresults))
+      $crashed
+    elseif (every?(result-passing?, subresults))
+      $passed
+    else
+      $failed
+    end if
+  end if
+end function;
 
 define method execute-component
     (test :: <runnable>, runner :: <test-runner>)
@@ -309,7 +255,7 @@ define method execute-component
               microseconds := cpu-time-microseconds;
               bytes := allocation;
             end profiling;
-        decide-status(test, subresults, cond)
+        decide-test-status(test, subresults, cond)
       end dynamic-bind;
   make(component-result-type(test),
        name: test.component-name,
@@ -321,7 +267,7 @@ define method execute-component
        bytes: bytes)
 end method execute-component;
 
-define function decide-status
+define function decide-test-status
     (test :: <runnable>, subresults, condition)
  => (status :: <result-status>, reason)
   let benchmark? = ~test.test-requires-assertions?;
@@ -404,8 +350,7 @@ end method;
 define method show-progress-done
     (runner :: <test-runner>, component :: <component>, result :: <result>) => ()
   let status = result.result-status;
-  let bytes = result.result-bytes;
-  test-output("%s%s %=%s%= %=%s%= in %ss%s\n",
+  test-output("%s%s %=%s%= %=%s%=",
               *indent*,
               capitalize(component.component-type-name),
               $component-name-text-attributes,
@@ -413,13 +358,16 @@ define method show-progress-done
               $reset-text-attributes,
               result-status-to-text-attributes(status),
               status.status-name.as-uppercase,
-              $reset-text-attributes,
-              result.result-time,
-              if (bytes)
-                format-to-string(" and %s", format-bytes(bytes))
-              else
-                ""
-              end);
+              $reset-text-attributes);
+  let elapsed = result.result-time;
+  if (elapsed & status ~== $skipped & status ~== $not-implemented)
+    test-output(" in %ss", elapsed);
+    let bytes = result.result-bytes;
+    if (bytes)
+      test-output(" and %s", format-bytes(bytes));
+    end;
+  end;
+  test-output("\n");
 end method;
 
 // assertions
