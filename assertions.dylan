@@ -43,80 +43,59 @@ define macro check
 end macro check;
 
 define macro check-equal
-  { check-equal (?name:expression, ?expr1:expression, ?expr2:expression)
+  { check-equal (?name:expression, ?want:expression, ?got:expression)
   } => {
     do-check-equal(method () ?name end,
                    method ()
-                     values(?expr1, ?expr2, ?"expr1", ?"expr2")
+                     values(?want, ?got, ?"want", ?"got")
                    end,
-                   negate?: #f,
+                   "check-equal",
                    terminate?: #f)
   }
 end macro check-equal;
 
 define macro assert-equal
-  { assert-equal (?expr1:expression, ?expr2:expression)
+  { assert-equal (?want:expression, ?got:expression)
   } => {
-    assert-equal(?expr1, ?expr2, ?"expr1" " = " ?"expr2")
+    assert-equal(?want, ?got, ?"want" " = " ?"got")
   }
-  { assert-equal (?expr1:expression, ?expr2:expression, ?description:*)
+  { assert-equal (?want:expression, ?got:expression, ?description:*)
   } => {
     do-check-equal(method () values(?description) end,
                    method ()
-                     values(?expr1, ?expr2, ?"expr1", ?"expr2")
+                     values(?want, ?got, ?"want", ?"got")
                    end,
-                   negate?: #f,
+                   "assert-equal",
                    terminate?: #t)
   }
 end macro assert-equal;
 
-define macro assert-not-equal
-  { assert-not-equal (?expr1:expression, ?expr2:expression)
-  } => {
-    assert-not-equal(?expr1, ?expr2, ?"expr1" " ~= " ?"expr2")
-  }
-  { assert-not-equal (?expr1:expression, ?expr2:expression, ?description:*)
-  } => {
-    do-check-equal(method () values(?description) end,
-                   method ()
-                     values(?expr1, ?expr2, ?"expr1", ?"expr2")
-                   end,
-                   negate?: #t,
-                   terminate?: #t)
-  }
-end macro assert-not-equal;
-
 define function do-check-equal
-    (description-thunk :: <function>, get-arguments :: <function>,
-     #key negate? :: <boolean>,
-          terminate? :: <boolean>)
+    (description-thunk :: <function>, arguments-thunk :: <function>,
+     caller :: <string>, #key terminate? :: <boolean>)
  => ()
   let phase = "evaluating assertion description";
   let description :: false-or(<string>) = #f;
   block ()
     description := eval-check-description(description-thunk);
     phase := "evaluating assertion expressions";
-    let (val1, val2, expr1, expr2) = get-arguments();
-    phase := format-to-string("while comparing %s and %s for %sequality",
-                              expr1, expr2,
-                              if (negate?) "in" else "" end);
-    let compare = if (negate?) \~= else \= end;
-    if (compare(val1, val2))
+    let (want, got, want-expr, got-expr) = arguments-thunk();
+    phase := format-to-string("while comparing %s and %s for equality",
+                              want-expr, got-expr);
+    if (want = got)
       record-check(description, $passed, #f);
     else
-      phase := format-to-string("getting assert-%sequal failure detail",
-                                if (negate?) "not-" else "" end);
-      let detail = if (negate?)
-                     ""
+      phase := format-to-string("getting %s failure detail", caller);
+      let detail = check-equal-failure-detail(want, got);
+      let detail = if (detail)
+                     format-to-string("\n%s%sdetail: %s",
+                                      *indent*, $indent-step, detail)
                    else
-                     check-equal-failure-detail(val1, val2)
+                     ""
                    end;
       record-check(description, $failed,
-                   format-to-string("%= and %= are %s=.%s%s",
-                                    val1, val2,
-                                    if (negate?) "" else "not " end,
-                                    if (detail) "  " else "" end,
-                                    detail | ""));
+                   format-to-string("want: %=\n%s%sgot:  %=%s",
+                                    want, *indent*, $indent-step, got, detail));
       terminate? & signal(make(<assertion-failure>));
     end;
   exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
@@ -125,10 +104,54 @@ define function do-check-equal
                  format-to-string("Error %s: %s", phase, err));
     terminate? & signal(make(<assertion-failure>));
   end block
-end function do-check-equal;
+end function;
+
+define macro assert-not-equal
+  { assert-not-equal (?expr1:expression, ?expr2:expression)
+  } => {
+    assert-not-equal(?expr1, ?expr2, ?"expr1" " ~= " ?"expr2")
+  }
+  { assert-not-equal (?expr1:expression, ?expr2:expression, ?description:*)
+  } => {
+    do-check-not-equal(method () values(?description) end,
+                       method ()
+                         values(?expr1, ?expr2, ?"expr1", ?"expr2")
+                       end,
+                       terminate?: #t)
+  }
+end macro assert-not-equal;
+
+define function do-check-not-equal
+    (description-thunk :: <function>, arguments-thunk :: <function>,
+     #key terminate? :: <boolean>)
+ => ()
+  let phase = "evaluating assertion description";
+  let description :: false-or(<string>) = #f;
+  block ()
+    description := eval-check-description(description-thunk);
+    phase := "evaluating assertion expressions";
+    let (val1, val2, expr1, expr2) = arguments-thunk();
+    phase := format-to-string("while comparing %s and %s for inequality",
+                              expr1, expr2);
+    if (val1 ~= val2)
+      record-check(description, $passed, #f);
+    else
+      phase := "getting assert-not-equal failure detail";
+      record-check(description, $failed,
+                   format-to-string("%= and %= are =.", val1, val2));
+      terminate? & signal(make(<assertion-failure>));
+    end;
+  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+    record-check(description | $invalid-description,
+                 $crashed,
+                 format-to-string("Error %s: %s", phase, err));
+    terminate? & signal(make(<assertion-failure>));
+  end block
+end function;
 
 // Return a string with details about why two objects are not =.
-// Users can override this for their own classes.
+// Users can override this for their own classes. The output should
+// be indented 4 spaces if you want it to display nicely.
 define open generic check-equal-failure-detail
     (val1 :: <object>, val2 :: <object>) => (detail :: false-or(<string>));
 
@@ -142,7 +165,7 @@ define method check-equal-failure-detail
   if (coll1.size ~= coll2.size)
     format-to-string("sizes differ (%d and %d)", coll1.size, coll2.size)
   end
-end method check-equal-failure-detail;
+end method;
 
 define method check-equal-failure-detail
     (seq1 :: <sequence>, seq2 :: <sequence>) => (detail :: false-or(<string>))
@@ -151,14 +174,13 @@ define method check-equal-failure-detail
   for (e1 in seq1, e2 in seq2, i from 0, while: e1 = e2)
   finally
     if (i < seq1.size & i < seq2.size)
-      // TODO(cgay): show the two element values.
-      detail2 := format-to-string("element %d is the first non-matching element", i);
+      detail2 := format-to-string("element %d is the first mismatch", i);
     end;
   end for;
-  join(choose(identity, vector(detail1, detail2)), ", ")
-end method check-equal-failure-detail;
+  join(choose(identity, vector(detail1, detail2)), "; ")
+end method;
 
-// TODO: if key sets are same, compare values. Limit to showing 1 mismatch?
+// TODO: limit the total number of keys/values output
 define method check-equal-failure-detail
     (t1 :: <table>, t2 :: <table>) => (detail :: false-or(<string>))
   let detail1 = next-method();
@@ -174,12 +196,13 @@ define method check-equal-failure-detail
       add!(t2-missing-keys, k);
     end;
   end;
+  let eformat = curry(format-to-string, "%="); // e for escape
   let detail2 = (~empty?(t1-missing-keys)
                    & concatenate("table1 is missing keys ",
-                                 join(sort(t1-missing-keys), ", ")));
+                                 join(t1-missing-keys, ", ", key: eformat)));
   let detail3 = (~empty?(t2-missing-keys)
                    & concatenate("table2 is missing keys ",
-                                 join(sort(t2-missing-keys), ", ")));
+                                 join(t2-missing-keys, ", ", key: eformat)));
   join(choose(identity, vector(detail1, detail2, detail3)), "; ")
 end method;
 

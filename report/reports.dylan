@@ -36,7 +36,7 @@ define method print-result-reason
   format-out("%s  %s %s%s\n",
              indent, name, status-name(result.result-status),
              if (result.result-reason)
-               format-to-string(" [%s]", result.result-reason)
+               format-to-string(" %s", result.result-reason)
              else
                ""
              end);
@@ -111,7 +111,7 @@ define method print-comparison-info
   print-status-line(result, indent: indent, test: test);
   let result1 = result.comparison-result1;
   let result2 = result.comparison-result2;
-  if (instance?(result1 | result2, <unit-result>))
+  if (instance?(result1 | result2, <check-result>))
     print-reason(result, indent: indent, test: test);
   end;
   let subindent = concatenate-as(<byte-string>, indent, "  ");
@@ -259,7 +259,7 @@ define method print-benchmark-result-footer
     format-out("\n    [*] %d benchmark%s crashed.\n", crashes, plural(crashes));
   end if;
 end method;
-                                        
+
 define method print-benchmark-diff-report
     (top-result :: <comparison-result>, #key show-all? :: <boolean>)
  => ()

@@ -67,101 +67,37 @@ define function count-results-of-type
   n
 end function;
 
-
-/// Summary generation
-
-// Output lines like these, one per call. `kind` is "suite", "test", "benchmark", or "check".
-//    Ran 1455 checks: 22 crashed 1 failed
-//    Ran 37 tests: FAILED (1 crashed, 1 failed, 3 not implemented, 1 skipped, 1 expected failure)
-define method print-result-summary
-    (result :: <result>, kind :: <string>, stream :: <stream>,
-     #key test = always(#t))
- => ()
-  // Unexpected success is currently lumped in with failures.
-  let (passed, failed, crashed, skipped, nyi, expected-failures)
-    = count-results(result, test: test);
-  let total = passed + failed + crashed + skipped + nyi + expected-failures;
-  let did-paren? = #f;
-  let did-comma? = #f;
-  local method print-count (count, label, #key plural = "")
-          if (count > 0)
-            if (~did-paren?)
-              did-paren? := #t;
-              write(stream, " (");
-            end;
-            if (did-comma?)
-              write(stream, ", ");
-            end;
-            format(stream, "%d %s%s", count, label, if (count = 1) "" else plural end);
-            did-comma? := #t;
-          end;
-        end method;
-  // "Ran 10 suites: " etc
-  format(stream, "Ran %=%s%= %s%s:",
-         $total-text-attributes,
-         total,
-         $reset-text-attributes,
-         kind,
-         if (total == 1) "" else "s" end);
-  let passed? = crashed = 0 & failed = 0;
-  if (passed?)
-    format(stream, " %=PASSED%=", $passed-text-attributes, $reset-text-attributes);
-  else
-    format(stream, " %=FAILED%=", $failed-text-attributes, $reset-text-attributes);
+define method print-result-info
+    (result :: <result>, stream :: <stream>, #key test) => ()
+  if (~test | test(result))
+    let reason = result.result-reason;
+    let status = result.result-status;
+    format(stream, "%s%s: %s%s\n",
+           *indent*,
+           status.status-name.as-uppercase,
+           result.result-name,
+           if (status == $passed & instance?(result, <metered-result>))
+             format-to-string(" in %ss and %s",
+                              result.result-time,
+                              format-bytes(result.result-bytes))
+           else
+             ""
+           end);
+    if (reason)
+      format(stream, "%s%s%s\n", *indent*, $indent-step, reason);
+    end;
   end;
-  print-count(failed, "failed");
-  print-count(crashed, "crashed");
-  print-count(skipped, "skipped");
-  print-count(nyi, "not implemented");
-  print-count(expected-failures, "expected failure", plural: "s");
-  if (did-paren?)
-    write(stream, ")");
-  end;
-  write(stream, "\n");
-end method print-result-summary;
+end method;
 
 define method print-result-info
-    (result :: <result>, stream :: <stream>, #key indent = "", test)
- => ()
-  let result-status = result.result-status;
-  let show-result? = if (test) test(result) else #t end;
-  if (show-result?)
-    format(stream, "\n%s%s %s",
-           indent, result.result-name, status-name(result-status));
-    if (result-status == $passed
-        & instance?(result, <metered-result>))
-      format(stream, " in %s seconds with %s bytes allocated.",
-             result-time(result), result-bytes(result) | "?");
-    end if
-  end;
-end method print-result-info;
-
-define method print-result-info
-    (result :: <component-result>, stream :: <stream>, #key indent = "", test)
- => ()
+    (result :: <component-result>, stream :: <stream>, #key test) => ()
   next-method();
-  let show-result? = if (test) test(result) else #t end;
-  let reason = result.result-reason;
-  if (show-result? & reason)
-    format(stream, " [%s]", reason);
+  dynamic-bind (*indent* = next-indent())
+    for (subresult in result-subresults(result))
+      print-result-info(subresult, stream, test: test)
+    end;
   end;
-  let subindent = concatenate(indent, "  ");
-  for (subresult in result-subresults(result))
-    print-result-info(subresult, stream, indent: subindent, test: test)
-  end
-end method print-result-info;
-
-// This 'after' method prints the reason for the result's failure
-define method print-result-info
-    (result :: <unit-result>, stream :: <stream>, #key indent = "", test) => ()
-  ignore(indent);
-  next-method();
-  let show-result? = if (test) test(result) else #t end;
-  let reason = result.result-reason;
-  if (show-result? & reason)
-    format(stream, " [%s]", reason);
-  end;
-end method print-result-info;
+end method;
 
 define function stats-summary
     (v :: limited(<vector>, of: <double-float>))
@@ -185,15 +121,9 @@ define function stats-summary
 end function;
 
 define method print-result-info
-    (result :: <benchmark-result>, stream :: <stream>, #key indent = "", test) => ()
+    (result :: <benchmark-result>, stream :: <stream>, #key test) => ()
   if (~test | test(result))
-    let result-status = result.result-status;
-    format(stream, "\n%s%s %s",
-           indent, result.result-name, status-name(result-status));
-    if (result-status == $passed)
-      format(stream, " in %s seconds with %s bytes allocated.",
-             result-time(result), result-bytes(result) | "?");
-    end if;
+    next-method();
     let iteration-results
       = choose(rcurry(instance?, <benchmark-iteration-result>),
                result-subresults(result));
@@ -208,16 +138,16 @@ define method print-result-info
       let (min-value :: <double-float>, max-value :: <double-float>,
            mean-value :: <double-float>, median-value :: <double-float>)
         = stats-summary(iteration-times);
-      format(stream, "\n%s  %d iterations, per iteration min %s seconds, mean %s seconds,"
-               " median %s seconds, max %s seconds",
-             indent, iteration-times.size,
+      format(stream, "%s%s%d iterations, per iteration min %ss, mean %ss,"
+               " median %ss, max %ss\n",
+             *indent*, $indent-step, iteration-times.size,
              float-time-to-string(min-value),
              float-time-to-string(mean-value),
              float-time-to-string(median-value),
              float-time-to-string(max-value));
     end unless;
   end if;
-end method print-result-info;
+end method;
 
 
 /// Report functions
@@ -226,31 +156,58 @@ define method print-null-report
     (result :: <result>, stream :: <stream>) => ()
 end;
 
+// Example output:
+//   Ran 437 tests with 4 expected failures and 117 not implemented
+//   PASSED in 88.278782 seconds
 define method print-summary-report
     (result :: <result>, stream :: <stream>) => ()
-  let stream = colorize-stream(stream);
-  local method print-class-summary (result, name, class) => ()
-          print-result-summary(result, name, stream, test: rcurry(instance?, class))
+  local method pluralize (count :: <integer>) => (s :: <string>)
+          if (count == 1) "" else "s" end
         end;
-  write(stream, "\n");
-  print-class-summary(result, "check", <check-result>);
-
-  // The expectation is that tests and benchmarks should be in different
-  // libraries so we try to print only one or the other here. If there are
-  // neither tests nor benchmarks something is wrong so print both.
+  let stream = colorize-stream(stream);
+  let (_, failed, crashed, skipped, nyi, expected-failures)
+    = count-results(result,
+                    test: method (result)
+                            instance?(result, <test-result>)
+                              | instance?(result, <benchmark-result>)
+                          end);
+  let assertions = count-results-of-type(result, <check-result>);
   let benches = count-results-of-type(result, <benchmark-result>);
   let tests = count-results-of-type(result, <test-result>);
-  if (benches > 0 | tests = 0)
-    print-class-summary(result, "benchmark", <benchmark-result>);
+  let kinds = make(<stretchy-vector>);
+  if (tests > 0)
+    add!(kinds, format-to-string("%d test%s", tests, pluralize(tests)));
   end;
-  if (tests > 0 | benches = 0)
-    print-class-summary(result, "test", <test-result>);
+  if (benches > 0)
+    add!(kinds, format-to-string("%d benchmark%s", benches, pluralize(benches)));
   end;
-
-  let result-status = result.result-status;
-  format(stream, "%=%s%= in %s seconds\n",
-         result-status-to-text-attributes(result-status),
-         result-status.status-name.as-uppercase,
+  let breakdown = make(<stretchy-vector>);
+  if (crashed > 0)
+    add!(breakdown, format-to-string("%d crashed", crashed));
+  end;
+  if (failed > 0)
+    add!(breakdown, format-to-string("%d failed", failed));
+  end;
+  if (expected-failures > 0)
+    add!(breakdown,
+         format-to-string("%d expected failure%s",
+                          expected-failures, pluralize(expected-failures)));
+  end;
+  if (nyi > 0)
+    add!(breakdown, format-to-string("%d not implemented", nyi));
+  end;
+  if (skipped > 0)
+    add!(breakdown, format-to-string("%d skipped", skipped));
+  end;
+  format(stream, "Ran %d assertion%s\n", assertions, pluralize(assertions));
+  format(stream, "Ran %s", join(kinds, " and "));
+  if (breakdown.size > 0)
+    format(stream, ": %s", join(breakdown, ", ", conjunction: " and "));
+  end;
+  let status = result.result-status;
+  format(stream, "\n%=%s%= in %s seconds\n",
+         result-status-to-text-attributes(status),
+         status.status-name.as-uppercase,
          $reset-text-attributes,
          result.result-time);
 end method;
@@ -258,11 +215,7 @@ end method;
 define method print-failures-report
     (result :: <result>, stream :: <stream>) => ()
   if (result.result-status ~= $passed)
-    print-result-info (result, stream,
-                       test: method (result)
-                               let status = result.result-status;
-                               status ~== $passed & status ~== $skipped
-                             end);
+    print-result-info(result, stream, test: compose(\~, result-passing?));
     format(stream, "\n");
   end;
   print-summary-report(result, stream);
@@ -422,11 +375,7 @@ define function emit-surefire-test
     $not-implemented =>
       format(stream, "\n      <failure message=\"Not implemented\" />\n");
     otherwise =>
-      // If this test failed then we know at least one of the checks
-      // failed.  Note that (due to testworks-specs) a <test-result>
-      // may contain <test-unit-result>s and we flatten those into
-      // this result because they don't (apparently?) match Surefire's
-      // format.
+      // If this test failed then we know at least one of the checks failed.
       format(stream, "\n      <failure>\n");
       do-results(rcurry(emit-surefire-check, stream), test,
                  test: rcurry(instance?, <check-result>));

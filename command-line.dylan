@@ -9,11 +9,6 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define constant $list-option-values = #["all", "suites", "tests", "benchmarks"];
 
-// types of progress to display
-define constant $none = #"none";
-define constant $default = #"default";
-define constant $verbose = #"verbose";
-
 // TODO(cgay): This seems to mix two concerns: what I want to output to the
 // screen during and after the test run, and what I want stored in a file for
 // later analysis. I think the --report option should apply to the latter and
@@ -34,30 +29,30 @@ define function parse-args
   let parser = make(<command-line-parser>,
                     help: "Run tests.");
   add-option(parser,
-             // TODO: When <choice-option> supports having an optional
-             // value then this can be made optional where no value
-             // means "failures".
              make(<choice-option>,
                   names: "debug",
-                  choices: #("no", "crashes", "failures"),
-                  default: "no",
+                  choices: #("none", "crashes", "all"),
+                  default: "none",
                   variable: "WHAT",
-                  help: "Enter the debugger on failure: NO|crashes|failures"));
+                  help: "Enter the debugger? None, crashes, or all"
+                    " (crashes and failures). [%default%]"));
   add-option(parser,
              make(<choice-option>,
                   names: #("progress", "p"),
-                  choices: #("none", "default", "verbose"),
-                  default: "default",
+                  choices: #("none", "minimal", "all"),
+                  default: "minimal",
                   variable: "TYPE",
-                  help: "Show output as the test run progresses: none|DEFAULT|verbose"));
+                  help: "Show test names and results as the test run progresses? None, minimal"
+                    " (no assertions unless they fail), or all. [%default%]"));
   add-option(parser,
              make(<choice-option>,
                   names: "report",
                   choices: key-sequence($report-functions),
                   default: "failures",
                   variable: "TYPE",
-                  help: format-to-string("Final report to generate: %s",
-                                         join(sort(key-sequence($report-functions)), "|"))));
+                  help: format-to-string("Final report to generate: %s [%%default%%]",
+                                         join(sort(key-sequence($report-functions)), ", ",
+                                              conjunction: ", or "))));
   add-option(parser,
              make(<choice-option>,
                   names: "order",
@@ -68,7 +63,8 @@ define function parse-args
                   default: as-lowercase(as(<string>, $default-order)),
                   help: "Order in which to run tests. Note that when suites are being used"
                     " the suite is ordered with other tests/suites at the same level and"
-                    " then when that suite runs its components are ordered separately."));
+                    " then when that suite runs its components are ordered separately."
+                    " [%default%]"));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: "load",
@@ -105,7 +101,7 @@ define function parse-args
                   default: #f,
                   variable: "WHAT",
                   help: format-to-string("List components: %s",
-                                         join($list-option-values, "|"))));
+                                         join($list-option-values, ", "))));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: #("tag", "t"),
@@ -146,22 +142,26 @@ define function make-runner-from-command-line
                                         end);
           (i & $components[i]) | usage-error("test component not found: %=", name);
         end;
-  let debug = get-option-value(parser, "debug");
+  let debug = select (get-option-value(parser, "debug") by string-equal-ic?)
+                "none"    => $debug-none;
+                "crashes" => $debug-crashes;
+                "all"     => $debug-all;
+              end;
+  let progress = select (get-option-value(parser, "progress") by string-equal-ic?)
+                   "none"    => $progress-none;
+                   "minimal" => $progress-minimal;
+                   "all"     => $progress-all;
+                 end;
   let report = get-option-value(parser, "report");
-  let progress = as(<symbol>, get-option-value(parser, "progress"));
   let report-function = element($report-functions, report);
   let runner = make(<test-runner>,
-                    debug?: select (debug by \=)
-                              "no" => #f;
-                              "crashes" => #"crashes";
-                              "failures" => #t;
-                            end select,
+                    debug: debug,
                     skip: concatenate(map(find-component,
                                           get-option-value(parser, "skip-suite")),
                                       map(find-component,
                                           get-option-value(parser, "skip-test"))),
                     report: report,
-                    progress: if (progress = $none) #f else progress end,
+                    progress: progress,
                     tags: parse-tags(get-option-value(parser, "tag")),
                     order: as(<symbol>, get-option-value(parser, "order")),
                     options: get-option-value(parser, "options"));
@@ -217,7 +217,9 @@ define function run-test-application
     exit-application(err.exit-status);
   exception (error :: <error>,
              test: method (cond)
-                     test-runner & ~test-runner.debug-runner?
+                     test-runner
+                       & (runner-debug(test-runner) == $debug-crashes
+                            | runner-debug(test-runner) == $debug-all)
                    end)
     format(*standard-error*, "Error: %s", error);
     exit-application(1);

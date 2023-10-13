@@ -117,9 +117,6 @@ end method;
 define class <test> (<runnable>)
 end;
 
-define class <test-unit> (<test>)
-end;
-
 
 define generic component-type-name
     (component :: <component>) => (type-name :: <string>);
@@ -127,11 +124,6 @@ define generic component-type-name
 define method component-type-name
     (test :: <test>) => (type-name :: <string>)
   "test"
-end;
-
-define method component-type-name
-    (test-unit :: <test-unit>) => (type-name :: <string>)
-  "test unit"
 end;
 
 define method component-type-name
@@ -163,11 +155,6 @@ end;
 define method component-result-type
     (component :: <suite>) => (result-type :: subclass(<result>))
   <suite-result>
-end;
-
-define method component-result-type
-    (component :: <test-unit>) => (result-type :: subclass(<result>))
-  <test-unit-result>
 end;
 
 // All tests, benchmarks, and suites are added to this when created.
@@ -242,14 +229,6 @@ define macro benchmark-definer
     register-component(?test-name);
   }
 end macro benchmark-definer;
-
-// For backward compatibility.
-define macro with-test-unit
-  { with-test-unit (?name:expression, ?keyword-args:*)
-      ?test-body:body
-    end
-  } => { ?test-body }
-end macro with-test-unit;
 
 // Find a minimal set of components that cover all tests and return
 // them.

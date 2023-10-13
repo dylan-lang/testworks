@@ -5,10 +5,10 @@ Synopsis: Tests for command-line.dylan
 define constant $dummy-suite = make(<suite>, name: "Dummy", components: #());
 
 define test command-line-options-test ()
-  let args = list(list("--debug=no", debug-runner?, #f, #f),
-                  list("--debug=crashes", debug-runner?, #"crashes", #f),
-                  list("--debug=failures", debug-runner?, #t, #f),
-                  list("--debug=foo", debug-runner?, #f, #t),
+  let args = list(list("--debug=none", runner-debug, $debug-none, #f),
+                  list("--debug=crashes", runner-debug, $debug-crashes, #f),
+                  list("--debug=all", runner-debug, $debug-all, #f),
+                  list("--debug=foo", runner-debug, $debug-none, #t),
                   list("--options key1 = val1 --options key2 = val2", runner-options,
                        begin
                          let t = make(<string-table>);

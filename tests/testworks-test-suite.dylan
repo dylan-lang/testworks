@@ -15,7 +15,8 @@ define function do-with-result
   let test = make(<test>,
                   name: "anonymous",
                   function: thunk);
-  let result = run-tests(make(<test-runner>, progress: #f), test);
+  let result = run-tests(make(<test-runner>, progress: $progress-none),
+                         test);
   let subresults = result.result-subresults;
   assert-equal(1, subresults.size,
                "assertion-status thunk had exactly one assertion?");
@@ -346,7 +347,7 @@ end;
 /// Verify the result objects
 
 define test test-run-tests/test ()
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let test-results = run-tests(runner, testworks-check-test);
   assert-true(instance?(test-results, <test-result>),
               "run-tests returns <test-result> when running a <test>");
@@ -362,7 +363,7 @@ end test test-run-tests/test;
 
 define test test-run-tests/suite ()
   let suite-to-check = testworks-assertion-macros-suite;
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let suite-results = run-tests(runner, suite-to-check);
   assert-true(instance?(suite-results, <suite-result>),
               "run-tests returns <suite-result> when running a <suite>");
@@ -371,18 +372,6 @@ define test test-run-tests/suite ()
   assert-true(instance?(suite-results.result-subresults, <vector>),
               "run-tests sub-results are in a vector");
 end test test-run-tests/suite;
-
-// This simply exercises the with-test-unit macro.  It'll catch
-// compile time warnings at least, but doesn't actually verify
-// anything else.
-define test test-with-test-unit ()
-  with-test-unit ("foo-unit")
-    assert-equal(2, 2);
-  end;
-  with-test-unit ("bar-unit")
-    assert-equal(3, 3);
-  end;
-end test test-with-test-unit;
 
 // The following tests and suites are defined without using their
 // respective -definer macros so that they don't get registered and
@@ -430,7 +419,7 @@ define constant unexpected-success-suite
          components: vector(test-unexpected-success));
 
 define test test-run-tests-expect-failure/suite ()
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
 
   let suite-results = run-tests(runner, expected-to-fail-suite);
   assert-equal($passed, suite-results.result-status,
@@ -444,7 +433,7 @@ define test test-run-tests-expect-failure/suite ()
 end test;
 
 define test test-run-tests-expect-failure/test ()
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
 
   let test-results = run-tests(runner, test-expected-to-fail-always);
   assert-equal($expected-failure, test-results.result-status);
@@ -590,7 +579,7 @@ define test test-that-not-implemented-is-not-a-failure ()
   let suite = make(<suite>,
                    name: "not-implemented-suite",
                    components: vector(test));
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let result = run-tests(runner, suite);
   assert-equal($not-implemented, result.result-status);
 end;
@@ -605,7 +594,7 @@ define test test-that-not-implemented-plus-passed-is-passed ()
   let suite = make(<suite>,
                    name: "not-implemented-suite",
                    components: vector(test1, test2));
-  let runner = make(<test-runner>, progress: #f);
+  let runner = make(<test-runner>, progress: $progress-none);
   let result = run-tests(runner, suite);
   assert-equal($passed, result.result-status);
 end;
@@ -636,18 +625,20 @@ define test test-included-in-suite-multiple-times ()
                                                    components: list(test1)))));
 end test;
 
+define function check-description (test-function, want-string)
+  let test = make(<test>,
+                  name: "no name",
+                  function: test-function);
+  let result = run-tests(make(<test-runner>, progress: $progress-none),
+                         test);
+  let report = with-output-to-string (stream)
+                 print-full-report(result, stream)
+               end;
+  check-true(format-to-string("find %= in %=", want-string, report),
+             find-substring(report, want-string));
+end function;
+
 define test test-assertion-description ()
-  local method check-description (test-function, want-string)
-          let test = make(<test>,
-                          name: "no name",
-                          function: test-function);
-          let result = run-tests(make(<test-runner>, progress: #f), test);
-          let report = with-output-to-string (stream)
-                         print-full-report(result, stream)
-                       end;
-          assert-true(find-substring(report, want-string),
-                      "find %= in %=", want-string, report);
-        end;
   // assert-equal
   check-description(method () assert-equal(#t, #t);            end, "#t = #t");
   check-description(method () assert-equal(#t, #t, 123);       end, "123");
@@ -701,3 +692,90 @@ define test test-assertion-description ()
                     end,
                     "456");
 end test;
+
+define class <test-object> (<object>) end;
+
+define test test-check-equal-failure-detail ()
+  check-description(method ()
+                      check-equal("list, same size, different elements",
+                                  #("a", "b", "c", "d"),
+                                  #("a", "b", "x", "d"));
+                    end,
+                    "element 2 is the first mismatch");
+  check-description(method ()
+                      check-equal("list, different sizes",
+                                  #("a", "b", "c", "d"),
+                                  #("a", "b", "c", "d", "e"));
+                    end,
+                    "sizes differ (4 and 5)");
+  check-description(method ()
+                      check-equal("integer, different", 123, 456);
+                    end,
+                    "want: 123"); // no detail in this case
+  check-description(method ()
+                      check-equal("table, same size, different elements",
+                                  tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3),
+                                  tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3));
+                    end,
+                    "table1 is missing keys \"x\"; table2"); // could be better
+  check-description(method ()
+                      check-equal("table, different sizes",
+                                  tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3),
+                                  tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3, "d" => 4));
+                    end,
+                    "table1 is missing keys"); // needs regex to match more
+  check-description(method ()
+                      check-equal("table, different typed keys and (unsortable) values",
+                                  tabling(1 => 1, "b" => "b",
+                                          make(<test-object>) => make(<test-object>)),
+                                  tabling(1 => 1, "b" => "b", #() => #f));
+                    end,
+                    "table2 is missing keys {<test-object>");
+  check-description(method ()
+                      check-equal("string, same size different elements",
+                                  "abcd", "axcd");
+                    end,
+                    "element 1 is the first mismatch");
+  check-description(method ()
+                      check-equal("string, different sizes",
+                                  "abcd", "abcde");
+                    end,
+                    "sizes differ (4 and 5)");
+end test;
+
+/* Leaving this here because actually running these failing checks makes it
+ much easier to debug, compared to running the above test, and there's more
+ work to be done in this area so I expect to use these more.
+
+define test test-assert-equal-output ()
+  check-instance?("b", <string>, 1);
+  check-true("d", 3 < 2);
+  check-false("e", 3 == 3);
+  check-condition("f", <error>, "no error");
+  check-no-condition("g", error("foo"));
+  check-equal("list, same size, different elements",
+              #("a", "b", "c", "d"),
+              #("a", "b", "x", "d"));
+  check-equal("list, different sizes",
+              #("a", "b", "c", "d"),
+              #("a", "b", "c", "d", "e"));
+  check-equal("integer, different",
+              123, 456);
+  let t1 = tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3);
+  let t2 = tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3);
+  check-equal("table, same size, different elements",
+              t1, t2);
+  let t1 = tabling(<string-table>, "a" => 1, "b" => 2, "c" => 3);
+  let t2 = tabling(<string-table>, "a" => 1, "x" => 2, "c" => 3, "d" => 4);
+  check-equal("table, different sizes",
+              t1, t2);
+  check-equal("string, same size different elements",
+              "abcd", "axcd");
+  check-equal("string, different sizes",
+              "abcd", "abcde");
+  check-equal("table, different typed keys and (unsortable) values",
+              tabling(1 => 1, "b" => "b",
+                      make(<test-object>) => make(<test-object>)),
+              tabling("a" => 1, "x" => 2, "c" => 3));
+end test;
+*/

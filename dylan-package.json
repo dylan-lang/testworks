@@ -1,7 +1,7 @@
 {
     "name": "testworks",
     "description": "Unit testing framework",
-    "version": "2.3.1",
+    "version": "3.0",
     "keywords": [
         "testing"
     ],

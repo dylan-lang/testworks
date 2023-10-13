@@ -136,10 +136,6 @@ define method convert-xml-node
       #"test"      => make-component-result(<test-result>);
       #"benchmark" => make-component-result(<benchmark-result>);
       #"iteration" => make-component-result(<benchmark-iteration-result>);
-      #"test-unit"
-        => make(<test-unit-result>,
-                name: name, status: status, reason: reason,
-                subresults: get-subresults());
       #"check"
         => make(<check-result>, name: name, status: status, reason: reason);
       otherwise =>

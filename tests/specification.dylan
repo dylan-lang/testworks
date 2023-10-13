@@ -7,10 +7,10 @@ define interface-specification-suite testworks-interface-specification-suite ()
   open generic function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
 
   // For extending the runner capabilities.
-  function debug-runner? (<test-runner>) => (<object>);
+  function runner-debug (<test-runner>) => (<debug-option>);
   function run-tests (<test-runner>, <component>) => (<component-result>);
   function runner-output-stream (<test-runner>) => (<stream>);
-  function runner-progress (<test-runner>) => (one-of(#f, $default, $verbose));
+  function runner-progress (<test-runner>) => (<progress-option>);
   function runner-skip (<test-runner>) => (<sequence>);
   function runner-tags (<test-runner>) => (<sequence>);
   function test-option (<string>, #"key", #"default") => (<string>);
@@ -53,5 +53,4 @@ define suite testworks-test-suite ()
   test test-test-temp-directory;
   test test-that-not-implemented-is-not-a-failure;
   test test-that-not-implemented-plus-passed-is-passed;
-  test test-with-test-unit;
 end suite;

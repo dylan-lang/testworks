@@ -33,7 +33,7 @@ end;
 define class <benchmark-result> (<component-result>)
 end;
 
-define class <benchmark-iteration-result> (<unit-result>, <metered-result>)
+define class <benchmark-iteration-result> (<metered-result>)
 end;
 
 define method result-type-name

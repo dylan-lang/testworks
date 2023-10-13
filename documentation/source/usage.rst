@@ -140,9 +140,9 @@ arguments. These are all valid:
 
 .. code-block:: dylan
 
-   assert-equal(a, b);     // auto-generated description
-   assert-equal(a, b, a);  // a used as description
-   assert-equal(a, b, "does %= = %=?", a, b);  // formatted description
+   assert-equal(want, got);       // auto-generated description
+   assert-equal(want, got, foo);  // a used as description
+   assert-equal(want, got, "does %= = %=?", a, b);  // formatted description
 
 Tests
 -----

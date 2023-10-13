@@ -110,3 +110,18 @@ define function format-bytes
                          end;
   concatenate(integer-to-string(round/(bytes, divisor)), units)
 end function format-bytes;
+
+define function capitalize
+    (string :: <string>) => (_ :: <string>)
+  concatenate(as-uppercase(copy-sequence(string, end: 1)),
+              copy-sequence(string, start: 1))
+end function;
+
+// For --progress and --report=full
+define thread variable *indent* :: <string> = "";
+
+define constant $indent-step :: <string> = "  ";
+
+define function next-indent () => (indent :: <string>)
+  concatenate(*indent*, $indent-step)
+end function;
