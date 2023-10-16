@@ -94,6 +94,21 @@ define test testworks-check-true-test ()
                "check-true of error crashes");
 end test;
 
+define test test-expect ()
+  expect(always(#t));
+  expect(identity(#t));
+  expect(3 = 3);
+  assert-equal($passed,
+               with-result-status () expect(#t) end,
+               "expect(#t) passes");
+  assert-equal($failed,
+               with-result-status () expect(#f) end,
+               "expect(#f) fails");
+  assert-equal($crashed,
+               with-result-status () expect(test-error()) end,
+               "expect of error crashes");
+end test;
+
 define test testworks-assert-true-test ()
   assert-true(#t);
   assert-true(#t, "#t is true with description");
@@ -118,6 +133,18 @@ define test testworks-check-false-test ()
                  check-false($internal-check-name, test-error())
                end,
                "check-false of error crashes");
+end test;
+
+define test test-expect-false ()
+  assert-equal($failed,
+               with-result-status () expect-false(#t) end,
+               "expect-false(#t) fails");
+  assert-equal($passed,
+               with-result-status () expect-false(#f) end,
+               "expect-false(#f) passes");
+  assert-equal($crashed,
+               with-result-status () expect-false(test-error()) end,
+               "expect-false of error crashes");
 end test;
 
 define test testworks-assert-false-test ()
@@ -151,6 +178,21 @@ define test testworks-check-equal-test ()
                "check-equal of error crashes");
 end test;
 
+define test test-expect-equal ()
+  assert-equal($passed,
+               with-result-status () expect-equal(1, 1) end,
+               "expect-equal(1, 1) passes");
+  assert-equal($passed,
+               with-result-status () expect-equal("1", "1") end,
+               """expect-equal("1", "1") passes""");
+  assert-equal($failed,
+               with-result-status () expect-equal(1, 2) end,
+               "expect-equal(1, 2) fails");
+  assert-equal($crashed,
+               with-result-status () expect-equal(1, test-error()) end,
+               "expect-equal of error crashes");
+end test;
+
 define test testworks-assert-equal-failure-detail ()
   let result = with-result ()
                  assert-equal(#[1, 2, 3], #[1, 3, 2])
@@ -178,6 +220,15 @@ define test testworks-assert-not-equal-test ()
   assert-equal($crashed, with-result-status () assert-not-equal(1, test-error()) end);
 end test;
 
+define test test-expect-not-equal ()
+  expect-not-equal(8, 9);
+  expect-not-equal(8, 9, "8 ~= 9 with description");
+  assert-equal($passed, with-result-status () expect-not-equal(1, 2) end);
+  assert-equal($passed, with-result-status () expect-not-equal("1", "2") end);
+  assert-equal($failed, with-result-status () expect-not-equal(1, 1) end);
+  assert-equal($crashed, with-result-status () expect-not-equal(1, test-error()) end);
+end test;
+
 define test testworks-check-instance?-test ()
   assert-equal($passed,
                with-result-status ()
@@ -194,6 +245,20 @@ define test testworks-check-instance?-test ()
                  check-instance?($internal-check-name, <integer>, test-error())
                end,
                "check-instance? of error crashes");
+end test;
+
+define test test-expect-instance? ()
+  assert-equal($passed,
+               with-result-status () expect-instance?(<integer>, 1) end,
+               "expect-instance?(<integer>, 1) passes");
+  assert-equal($failed,
+               with-result-status () expect-instance?(<string>, 1) end,
+               "expect-instance?(<string>, 1) fails");
+  assert-equal($crashed,
+               with-result-status ()
+                 expect-instance?(<integer>, test-error())
+               end,
+               "expect-instance? of error crashes");
 end test;
 
 define test testworks-assert-instance?-test ()
@@ -232,6 +297,24 @@ define test testworks-assert-not-instance?-test ()
                "assert-not-instance? of error crashes");
 end test;
 
+define test test-assert-not-instance? ()
+  assert-equal($passed,
+               with-result-status ()
+                 expect-not-instance?(<string>, 1)
+               end,
+               "expect-not-instance?(<string>, 1) passes");
+  assert-equal($failed,
+               with-result-status ()
+                 expect-not-instance?(<integer>, 1)
+               end,
+               "expect-not-instance?(<integer>, 1) fails");
+  assert-equal($crashed,
+               with-result-status ()
+                 expect-not-instance?(<integer>, test-error())
+               end,
+               "expect-not-instance? of error crashes");
+end test;
+
 define test testworks-check-condition-test ()
   begin
     let success? = #f;
@@ -262,30 +345,59 @@ define test testworks-check-condition-test ()
                "check-condition doesn't catch wrong condition");
 end test;
 
-define test testworks-assert-signals-test ()
-  assert-signals(<error>, error("foo"));
-  assert-signals(<error>, error("foo"), "error signals error w/ description");
+define test test-expect-condition ()
   begin
     let success? = #f;
     assert-equal($passed,
                  with-result-status ()
-                   assert-signals(<test-error>,
-                                  begin
-                                    // default-handler for <warning> returns #f
-                                    test-warning();
-                                    success? := #t;
-                                    test-error()
-                                  end)
+                   expect-condition(<test-error>,
+                                    begin
+                                      // default-handler for <warning> returns #f
+                                      test-warning();
+                                      success? := #t;
+                                      test-error()
+                                    end)
+                 end,
+                 "expect-condition catches <test-error>");
+    assert-true(success?,
+                "expect-condition for <test-error> doesn't catch <warning>");
+  end;
+  assert-equal($failed,
+               with-result-status ()
+                 expect-condition(<test-error>, #f)
+               end,
+               "expect-condition fails if no condition");
+  assert-equal($failed,
+               with-result-status ()
+                 expect-condition(<test-error>, test-warning())
+               end,
+               "expect-condition doesn't catch wrong condition");
+end test;
+
+define test testworks-assert-condition-test ()
+  assert-condition(<error>, error("foo"));
+  assert-condition(<error>, error("foo"), "error signals error w/ description");
+  begin
+    let success? = #f;
+    assert-equal($passed,
+                 with-result-status ()
+                   assert-condition(<test-error>,
+                                    begin
+                                      // default-handler for <warning> returns #f
+                                      test-warning();
+                                      success? := #t;
+                                      test-error()
+                                    end)
                  end);
     assert-true(success?);
   end;
   assert-equal($failed,
                with-result-status ()
-                 assert-signals(<test-error>, #f)
+                 assert-condition(<test-error>, #f)
                end);
   assert-equal($failed,
                with-result-status ()
-                 assert-signals(<test-error>, test-warning())
+                 assert-condition(<test-error>, test-warning())
                end);
 end test;
 
@@ -313,6 +425,13 @@ define test testworks-assert-no-errors-test ()
   assert-equal($crashed, with-result-status () assert-no-errors(test-error()) end);
 end test;
 
+define test test-expect-no-condition ()
+  assert-equal($passed, with-result-status () expect-no-condition(#t) end);
+  assert-equal($passed, with-result-status () expect-no-condition(#f) end);
+  assert-equal($crashed, with-result-status () expect-no-condition(test-error()) end);
+end test;
+
+
 define suite testworks-assertion-macros-suite ()
   test testworks-check-test;
   test testworks-check-true-test;
@@ -322,7 +441,6 @@ define suite testworks-assertion-macros-suite ()
   test testworks-check-condition-test;
   test testworks-check-no-errors-test;
 
-  // Assert macros (newer).
   test testworks-assert-true-test;
   test testworks-assert-false-test;
   test testworks-assert-equal-test;
@@ -330,10 +448,9 @@ define suite testworks-assertion-macros-suite ()
   test testworks-assert-not-equal-test;
   test testworks-assert-instance?-test;
   test testworks-assert-not-instance?-test;
-  test testworks-assert-signals-test;
+  test testworks-assert-condition-test;
   test testworks-assert-no-errors-test;
 end suite testworks-assertion-macros-suite;
-
 
 define benchmark basic-benchmark ()
   "just exercise basic benchmark functionality"
@@ -343,7 +460,6 @@ define suite testworks-benchmarks-suite ()
   benchmark basic-benchmark;
 end;
 
-
 /// Verify the result objects
 
 define test test-run-tests/test ()
@@ -457,6 +573,21 @@ define test test-check-failure-continues ()
     without-recording ()
       check-true($internal-check-name, #f);            // fail
       check-true($internal-check-name, error("blah")); // fail
+    end;
+    x := #t;
+  cleanup
+    assert-true(x);
+  end;
+end test;
+
+// Make sure that if one `expect-*` expression fails the remaining assertions
+// are still executed.
+define test test-expect-failure-continues ()
+  let x = #f;
+  block ()
+    without-recording ()
+      expect(#f);            // fail
+      expect(error("blah")); // fail
     end;
     x := #t;
   cleanup
@@ -776,11 +907,13 @@ end test;
  work to be done in this area so I expect to use these more.
 
 define test test-assert-equal-output ()
-  check-instance?("b", <string>, 1);
-  check-true("d", 3 < 2);
-  check-false("e", 3 == 3);
-  check-condition("f", <error>, "no error");
-  check-no-condition("g", error("foo"));
+  expect(2 > 3);
+  expect-instance?(<string>, 1);
+  expect-not-instance?(<string>, "b");
+  expect-true(3 < 2);
+  expect-false(3 == 3);
+  expect-condition(<error>, "no error");
+  expect-no-condition(error("foo"));
   check-equal("list, same size, different elements",
               #("a", "b", "c", "d"),
               #("a", "b", "x", "d"));

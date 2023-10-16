@@ -22,7 +22,7 @@ Suites, Tests, and Benchmarks
    :signature:
       define test *test-name* (#key *expected-to-fail-reason, expected-to-fail-test, tags*) *body* end
    :parameter test-name: Name of the test; a Dylan variable name.
-   :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``.
+   :parameter #key expected-to-fail-reason: A :drm:`<string>` or :drm:`#f`.
       The reason this test is expected to fail.
    :parameter #key expected-to-fail-test: An instance of :drm:`<function>`.
       A function to decide whether the test is expected to fail.
@@ -63,7 +63,7 @@ Suites, Tests, and Benchmarks
    :signature:
       define benchmark *benchmark-name* (#key *expected-to-fail-reason, expected-to-fail-test, tags*) *body* end
    :parameter benchmark-name: Name of the benchmark; a Dylan variable name.
-   :parameter #key expected-to-fail-reason: A :drm:`<string>` or ``#f``.
+   :parameter #key expected-to-fail-reason: A :drm:`<string>` or :drm:`#f`.
       The reason this benchmark is expected to fail.
    :parameter #key expected-to-fail-test: An instance of :drm:`<function>`.
       A function to decide whether the benchmark is expected to fail.
@@ -280,15 +280,21 @@ These are the available assertion macros:
   * :macro:`assert-no-errors`
   * :macro:`assert-instance?`
   * :macro:`assert-not-instance?`
+  * :macro:`expect`
+  * :macro:`expect-false`
+  * :macro:`expect-equal`
+  * :macro:`expect-not-equal`
+  * :macro:`expect-condition`
+  * :macro:`expect-no-condition`
+  * :macro:`expect-instance?`
+  * :macro:`expect-not-instance?`
 
 .. macro:: assert-true
 
-   Assert that an expression evaluates to a true value.  Importantly,
-   this does not mean the expression is exactly ``#t``, but rather
-   that it is *not* ``#f``.  If you want to explicitly test for
-   equality to ``#t`` use ``assert-equal(#t, ...)`` .
+   Assert that an expression evaluates to a true value. Skip the remainder of
+   the test on failure.
 
-   :signature: assert-true *expression* [ *description* ]
+   :signature: assert-true *expression* [ *description* ... ]
 
    :parameter expression: any expression
    :parameter description: An optional description of what the assertion tests.
@@ -297,6 +303,16 @@ These are the available assertion macros:
       than three".  If no description is supplied one is automatically
       generated based on the text of the expression.
 
+   :description:
+
+      Importantly, this does not test that the expression is exactly :drm:`#t`,
+      but rather that it is *not* :drm:`#f`.  If you want to explicitly test for
+      equality to :drm:`#t` use ``assert-equal(#t, ...)`` .
+
+      .. note:: It is also possible to use :macro:`assert` from the
+                ``common-dylan`` library, which will signal an error upon
+                failure and skip the remainder of the test.
+
    :example:
 
       .. code-block:: dylan
@@ -304,11 +320,22 @@ These are the available assertion macros:
          assert-true(has-fleas?(my-dog))
          assert-true(has-fleas?(my-dog), "my dog has fleas")
 
+.. macro:: expect
+
+   Assert that an expression evaluates to a true value. **Do not skip** the
+   remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-true` but does not terminate the test. Use
+      this only if subsequent assertions are independent of this one.
+
 .. macro:: assert-false
 
-   Assert that an expression evaluates to ``#f``.
+   Assert that an expression evaluates to :drm:`#f`. Skip the remainder of the
+   test on failure.
 
-   :signature: assert-false *expression* [ *description* ]
+   :signature: assert-false *expression* [ *description* ... ]
 
    :parameter expression: any expression
    :parameter description: An optional description of what the assertion tests.
@@ -323,6 +350,16 @@ These are the available assertion macros:
 
          assert-false(3 < 2)
          assert-false(6 = 7, "six equals seven")
+
+.. macro:: expect-false
+
+   Assert that an expression evaluates to :drm:`#f`. **Do not skip** the
+   remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-false` but does not terminate the test. Use
+      this only if subsequent assertions are independent of this one.
 
 .. macro:: assert-equal
 
@@ -350,14 +387,22 @@ These are the available assertion macros:
          assert-equal(2, my-complicated-method())
          assert-equal(want, f(), "f() returned %=", want)
 
+.. macro:: expect-equal
+
+   Assert that two values are equal using :drm:`=` as the comparison function.
+   **Do not skip** the remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-equal` but does not terminate the test. Use
+      this only if subsequent assertions are independent of this one.
+
 .. macro:: assert-not-equal
 
    Assert that two values are not equal using ``~=`` as the comparison
-   function.  Using this macro is preferable to using ``assert-true(a
-   ~= b)`` or ``assert-false(a = b)`` because the generated failure
-   messages can be better.
+   function. Skip the remainder of the test on failure.
 
-   :signature: assert-not-equal *expression1* *expression2* [ *description* ]
+   :signature: assert-not-equal *expression1* *expression2* [ *description* ... ]
 
    :parameter expression1: any expression
    :parameter expression2: any expression
@@ -367,6 +412,12 @@ These are the available assertion macros:
       than three".  If no description is supplied one is automatically
       generated based on the text of the expression.
 
+   :description:
+
+      Using this macro is preferable to using ``assert-true(a ~= b)`` or
+      ``assert-false(a = b)`` because the generated failure messages can be
+      better.
+
    :example:
 
       .. code-block:: dylan
@@ -374,11 +425,22 @@ These are the available assertion macros:
          assert-not-equal(2, my-complicated-method())
          assert-not-equal(want, got, "want does not equal got")
 
+.. macro:: expect-not-equal
+
+   Assert that two values are not equal using :drm:`~=` as the comparison
+   function.  **Do not skip** the remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-not-equal` but does not terminate the
+      test. Use this only if subsequent assertions are independent of this one.
+
 .. macro:: assert-signals
 
-   Assert that an expression signals a given condition class.
+   Assert that an expression signals a given condition class. Skip the
+   remainder of the test on failure.
 
-   :signature: assert-signals *condition*, *expression* [ *description* ]
+   :signature: assert-signals *condition*, *expression* [ *description* ... ]
 
    :parameter condition: an expression that yields a condition class
    :parameter expression: any expression
@@ -399,29 +461,40 @@ These are the available assertion macros:
          assert-signals(<division-by-zero-error>, 3 / 0,
                         "my super special description")
 
+.. macro:: expect-condition
+
+   Assert that an expression signals a given condition class.  **Do not skip**
+   the remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-signals` but does not terminate the test. Use
+      this only if subsequent assertions are independent of this one.
+
 .. macro:: assert-no-errors
 
-   Assert that an expression does not signal any errors.
+   Assert that an expression does not signal any errors. Skip the remainder of
+   the test on failure.
 
-   :signature: assert-no-errors *expression* [ *description* ]
+   :signature: assert-no-errors *expression* [ *description* ... ]
 
-   :parameter expression: any expression 
+   :parameter expression: any expression
    :parameter description: An optional description of what the assertion tests.
       This may be a single value of any type or a format string and format
       arguments. It should be stated in positive form, such as "f(3) does not
-      signal <error>".  If no description is supplied one is automatically
+      signal <my-error>".  If no description is supplied one is automatically
       generated based on the text of the expression.
 
-   The assertion succeeds if no error is signaled by the evaluation of
-   *expression*.
+   :description:
 
-   Use of this macro is preferable to simply executing *expression* as
-   part of the test body for two reasons.  First, it can clarify the
-   purpose of the test, by telling the reader "here's an expression
-   that is explicitly being tested, and not just part of the test
-   setup."  Second, if the assertion signals an error the test will
-   record that fact and continue, as opposed to taking a non-local
-   exit.  Third, it will show up in generated reports.
+      The assertion succeeds if no condition is signaled by the evaluation of
+      *expression*.
+
+      Use of this macro is preferable to simply executing *expression* as part
+      of the test body because it can clarify the purpose of the test by
+      telling the reader "here's an expression that is explicitly being tested,
+      and not just part of the test setup."  Also, the assertion failure will
+      show up in generated reports.
 
    :example:
 
@@ -431,12 +504,22 @@ These are the available assertion macros:
          assert-no-errors(my-hairy-logic(),
                           "hairy logic completes without error")
 
+.. macro:: expect-no-condition
+
+   Assert that an expression does not signal a condition.  **Do not skip** the
+   remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-no-errors` but does not terminate the test.
+      Use this only if subsequent assertions are independent of this one.
 
 .. macro:: assert-instance?
 
    Assert that the result of an expression is an instance of a given type.
+   Skip the remainder of the test on failure.
 
-   :signature: assert-instance? *type* *expression* [ *description* ]
+   :signature: assert-instance? *type* *expression* [ *description* ... ]
 
    :parameter type: The expected type.
    :parameter expression: An expression.
@@ -459,16 +542,24 @@ These are the available assertion macros:
      .. code-block:: dylan
 
        assert-instance?(<type>, subclass(<string>));
+       assert-instance?(<type>, subclass(<string>), "subclass returns a type");
 
-       assert-instance?(<type>, subclass(<string>),
-                        "subclass returns type");
+.. macro:: expect-instance?
 
+   Assert that the result of an expression is an instance of a given type.
+   **Do not skip** the remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-instance?` but does not terminate the test.
+      Use this only if subsequent assertions are independent of this one.
 
 .. macro:: assert-not-instance?
 
-   Assert that the result of an expression is **not** an instance of a given class.
+   Assert that the result of an expression is **not** an instance of a given
+   class.  Skip the remainder of the test on failure.
 
-   :signature: assert-not-instance? *type* *expression* [ *description* ]
+   :signature: assert-not-instance? *type* *expression* [ *description* ... ]
 
    :parameter type: The type.
    :parameter expression: An expression.
@@ -491,13 +582,26 @@ These are the available assertion macros:
      .. code-block:: dylan
 
        assert-not-instance?(limited(<integer>, min: 0), -1);
-
        assert-not-instance?(limited(<integer>, min: 0), -1,
                             "values below lower bound are not instances");
+
+.. macro:: expect-not-instance?
+
+   Assert that the result of an expression is **not** an instance of a given
+   class.  **Do not skip** the remainder of the test on failure.
+
+   :description:
+
+      The same as :macro:`assert-not-instance?` but does not terminate the
+      test.  Use this only if subsequent assertions are independent of this
+      one.
 
 
 Checks
 ======
+
+.. deprecated:: 3.0
+   Use the ``expect-*`` macros documented above.
 
 Checks are like `Assertions`_ but they do not cause the test to terminate when
 they fail or crash. Only use them if later checks or assertions do not depend
@@ -522,9 +626,12 @@ These are the available checks:
 
    Perform a check within a test.
 
+   .. deprecated:: 3.0
+      Use :macro:`expect` instead.
+
    :signature: check *name* *function* #rest *arguments*
 
-   :parameter name: An instance of ``<string>``.
+   :parameter name: An instance of :drm:`<string>`.
    :parameter function: The function to check.
    :parameter #rest arguments: The arguments for ``function``.
 
@@ -539,9 +646,12 @@ These are the available checks:
 
    Check that a given condition is signalled.
 
+   .. deprecated:: 3.0
+      Use :macro:`expect-condition` instead.
+
    :signature: check-condition *name* *expected* *expression*
 
-   :parameter name: An instance of ``<string>``.
+   :parameter name: An instance of :drm:`<string>`.
    :parameter expected: The expected condition class.
    :parameter expression: An expression.
 
@@ -557,9 +667,12 @@ These are the available checks:
 
    Check that 2 expressions are equal.
 
+   .. deprecated:: 3.0
+      Use :macro:`expect-equal` instead.
+
    :signature: check-equal *name* *expected* *expression*
 
-   :parameter name: An instance of ``<string>``.
+   :parameter name: An instance of :drm:`<string>`.
    :parameter expected: The expected value of ``expression``.
    :parameter expression: An expression.
 
@@ -574,11 +687,14 @@ These are the available checks:
 
 .. macro:: check-false
 
-   Check that an expression has a result of ``#f``.
+   Check that an expression has a result of :drm:`#f`.
+
+   .. deprecated:: 3.0
+      Use :macro:`expect-false` instead.
 
    :signature: check-false *name* *expression*
 
-   :parameter name: An instance of ``<string>``.
+   :parameter name: An instance of :drm:`<string>`.
    :parameter expression: An expression.
 
    :example:
@@ -592,9 +708,12 @@ These are the available checks:
 
    Check that the result of an expression is an instance of a given type.
 
+   .. deprecated:: 3.0
+      Use :macro:`expect-instance?` instead.
+
    :signature: check-instance? *name* *type* *expression*
 
-   :parameter name: An instance of ``<string>``.
+   :parameter name: An instance of :drm:`<string>`.
    :parameter type: The expected type.
    :parameter expression: An expression.
 
@@ -608,17 +727,20 @@ These are the available checks:
 
 .. macro:: check-true
 
-   Check that the result of an expression is not ``#f``.
+   Check that the result of an expression is not :drm:`#f`.
+
+   .. deprecated:: 3.0
+      Use :macro:`expect` instead.
 
    :signature: check-true *name* *expression*
 
-   :parameter name: An instance of ``<string>``.
+   :parameter name: An instance of :drm:`<string>`.
    :parameter expression: An expression.
 
    :description:
 
      Note that if you want to explicitly check if an expression
-     evaluates to ``#t``, you should use :func:`check-equal`.
+     evaluates to :drm:`#t`, you should use :func:`check-equal`.
 
    :example:
 
@@ -672,9 +794,9 @@ Test Execution
    Retrieve a unique temporary directory for the current test to use.
 
    :signature: test-temp-directory => *directory*
-   :value directory: An instance of type ``<directory-locator>``.
+   :value directory: An instance of type :class:`<directory-locator>`.
 
-   Returns a directory (a ``<directory-locator>``) that may be used for
+   Returns a directory (a :class:`<directory-locator>`) that may be used for
    temporary files created by the test or benchmark. The directory is created
    the first time this function is called for each test or benchmark and is not
    deleted after the test run is complete in case it's useful for post-mortem
@@ -690,13 +812,13 @@ Test Execution
    Writes a file in the current test's temp directory.
 
    :signature: write-test-file *filename* #key *contents* => *locator*
-   :parameter filename: An instance of ``<pathname>`` (i.e., a string or a
+   :parameter filename: An instance of :class:`<pathname>` (i.e., a string or a
                         locator). The name may be a relative path and if it
                         contains the path separator character, subdirectories
                         will be created.
    :parameter #key contents: An instance of :drm:`<string>` to be written to
                              the file. Defaults to the empty string.
-   :value locator: An instance of ``<file-locator>`` which is the full,
+   :value locator: An instance of :class:`<file-locator>` which is the full,
                    absolute pathname of the created file.
 
    When your test requires files to be present this is a handy utility to
