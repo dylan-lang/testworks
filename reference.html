@@ -218,7 +218,7 @@
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>test-name</strong> – Name of the test; a Dylan variable name.</p></li>
-<li><p><strong>expected-to-fail-reason</strong> (<em>#key</em>) – A <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a> or <code class="docutils literal notranslate"><span class="pre">#f</span></code>.
+<li><p><strong>expected-to-fail-reason</strong> (<em>#key</em>) – A <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a> or <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a>.
 The reason this test is expected to fail.</p></li>
 <li><p><strong>expected-to-fail-test</strong> (<em>#key</em>) – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Function_Classes#function"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;function&gt;</span></code></a>.
 A function to decide whether the test is expected to fail.</p></li>
@@ -265,7 +265,7 @@ specific tags.</p>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>benchmark-name</strong> – Name of the benchmark; a Dylan variable name.</p></li>
-<li><p><strong>expected-to-fail-reason</strong> (<em>#key</em>) – A <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a> or <code class="docutils literal notranslate"><span class="pre">#f</span></code>.
+<li><p><strong>expected-to-fail-reason</strong> (<em>#key</em>) – A <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a> or <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a>.
 The reason this benchmark is expected to fail.</p></li>
 <li><p><strong>expected-to-fail-test</strong> (<em>#key</em>) – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Function_Classes#function"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;function&gt;</span></code></a>.
 A function to decide whether the benchmark is expected to fail.</p></li>
@@ -494,18 +494,24 @@ the positive sense.  For example:</p>
 <li><p><a class="reference internal" href="#testworks:testworks:assert-no-errors"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-no-errors</span></code></a></p></li>
 <li><p><a class="reference internal" href="#testworks:testworks:assert-instance?"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-instance?</span></code></a></p></li>
 <li><p><a class="reference internal" href="#testworks:testworks:assert-not-instance?"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-not-instance?</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect-false"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-false</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect-equal"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-equal</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect-not-equal"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-not-equal</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect-condition"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-condition</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect-no-condition"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-no-condition</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect-instance?"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-instance?</span></code></a></p></li>
+<li><p><a class="reference internal" href="#testworks:testworks:expect-not-instance?"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-not-instance?</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-true">
 <span class="sig-name descname"><span class="pre">assert-true</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-true" title="Permalink to this definition">#</a></dt>
-<dd><p>Assert that an expression evaluates to a true value.  Importantly,
-this does not mean the expression is exactly <code class="docutils literal notranslate"><span class="pre">#t</span></code>, but rather
-that it is <em>not</em> <code class="docutils literal notranslate"><span class="pre">#f</span></code>.  If you want to explicitly test for
-equality to <code class="docutils literal notranslate"><span class="pre">#t</span></code> use <code class="docutils literal notranslate"><span class="pre">assert-equal(#t,</span> <span class="pre">...)</span></code> .</p>
+<dd><p>Assert that an expression evaluates to a true value. Skip the remainder of
+the test on failure.</p>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-true <em>expression</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-true <em>expression</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -517,8 +523,20 @@ than three”.  If no description is supplied one is automatically
 generated based on the text of the expression.</p></li>
 </ul>
 </dd>
-<dt class="field-odd">Example<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-true</span><span class="p">(</span><span class="n">has-fleas?</span><span class="p">(</span><span class="n">my-dog</span><span class="p">))</span>
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p>Importantly, this does not test that the expression is exactly <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#true"><code class="xref drm docutils literal notranslate"><span class="pre">#t</span></code></a>,
+but rather that it is <em>not</em> <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a>.  If you want to explicitly test for
+equality to <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#true"><code class="xref drm docutils literal notranslate"><span class="pre">#t</span></code></a> use <code class="docutils literal notranslate"><span class="pre">assert-equal(#t,</span> <span class="pre">...)</span></code> .</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is also possible to use <code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert</span></code> from the
+<code class="docutils literal notranslate"><span class="pre">common-dylan</span></code> library, which will signal an error upon
+failure and skip the remainder of the test.</p>
+</div>
+</p>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-true</span><span class="p">(</span><span class="n">has-fleas?</span><span class="p">(</span><span class="n">my-dog</span><span class="p">))</span>
 <span class="n">assert-true</span><span class="p">(</span><span class="n">has-fleas?</span><span class="p">(</span><span class="n">my-dog</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;my dog has fleas&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -527,12 +545,26 @@ generated based on the text of the expression.</p></li>
 </dd></dl>
 
 <dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect">
+<span class="sig-name descname"><span class="pre">expect</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that an expression evaluates to a true value. <strong>Do not skip</strong> the
+remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-true"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-true</span></code></a> but does not terminate the test. Use
+this only if subsequent assertions are independent of this one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-false">
 <span class="sig-name descname"><span class="pre">assert-false</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-false" title="Permalink to this definition">#</a></dt>
-<dd><p>Assert that an expression evaluates to <code class="docutils literal notranslate"><span class="pre">#f</span></code>.</p>
+<dd><p>Assert that an expression evaluates to <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a>. Skip the remainder of the
+test on failure.</p>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-false <em>expression</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-false <em>expression</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -549,6 +581,19 @@ generated based on the text of the expression.</p></li>
 <span class="n">assert-false</span><span class="p">(</span><span class="mi">6</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;six equals seven&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect-false">
+<span class="sig-name descname"><span class="pre">expect-false</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect-false" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that an expression evaluates to <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a>. <strong>Do not skip</strong> the
+remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-false"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-false</span></code></a> but does not terminate the test. Use
+this only if subsequent assertions are independent of this one.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -586,15 +631,26 @@ generated based on the text of the expression.</p></li>
 </dd></dl>
 
 <dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect-equal">
+<span class="sig-name descname"><span class="pre">expect-equal</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect-equal" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that two values are equal using <a class="reference external" href="https://opendylan.org/books/drm/Equality_and_Comparison#equal"><code class="xref drm docutils literal notranslate"><span class="pre">=</span></code></a> as the comparison function.
+<strong>Do not skip</strong> the remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-equal"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-equal</span></code></a> but does not terminate the test. Use
+this only if subsequent assertions are independent of this one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-not-equal">
 <span class="sig-name descname"><span class="pre">assert-not-equal</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-not-equal" title="Permalink to this definition">#</a></dt>
 <dd><p>Assert that two values are not equal using <code class="docutils literal notranslate"><span class="pre">~=</span></code> as the comparison
-function.  Using this macro is preferable to using <code class="docutils literal notranslate"><span class="pre">assert-true(a</span>
-<span class="pre">~=</span> <span class="pre">b)</span></code> or <code class="docutils literal notranslate"><span class="pre">assert-false(a</span> <span class="pre">=</span> <span class="pre">b)</span></code> because the generated failure
-messages can be better.</p>
+function. Skip the remainder of the test on failure.</p>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-not-equal <em>expression1</em> <em>expression2</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-not-equal <em>expression1</em> <em>expression2</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -607,8 +663,13 @@ than three”.  If no description is supplied one is automatically
 generated based on the text of the expression.</p></li>
 </ul>
 </dd>
-<dt class="field-odd">Example<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-not-equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">my-complicated-method</span><span class="p">())</span>
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Using this macro is preferable to using <code class="docutils literal notranslate"><span class="pre">assert-true(a</span> <span class="pre">~=</span> <span class="pre">b)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">assert-false(a</span> <span class="pre">=</span> <span class="pre">b)</span></code> because the generated failure messages can be
+better.</p>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-not-equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">my-complicated-method</span><span class="p">())</span>
 <span class="n">assert-not-equal</span><span class="p">(</span><span class="n">want</span><span class="p">,</span><span class="w"> </span><span class="n">got</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;want does not equal got&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -617,12 +678,26 @@ generated based on the text of the expression.</p></li>
 </dd></dl>
 
 <dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect-not-equal">
+<span class="sig-name descname"><span class="pre">expect-not-equal</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect-not-equal" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that two values are not equal using <a class="reference external" href="https://opendylan.org/books/drm/Equality_and_Comparison#not_equal"><code class="xref drm docutils literal notranslate"><span class="pre">~=</span></code></a> as the comparison
+function.  <strong>Do not skip</strong> the remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-not-equal"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-not-equal</span></code></a> but does not terminate the
+test. Use this only if subsequent assertions are independent of this one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-signals">
 <span class="sig-name descname"><span class="pre">assert-signals</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-signals" title="Permalink to this definition">#</a></dt>
-<dd><p>Assert that an expression signals a given condition class.</p>
+<dd><p>Assert that an expression signals a given condition class. Skip the
+remainder of the test on failure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-signals <em>condition</em>, <em>expression</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-signals <em>condition</em>, <em>expression</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -650,12 +725,26 @@ the evaluation of <em>expression</em>.</p>
 </dd></dl>
 
 <dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect-condition">
+<span class="sig-name descname"><span class="pre">expect-condition</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect-condition" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that an expression signals a given condition class.  <strong>Do not skip</strong>
+the remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-signals"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-signals</span></code></a> but does not terminate the test. Use
+this only if subsequent assertions are independent of this one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-no-errors">
 <span class="sig-name descname"><span class="pre">assert-no-errors</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-no-errors" title="Permalink to this definition">#</a></dt>
-<dd><p>Assert that an expression does not signal any errors.</p>
-<dl class="field-list simple">
+<dd><p>Assert that an expression does not signal any errors. Skip the remainder of
+the test on failure.</p>
+<dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-no-errors <em>expression</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-no-errors <em>expression</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -663,23 +752,22 @@ the evaluation of <em>expression</em>.</p>
 <li><p><strong>description</strong> – An optional description of what the assertion tests.
 This may be a single value of any type or a format string and format
 arguments. It should be stated in positive form, such as “f(3) does not
-signal &lt;error&gt;”.  If no description is supplied one is automatically
+signal &lt;my-error&gt;”.  If no description is supplied one is automatically
 generated based on the text of the expression.</p></li>
 </ul>
 </dd>
-</dl>
-<p>The assertion succeeds if no error is signaled by the evaluation of
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p>The assertion succeeds if no condition is signaled by the evaluation of
 <em>expression</em>.</p>
-<p>Use of this macro is preferable to simply executing <em>expression</em> as
-part of the test body for two reasons.  First, it can clarify the
-purpose of the test, by telling the reader “here’s an expression
-that is explicitly being tested, and not just part of the test
-setup.”  Second, if the assertion signals an error the test will
-record that fact and continue, as opposed to taking a non-local
-exit.  Third, it will show up in generated reports.</p>
-<dl class="field-list">
-<dt class="field-odd">Example<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-no-errors</span><span class="p">(</span><span class="n">my-hairy-logic</span><span class="p">())</span>
+<p>Use of this macro is preferable to simply executing <em>expression</em> as part
+of the test body because it can clarify the purpose of the test by
+telling the reader “here’s an expression that is explicitly being tested,
+and not just part of the test setup.”  Also, the assertion failure will
+show up in generated reports.</p>
+</p>
+</dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-no-errors</span><span class="p">(</span><span class="n">my-hairy-logic</span><span class="p">())</span>
 <span class="n">assert-no-errors</span><span class="p">(</span><span class="n">my-hairy-logic</span><span class="p">(),</span>
 <span class="w">                 </span><span class="s">&quot;hairy logic completes without error&quot;</span><span class="p">)</span>
 </pre></div>
@@ -689,12 +777,26 @@ exit.  Third, it will show up in generated reports.</p>
 </dd></dl>
 
 <dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect-no-condition">
+<span class="sig-name descname"><span class="pre">expect-no-condition</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect-no-condition" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that an expression does not signal a condition.  <strong>Do not skip</strong> the
+remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-no-errors"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-no-errors</span></code></a> but does not terminate the test.
+Use this only if subsequent assertions are independent of this one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-instance?">
 <span class="sig-name descname"><span class="pre">assert-instance?</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-instance?" title="Permalink to this definition">#</a></dt>
-<dd><p>Assert that the result of an expression is an instance of a given type.</p>
+<dd><p>Assert that the result of an expression is an instance of a given type.
+Skip the remainder of the test on failure.</p>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-instance? <em>type</em> <em>expression</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-instance? <em>type</em> <em>expression</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -720,9 +822,7 @@ while it is the second parameter for <a class="reference external" href="https:/
 </dd>
 <dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-instance?</span><span class="p">(</span><span class="nc">&lt;type&gt;</span><span class="p">,</span><span class="w"> </span><span class="nb">subclass</span><span class="p">(</span><span class="nc">&lt;string&gt;</span><span class="p">));</span>
-
-<span class="n">assert-instance?</span><span class="p">(</span><span class="nc">&lt;type&gt;</span><span class="p">,</span><span class="w"> </span><span class="nb">subclass</span><span class="p">(</span><span class="nc">&lt;string&gt;</span><span class="p">),</span>
-<span class="w">                 </span><span class="s">&quot;subclass returns type&quot;</span><span class="p">);</span>
+<span class="n">assert-instance?</span><span class="p">(</span><span class="nc">&lt;type&gt;</span><span class="p">,</span><span class="w"> </span><span class="nb">subclass</span><span class="p">(</span><span class="nc">&lt;string&gt;</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;subclass returns a type&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd>
@@ -730,12 +830,26 @@ while it is the second parameter for <a class="reference external" href="https:/
 </dd></dl>
 
 <dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect-instance?">
+<span class="sig-name descname"><span class="pre">expect-instance?</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect-instance?" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that the result of an expression is an instance of a given type.
+<strong>Do not skip</strong> the remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-instance?"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-instance?</span></code></a> but does not terminate the test.
+Use this only if subsequent assertions are independent of this one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:assert-not-instance?">
 <span class="sig-name descname"><span class="pre">assert-not-instance?</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:assert-not-instance?" title="Permalink to this definition">#</a></dt>
-<dd><p>Assert that the result of an expression is <strong>not</strong> an instance of a given class.</p>
+<dd><p>Assert that the result of an expression is <strong>not</strong> an instance of a given
+class.  Skip the remainder of the test on failure.</p>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>assert-not-instance? <em>type</em> <em>expression</em> [ <em>description</em> ]</p>
+<dd class="field-odd"><p>assert-not-instance? <em>type</em> <em>expression</em> [ <em>description</em> … ]</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -761,7 +875,6 @@ while it is the second parameter for <a class="reference external" href="https:/
 </dd>
 <dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">assert-not-instance?</span><span class="p">(</span><span class="nb">limited</span><span class="p">(</span><span class="nc">&lt;integer&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">min:</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
-
 <span class="n">assert-not-instance?</span><span class="p">(</span><span class="nb">limited</span><span class="p">(</span><span class="nc">&lt;integer&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">min:</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
 <span class="w">                     </span><span class="s">&quot;values below lower bound are not instances&quot;</span><span class="p">);</span>
 </pre></div>
@@ -770,9 +883,26 @@ while it is the second parameter for <a class="reference external" href="https:/
 </dl>
 </dd></dl>
 
+<dl class="dylan macro">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:expect-not-instance?">
+<span class="sig-name descname"><span class="pre">expect-not-instance?</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:expect-not-instance?" title="Permalink to this definition">#</a></dt>
+<dd><p>Assert that the result of an expression is <strong>not</strong> an instance of a given
+class.  <strong>Do not skip</strong> the remainder of the test on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The same as <a class="reference internal" href="#testworks:testworks:assert-not-instance?"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">assert-not-instance?</span></code></a> but does not terminate the
+test.  Use this only if subsequent assertions are independent of this
+one.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="checks">
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Checks</a><a class="headerlink" href="#checks" title="Permalink to this heading">#</a></h2>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 3.0: </span>Use the <code class="docutils literal notranslate"><span class="pre">expect-*</span></code> macros documented above.</p>
+</div>
 <p>Checks are like <a class="reference internal" href="#assertions">Assertions</a> but they do not cause the test to terminate when
 they fail or crash. Only use them if later checks or assertions do not depend
 on them passing and they won’t cause too many cascading failures (for example
@@ -795,13 +925,16 @@ inconsistency in the future.</p>
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:check">
 <span class="sig-name descname"><span class="pre">check</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:check" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform a check within a test.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 3.0: </span>Use <a class="reference internal" href="#testworks:testworks:expect"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect</span></code></a> instead.</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
 <dd class="field-odd"><p>check <em>name</em> <em>function</em> #rest <em>arguments</em></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code>.</p></li>
+<li><p><strong>name</strong> – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a>.</p></li>
 <li><p><strong>function</strong> – The function to check.</p></li>
 <li><p><strong>arguments</strong> (<em>#rest</em>) – The arguments for <code class="docutils literal notranslate"><span class="pre">function</span></code>.</p></li>
 </ul>
@@ -818,13 +951,16 @@ inconsistency in the future.</p>
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:check-condition">
 <span class="sig-name descname"><span class="pre">check-condition</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:check-condition" title="Permalink to this definition">#</a></dt>
 <dd><p>Check that a given condition is signalled.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 3.0: </span>Use <a class="reference internal" href="#testworks:testworks:expect-condition"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-condition</span></code></a> instead.</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
 <dd class="field-odd"><p>check-condition <em>name</em> <em>expected</em> <em>expression</em></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code>.</p></li>
+<li><p><strong>name</strong> – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a>.</p></li>
 <li><p><strong>expected</strong> – The expected condition class.</p></li>
 <li><p><strong>expression</strong> – An expression.</p></li>
 </ul>
@@ -842,13 +978,16 @@ inconsistency in the future.</p>
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:check-equal">
 <span class="sig-name descname"><span class="pre">check-equal</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:check-equal" title="Permalink to this definition">#</a></dt>
 <dd><p>Check that 2 expressions are equal.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 3.0: </span>Use <a class="reference internal" href="#testworks:testworks:expect-equal"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-equal</span></code></a> instead.</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
 <dd class="field-odd"><p>check-equal <em>name</em> <em>expected</em> <em>expression</em></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code>.</p></li>
+<li><p><strong>name</strong> – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a>.</p></li>
 <li><p><strong>expected</strong> – The expected value of <code class="docutils literal notranslate"><span class="pre">expression</span></code>.</p></li>
 <li><p><strong>expression</strong> – An expression.</p></li>
 </ul>
@@ -866,14 +1005,17 @@ inconsistency in the future.</p>
 <dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:check-false">
 <span class="sig-name descname"><span class="pre">check-false</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:check-false" title="Permalink to this definition">#</a></dt>
-<dd><p>Check that an expression has a result of <code class="docutils literal notranslate"><span class="pre">#f</span></code>.</p>
+<dd><p>Check that an expression has a result of <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a>.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 3.0: </span>Use <a class="reference internal" href="#testworks:testworks:expect-false"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-false</span></code></a> instead.</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
 <dd class="field-odd"><p>check-false <em>name</em> <em>expression</em></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code>.</p></li>
+<li><p><strong>name</strong> – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a>.</p></li>
 <li><p><strong>expression</strong> – An expression.</p></li>
 </ul>
 </dd>
@@ -889,13 +1031,16 @@ inconsistency in the future.</p>
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:check-instance?">
 <span class="sig-name descname"><span class="pre">check-instance?</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:check-instance?" title="Permalink to this definition">#</a></dt>
 <dd><p>Check that the result of an expression is an instance of a given type.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 3.0: </span>Use <a class="reference internal" href="#testworks:testworks:expect-instance?"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect-instance?</span></code></a> instead.</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
 <dd class="field-odd"><p>check-instance? <em>name</em> <em>type</em> <em>expression</em></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code>.</p></li>
+<li><p><strong>name</strong> – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a>.</p></li>
 <li><p><strong>type</strong> – The expected type.</p></li>
 <li><p><strong>expression</strong> – An expression.</p></li>
 </ul>
@@ -912,20 +1057,23 @@ inconsistency in the future.</p>
 <dl class="dylan macro">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:check-true">
 <span class="sig-name descname"><span class="pre">check-true</span></span> <em class="property"><span class="pre">Macro</span></em><a class="headerlink" href="#testworks:testworks:check-true" title="Permalink to this definition">#</a></dt>
-<dd><p>Check that the result of an expression is not <code class="docutils literal notranslate"><span class="pre">#f</span></code>.</p>
+<dd><p>Check that the result of an expression is not <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a>.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 3.0: </span>Use <a class="reference internal" href="#testworks:testworks:expect"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">expect</span></code></a> instead.</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
 <dd class="field-odd"><p>check-true <em>name</em> <em>expression</em></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code>.</p></li>
+<li><p><strong>name</strong> – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a>.</p></li>
 <li><p><strong>expression</strong> – An expression.</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Discussion<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Note that if you want to explicitly check if an expression
-evaluates to <code class="docutils literal notranslate"><span class="pre">#t</span></code>, you should use <a class="reference internal" href="#testworks:testworks:check-equal"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">check-equal</span></code></a>.</p>
+evaluates to <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#true"><code class="xref drm docutils literal notranslate"><span class="pre">#t</span></code></a>, you should use <a class="reference internal" href="#testworks:testworks:check-equal"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">check-equal</span></code></a>.</p>
 </dd>
 <dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="n">check-true</span><span class="p">(</span><span class="s">&quot;unsupplied?($unsupplied)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">unsupplied?</span><span class="p">(</span><span class="no">$unsupplied</span><span class="p">));</span>
@@ -1003,11 +1151,11 @@ application and retrieved by the test.</p>
 </dd>
 <dt class="field-even">Values<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>directory</strong> – An instance of type <code class="docutils literal notranslate"><span class="pre">&lt;directory-locator&gt;</span></code>.</p></li>
+<li><p><strong>directory</strong> – An instance of type <code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;directory-locator&gt;</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
-<p>Returns a directory (a <code class="docutils literal notranslate"><span class="pre">&lt;directory-locator&gt;</span></code>) that may be used for
+<p>Returns a directory (a <code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;directory-locator&gt;</span></code>) that may be used for
 temporary files created by the test or benchmark. The directory is created
 the first time this function is called for each test or benchmark and is not
 deleted after the test run is complete in case it’s useful for post-mortem
@@ -1031,7 +1179,7 @@ otherwise.</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>filename</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;pathname&gt;</span></code> (i.e., a string or a
+<li><p><strong>filename</strong> – An instance of <code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;pathname&gt;</span></code> (i.e., a string or a
 locator). The name may be a relative path and if it
 contains the path separator character, subdirectories
 will be created.</p></li>
@@ -1041,7 +1189,7 @@ the file. Defaults to the empty string.</p></li>
 </dd>
 <dt class="field-odd">Values<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>locator</strong> – An instance of <code class="docutils literal notranslate"><span class="pre">&lt;file-locator&gt;</span></code> which is the full,
+<li><p><strong>locator</strong> – An instance of <code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;file-locator&gt;</span></code> which is the full,
 absolute pathname of the created file.</p></li>
 </ul>
 </dd>

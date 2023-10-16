@@ -14,22 +14,31 @@ See also: :doc:`reference`
 Quick Start
 ===========
 
-For the impatient, this section summarizes most of what you need to know to use
-Testworks.
+For the impatient (i.e., most of us), this section summarizes most of what you
+need to know to use Testworks.
 
 Add ``use testworks;`` to both your test library and test module.
 
-Tests contain arbitrary code and at least one assertion:
+Tests contain arbitrary code and at least one assertion or expectation.
+
+**Terminology:** An assertion failure terminates the test and skips any further
+assertions or expectations.  (This is normally preferred since it prevents
+cascading failures.)  An expectation failure does not terminate the
+test. Assertions are Testworks macros that begin with ``assert-`` and
+expectations begin with ``expect-``. When this documentation refers to
+"assertions" it should be understood to include both kinds of macros.
+
+Example test:
 
 .. code-block:: dylan
 
-   define test test-fn1 ()
+   define test test-my-function ()
      let v = do-something();
-     assert-equal("expected-value", fn1(v));
-     assert-signals(<error>, fn1(v, key: 7), "regression test for bug 12345");
-   end;
+     assert-equal("expected-value", my-function(v));
+     assert-condition(<error>, my-function(v, key: 7), "regression test for bug 12345");
+   end test;
 
-If there are no assertions in a test it is considered "not implemented", which
+If there are no assertions in a test it is considered "NOT IMPLEMENTED", which
 is displayed in the output (as a reminder to implement it) but is not
 considered a failure.
 
@@ -40,7 +49,6 @@ Benchmarks do not require any assertions and are automatically given the
 
 .. code-block:: dylan
 
-   // Benchmark fn1
    define benchmark fn1-benchmark ()
      fn1()
    end;
@@ -49,7 +57,8 @@ See also, :macro:`benchmark-repeat`.
 
 If you have a large or complex test library, "suites" may be used to organize
 tests into groups (for example one suite per module) and may be nested
-arbitrarily.
+arbitrarily. This does impose a small maintenance burden of adding each test to
+a suite, and is not required. See `Suites`_ for details.
 
 .. code-block:: dylan
 
@@ -84,49 +93,49 @@ accomplish this:
 In both cases :func:`run-test-application` parses the command line so the
 options are the same. Use ``--help`` to see all options.
 
-See `Suites`_ for a way to organize large test suites.
-
 Defining Tests
 ==============
 
 Assertions
 ----------
 
-An assertion accepts an expression to evaluate and report back on,
-saying if the expression passed, failed, or crashed (i.e., signaled an
-error).  As an example, in
+Assertions come in two forms: ``assert-*`` macros and ``expect-*`` macros.
+When an ``assert-*`` macro fails, it causes the test to fail and the remainder
+of the test to be skipped. This kind of assertion is generally preferred
+because it prevents "cascading failures". In contrast, when an ``expect-*``
+macro fails, it causes a test failure but the test continues running, so there
+may be multiple assertion failures recorded for the test.
+
+.. note:: You may also find ``check-*`` macros in existing test suites.  These
+          are a deprecated form of assertion, replaced by ``expect-*``.
+
+The benefit of the ``expect-*`` macros is that when you're initially debugging
+the test it may require fewer iterations if you can see multiple failures in
+one pass.
+
+An assertion accepts an expression to evaluate and report back on, saying if
+the expression passed, failed, or crashed (i.e., signaled an error).  As an
+example, in
 
 .. code-block:: dylan
 
     assert-true(foo > bar)
+    expect(foo > bar)
 
 the expression ``foo > bar`` is compared to ``#f``, and the result is recorded
-by the test harness.  Failing (or crashing) cause the test to terminate and
-skip the remaining assertions in that test.
+by the test harness.
 
-.. note:: You may also find ``check-*`` macros in existing test suites.  These
-          are deprecated assertions that do not cause the test to terminate and
-          require a description of the assertion as the first argument.
+See the `reference docs <Assertions>`_ for detailed documentation on the
+available assertion macros.
 
-See the :doc:`reference` for detailed documentation on the available
-assertion macros:
+Each assertion macro accepts an optional description (a format string and
+optional format arguments), after the required arguments, which is displayed if
+the assertion fails.  If the description isn't provided, Testworks makes one
+from the expressions passed to the assertion macro. For example,
+``assert-true(2 > 3)`` produces this failure message::
 
-  * :macro:`assert-true`
-  * :macro:`assert-false`
-  * :macro:`assert-equal`
-  * :macro:`assert-not-equal`
-  * :macro:`assert-signals`
-  * :macro:`assert-no-errors`
-  * :macro:`assert-instance?`
-  * :macro:`assert-not-instance?`
-
-Each of these takes an optional description, after the required
-arguments, which will be displayed if the assertion fails.  If the
-description isn't provided, Testworks makes one from the expressions
-passed to the assertion macro. For example, ``assert-true(2 > 3)``
-produces this failure message::
-
-  (2 > 3) is true failed [expression "(2 > 3)" evaluates to #f]
+  FAILED: (2 > 3)
+    expression "(2 > 3)" evaluates to #f
 
 In general, Testworks should be pretty good at reporting the actual values that
 caused the failure so it shouldn't be necessary to include them in the
@@ -141,7 +150,7 @@ arguments. These are all valid:
 .. code-block:: dylan
 
    assert-equal(want, got);       // auto-generated description
-   assert-equal(want, got, foo);  // a used as description
+   assert-equal(want, got, foo);  // foo used as description
    assert-equal(want, got, "does %= = %=?", a, b);  // formatted description
 
 Tests
