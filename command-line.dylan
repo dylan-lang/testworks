@@ -217,9 +217,7 @@ define function run-test-application
     exit-application(err.exit-status);
   exception (error :: <error>,
              test: method (cond)
-                     test-runner
-                       & (runner-debug(test-runner) == $debug-crashes
-                            | runner-debug(test-runner) == $debug-all)
+                     test-runner & (runner-debug(test-runner) == $debug-none)
                    end)
     format(*standard-error*, "Error: %s", error);
     exit-application(1);
