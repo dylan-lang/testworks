@@ -125,7 +125,7 @@ example, in
 the expression ``foo > bar`` is compared to ``#f``, and the result is recorded
 by the test harness.
 
-See the `reference docs <Assertions>`_ for detailed documentation on the
+See the :doc:`reference` for detailed documentation on the
 available assertion macros.
 
 Each assertion macro accepts an optional description (a format string and
