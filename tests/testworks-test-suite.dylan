@@ -109,6 +109,21 @@ define test test-expect ()
                "expect of error crashes");
 end test;
 
+define test test-expect-true ()
+  expect-true(always(#t));
+  expect-true(identity(#t));
+  expect-true(3 = 3);
+  assert-equal($passed,
+               with-result-status () expect-true(#t) end,
+               "expect(#t) passes");
+  assert-equal($failed,
+               with-result-status () expect-true(#f) end,
+               "expect(#f) fails");
+  assert-equal($crashed,
+               with-result-status () expect-true(test-error()) end,
+               "expect of error crashes");
+end test;
+
 define test testworks-assert-true-test ()
   assert-true(#t);
   assert-true(#t, "#t is true with description");

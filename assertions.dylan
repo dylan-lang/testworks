@@ -54,6 +54,19 @@ define macro expect
   }
 end macro;
 
+// This is for symmetry with expect-false. Usually expect is preferred.
+define macro expect-true
+    { expect-true(?expr:expression) }
+ => { expect-true(?expr, ?"expr" " is true") }
+
+    { expect-true(?expr:expression, ?description:*) }
+ => { do-check-true(method () values(?description) end,
+                    method () values(?expr, ?"expr") end,
+                    "expect",
+                    terminate?: #f)
+  }
+end macro;
+
 // Deprecated; use expect-equal.
 define macro check-equal
     { check-equal(?description:expression, ?want:expression, ?got:expression) }
