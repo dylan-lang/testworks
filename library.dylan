@@ -67,6 +67,7 @@ define module testworks
     expect,
     expect-equal,
     expect-not-equal,
+    expect-true,
     expect-false,
     expect-instance?,
     expect-not-instance?,
