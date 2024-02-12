@@ -110,3 +110,6 @@ epub_title = u'Testworks'
 epub_author = u'Dylan Hackers'
 epub_publisher = u'Dylan Hackers'
 epub_copyright = u'2023, Dylan Hackers'
+
+# Ignore certification verification
+tls_verify = False
