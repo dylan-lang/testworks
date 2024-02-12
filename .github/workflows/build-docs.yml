@@ -29,25 +29,30 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Until dylan-lang/install-dylan-tool
-      # updates the version
-      - name: Install Open Dylan
-        uses: dylan-lang/install-opendylan@v3
+      - name: Check links
+        uses: addnab/docker-run-action@v3
         with:
-          version: 2023.1
-          tag: v2023.1.0
+          image: ghcr.io/fraya/dylan-docs
+          options: -v ${{ github.workspace }}/documentation:/docs
+          run: make linkcheck
 
-      - name: Install sphinx-extensions dependencies
-        run: |
-          dylan update 
-
-      - name: Build docs
-        uses: ammaraskar/sphinx-action@master
+      - name: Build docs with Furo theme
+        uses: addnab/docker-run-action@v3
         with:
-          pre-build-command: "echo furo >> documentation/requirements.txt"
-          docs-folder: "documentation/"
+          image: ghcr.io/fraya/dylan-docs
+          options: -v ${{ github.workspace }}/documentation:/docs
+          run: make html
+
+      - name: Upload html artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: testworks-doc-html
+          path: documentation/build/html/
+
+      - name: Bypassing Jekyll on GH Pages
+        run: sudo touch documentation/build/html/.nojekyll
 
       - name: Deploy documents to GH pages
         uses: JamesIves/github-pages-deploy-action@v4
