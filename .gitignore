@@ -1,3 +1,7 @@
-_build
+_build/
 .idea
 *.iml
+_packages/
+registry/
+*~
+documentation/build/
