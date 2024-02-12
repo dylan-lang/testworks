@@ -13,8 +13,7 @@
 
 import os
 import sys
-# Substitute version '0.2.0' for 'current' when available
-sys.path.insert(0, os.path.abspath('../../_packages/sphinx-extensions/0.2.0/src/sphinxcontrib'))
+sys.path.insert(0, os.path.abspath('../../_packages/sphinx-extensions/current/src/sphinxcontrib'))
 import dylan.themes as dylan_themes
 
 # -- Project information -----------------------------------------------------
