@@ -21,7 +21,8 @@ import dylan.themes as dylan_themes
 project = 'dylan-libraries'
 copyright = '2023, Dylan Hackers'
 author = 'Dylan Hackers'
-
+release = 'v3.0.0'
+version = release
 
 # -- General configuration -----------------------------------------------------
 
