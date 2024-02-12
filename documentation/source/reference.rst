@@ -5,9 +5,6 @@ Testworks Reference
 .. current-library:: testworks
 .. current-module:: testworks
 
-.. contents::  Contents
-   :local:
-
 See also: :doc:`usage`
 
 The *testworks* library exports a single module named *testworks*.

@@ -4,9 +4,6 @@ Testworks Usage
 .. current-library:: testworks
 .. current-module:: testworks
 
-.. contents::  Contents
-   :local:
-
 Testworks is a Dylan unit testing library.
 
 See also: :doc:`reference`
