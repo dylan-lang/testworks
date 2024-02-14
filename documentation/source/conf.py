@@ -13,8 +13,7 @@
 
 import os
 import sys
-# Substitute version '0.2.0' for 'current' when available
-sys.path.insert(0, os.path.abspath('../../_packages/sphinx-extensions/0.2.0/src/sphinxcontrib'))
+sys.path.insert(0, os.path.abspath('../../_packages/sphinx-extensions/current/src/sphinxcontrib'))
 import dylan.themes as dylan_themes
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +21,8 @@ import dylan.themes as dylan_themes
 project = 'dylan-libraries'
 copyright = '2023, Dylan Hackers'
 author = 'Dylan Hackers'
-
+release = 'v3.0.0'
+version = release
 
 # -- General configuration -----------------------------------------------------
 
@@ -110,3 +110,6 @@ epub_title = u'Testworks'
 epub_author = u'Dylan Hackers'
 epub_publisher = u'Dylan Hackers'
 epub_copyright = u'2023, Dylan Hackers'
+
+# Ignore certification verification
+tls_verify = False
