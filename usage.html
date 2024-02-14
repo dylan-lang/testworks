@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="copyright" title="Copyright" href="copyright.html" /><link rel="next" title="Testworks Reference" href="reference.html" /><link rel="prev" title="Testworks" href="index.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Testworks Usage - Testworks</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -194,29 +194,10 @@
         <article role="main">
           <section id="testworks-usage">
 <h1>Testworks Usage<a class="headerlink" href="#testworks-usage" title="Permalink to this heading">#</a></h1>
-<nav class="contents local" id="contents">
-<p class="topic-title">Contents</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="#quick-start" id="id1">Quick Start</a></p></li>
-<li><p><a class="reference internal" href="#defining-tests" id="id2">Defining Tests</a></p>
-<ul>
-<li><p><a class="reference internal" href="#assertions" id="id3">Assertions</a></p></li>
-<li><p><a class="reference internal" href="#tests" id="id4">Tests</a></p></li>
-<li><p><a class="reference internal" href="#benchmarks" id="id5">Benchmarks</a></p></li>
-<li><p><a class="reference internal" href="#suites" id="id6">Suites</a></p></li>
-<li><p><a class="reference internal" href="#interface-specification-suites" id="id7">Interface Specification Suites</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#organizing-tests-for-one-library" id="id8">Organizing Tests for One Library</a></p></li>
-<li><p><a class="reference internal" href="#running-tests-as-a-stand-alone-application" id="id9">Running Tests As A Stand-alone Application</a></p></li>
-<li><p><a class="reference internal" href="#reports" id="id10">Reports</a></p></li>
-<li><p><a class="reference internal" href="#comparing-test-results" id="id11">Comparing Test Results</a></p></li>
-</ul>
-</nav>
 <p>Testworks is a Dylan unit testing library.</p>
 <p>See also: <a class="reference internal" href="reference.html"><span class="doc">Testworks Reference</span></a></p>
 <section id="quick-start">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Quick Start</a><a class="headerlink" href="#quick-start" title="Permalink to this heading">#</a></h2>
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading">#</a></h2>
 <p>For the impatient (i.e., most of us), this section summarizes most of what you
 need to know to use Testworks.</p>
 <p>Add <code class="docutils literal notranslate"><span class="pre">use</span> <span class="pre">testworks;</span></code> to both your test library and test module.</p>
@@ -289,9 +270,9 @@ run.</p>
 options are the same. Use <code class="docutils literal notranslate"><span class="pre">--help</span></code> to see all options.</p>
 </section>
 <section id="defining-tests">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Defining Tests</a><a class="headerlink" href="#defining-tests" title="Permalink to this heading">#</a></h2>
+<h2>Defining Tests<a class="headerlink" href="#defining-tests" title="Permalink to this heading">#</a></h2>
 <section id="assertions">
-<h3><a class="toc-backref" href="#id3" role="doc-backlink">Assertions</a><a class="headerlink" href="#assertions" title="Permalink to this heading">#</a></h3>
+<h3>Assertions<a class="headerlink" href="#assertions" title="Permalink to this heading">#</a></h3>
 <p>Assertions come in two forms: <code class="docutils literal notranslate"><span class="pre">assert-*</span></code> macros and <code class="docutils literal notranslate"><span class="pre">expect-*</span></code> macros.
 When an <code class="docutils literal notranslate"><span class="pre">assert-*</span></code> macro fails, it causes the test to fail and the remainder
 of the test to be skipped. This kind of assertion is generally preferred
@@ -341,7 +322,7 @@ arguments. These are all valid:</p>
 </div>
 </section>
 <section id="tests">
-<h3><a class="toc-backref" href="#id4" role="doc-backlink">Tests</a><a class="headerlink" href="#tests" title="Permalink to this heading">#</a></h3>
+<h3>Tests<a class="headerlink" href="#tests" title="Permalink to this heading">#</a></h3>
 <p>Tests contain assertions and arbitrary code needed to support those
 assertions. Each test may be part of a suite.  Use the
 <a class="reference internal" href="reference.html#testworks:testworks:test-definer"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">test-definer</span></code></a> macro to define a test:</p>
@@ -442,7 +423,7 @@ shorthand to indicate that failure is expected even when
 </div>
 </section>
 <section id="benchmarks">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">Benchmarks</a><a class="headerlink" href="#benchmarks" title="Permalink to this heading">#</a></h3>
+<h3>Benchmarks<a class="headerlink" href="#benchmarks" title="Permalink to this heading">#</a></h3>
 <p>Benchmarks are like tests except for:</p>
 <ul class="simple">
 <li><p>They do not require any assertions. (They pass unless they signal an error.)</p></li>
@@ -467,7 +448,7 @@ every commit.</p>
 <p>See also, <a class="reference internal" href="reference.html#testworks:testworks:benchmark-repeat"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">benchmark-repeat</span></code></a>.</p>
 </section>
 <section id="suites">
-<h3><a class="toc-backref" href="#id6" role="doc-backlink">Suites</a><a class="headerlink" href="#suites" title="Permalink to this heading">#</a></h3>
+<h3>Suites<a class="headerlink" href="#suites" title="Permalink to this heading">#</a></h3>
 <p>Suites are an optional feature that may be used to organize your tests
 into a hierarchy.  Suites contain tests, benchmarks, and other
 suites. A suite is defined with the <a class="reference internal" href="reference.html#testworks:testworks:suite-definer"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">suite-definer</span></code></a> macro.  The
@@ -506,7 +487,7 @@ suite:</p>
 </div>
 </section>
 <section id="interface-specification-suites">
-<h3><a class="toc-backref" href="#id7" role="doc-backlink">Interface Specification Suites</a><a class="headerlink" href="#interface-specification-suites" title="Permalink to this heading">#</a></h3>
+<h3>Interface Specification Suites<a class="headerlink" href="#interface-specification-suites" title="Permalink to this heading">#</a></h3>
 <p>The <a class="reference internal" href="reference.html#testworks:testworks:interface-specification-suite-definer"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">interface-specification-suite-definer</span></code></a> macro creates a normal test
 suite, much like <code class="docutils literal notranslate"><span class="pre">define</span> <span class="pre">suite</span></code> does, but based on an interface
 specification. For example,</p>
@@ -543,7 +524,7 @@ various kinds of specs.</p>
 </section>
 </section>
 <section id="organizing-tests-for-one-library">
-<h2><a class="toc-backref" href="#id8" role="doc-backlink">Organizing Tests for One Library</a><a class="headerlink" href="#organizing-tests-for-one-library" title="Permalink to this heading">#</a></h2>
+<h2>Organizing Tests for One Library<a class="headerlink" href="#organizing-tests-for-one-library" title="Permalink to this heading">#</a></h2>
 <p>If you don’t use suites, the only organization you need is to name
 your tests and benchmarks uniquely, and you can safely skip the rest
 of this section.  If you do use suites, read on….</p>
@@ -603,7 +584,7 @@ included in a combined test library may look something like this:</p>
 </div>
 </section>
 <section id="running-tests-as-a-stand-alone-application">
-<h2><a class="toc-backref" href="#id9" role="doc-backlink">Running Tests As A Stand-alone Application</a><a class="headerlink" href="#running-tests-as-a-stand-alone-application" title="Permalink to this heading">#</a></h2>
+<h2>Running Tests As A Stand-alone Application<a class="headerlink" href="#running-tests-as-a-stand-alone-application" title="Permalink to this heading">#</a></h2>
 <p>If you don’t need to export any suites so they can be included in a
 higher-level combined test suite library (i.e., if you’re happy
 running your test suite library as an executable) then you can simply
@@ -657,7 +638,7 @@ into an executable with <code class="docutils literal notranslate"><span class="
 <span class="pre">xxx-test-suite-app.lid</span></code> and run with <code class="docutils literal notranslate"><span class="pre">xxx-test-suite-app</span> <span class="pre">--help</span></code>.</p>
 </section>
 <section id="reports">
-<h2><a class="toc-backref" href="#id10" role="doc-backlink">Reports</a><a class="headerlink" href="#reports" title="Permalink to this heading">#</a></h2>
+<h2>Reports<a class="headerlink" href="#reports" title="Permalink to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">--report</span></code> option can be used to generate a full report of test run
 results. These are the available report types:</p>
 <dl class="simple">
@@ -680,7 +661,7 @@ with full detail.</p>
 </dl>
 </section>
 <section id="comparing-test-results">
-<h2><a class="toc-backref" href="#id11" role="doc-backlink">Comparing Test Results</a><a class="headerlink" href="#comparing-test-results" title="Permalink to this heading">#</a></h2>
+<h2>Comparing Test Results<a class="headerlink" href="#comparing-test-results" title="Permalink to this heading">#</a></h2>
 <p><strong>* To be filled in *</strong></p>
 <p>Quick version:</p>
 <ul class="simple">
@@ -771,7 +752,7 @@ with full detail.</p>
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=2f5613ae"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>
