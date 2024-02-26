@@ -510,8 +510,10 @@ xxx-test-suite-app.lid`` and run with ``xxx-test-suite-app --help``.
 Reports
 =======
 
-The ``--report`` option can be used to generate a full report of test run
-results. These are the available report types:
+The ``--report`` and ``--report-file`` options can be used to write a full
+report of test run results so that those results can be compared with
+subsequent test runs, for example to find regressions. These are the available
+report types:
 
 failures (the default)
   Prints out only the list of failures and a summary, in readable text format.
