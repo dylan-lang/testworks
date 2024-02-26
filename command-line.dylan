@@ -65,6 +65,13 @@ define function parse-args
                     " the suite is ordered with other tests/suites at the same level and"
                     " then when that suite runs its components are ordered separately."
                     " [%default%]"));
+  // TODO(cgay): I adopted the convention of using ./_test in test-temp-directory()
+  // and we could use it here as the default location of the report file.
+  add-option(parser,
+             make(<parameter-option>,
+                  names: "report-file",
+                  variable: "FILE",
+                  help: "File in which to store the report."));
   add-option(parser,
              make(<repeated-parameter-option>,
                   names: "load",
@@ -261,13 +268,18 @@ define function run-or-list-tests
     0
   else
     // Run the requested tests.
+    let pathname = get-option-value(parser, "report-file");
     let result = run-tests(runner, start-suite);
-    report-function(result, *standard-output*);
-    if (result.result-status == $passed)
-      0
+    if (pathname)
+      fs/with-open-file(stream = pathname, direction: #"output", if-exists: #"replace")
+        report-function(result, stream);
+      end;
+      // Always display the summary on the console.
+      print-summary-report(result, *standard-output*);
     else
-      1
-    end
+      report-function(result, *standard-output*);
+    end;
+    if (result.result-status == $passed) 0 else 1 end
   end
 end function;
 
