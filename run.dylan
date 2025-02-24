@@ -399,6 +399,9 @@ define method show-progress-done
     end;
   end;
   test-output("\n");
+  if (result.result-reason)
+    test-output("%s%s%s\n", *indent*, $indent-step, result.result-reason);
+  end;
 end method;
 
 // assertions
@@ -407,15 +410,15 @@ define method show-progress-done
   if (~result-passing?(result)
         | runner.runner-progress == $progress-all)
     let status = result.result-status;
-    test-output("%s%=%s%=: %s\n%s%s%s\n",
+    test-output("%s%=%s%=: %s\n",
                 *indent*,
                 result-status-to-text-attributes(status),
                 status.status-name.as-uppercase,
                 $reset-text-attributes,
-                result.result-name,
-                *indent*,
-                $indent-step,
-                result.result-reason);
+                result.result-name);
+    if (result.result-reason)
+      test-output("%s%s%s\n", *indent*, $indent-step, result.result-reason);
+    end;
   end;
 end method;
 
