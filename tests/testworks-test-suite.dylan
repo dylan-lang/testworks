@@ -8,6 +8,9 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// Some utilities for testing TestWorks
 
+// TODO: anything that calls run-tests should turn off debug?() so that running
+// testworks-test-suite with --debug=crashes doesn't cause unwanted debugger entry.
+
 // Given a function that runs exactly one assertion, run it as a test and
 // return the assertion's result: $passed, $failed, etc.
 define function do-with-result
@@ -503,6 +506,45 @@ define test test-run-tests/suite ()
   assert-true(instance?(suite-results.result-subresults, <vector>),
               "run-tests sub-results are in a vector");
 end test test-run-tests/suite;
+
+define test test-run-tests/suite-setup-failure ()
+  let suite
+    = make(<suite>,
+           name: "setup-failure-suite",
+           components:
+             vector(make(<test>,
+                         name: "setup-failure-passing-test",
+                         function: method () assert-true(#t) end)),
+           setup-function:
+             curry(error, "error in setup-failure-suite setup function"));
+  let runner = make(<test-runner>, progress: $progress-none);
+  let suite-result = run-tests(runner, suite);
+  assert-equal($crashed, suite-result.result-status,
+               "run-tests returns $crashed when suite setup fails");
+  assert-equal(1, suite-result.result-subresults.size);
+  let test-result = suite-result.result-subresults.first;
+  assert-equal($skipped, test-result.result-status,
+               "passing test skipped when suite setup fails")
+end test;
+
+define test test-run-tests/suite-cleanup-failure ()
+  let suite
+    = make(<suite>,
+           name: "cleanup-failure-suite",
+           components:
+             vector(make(<test>,
+                         name: "cleanup-failure-passing-test",
+                         function: method () assert-true(#t) end)),
+           cleanup-function:
+             curry(error, "error in cleanup-failure-suite cleanup function"));
+  let runner = make(<test-runner>, progress: $progress-none);
+  let suite-result = run-tests(runner, suite);
+  assert-equal($crashed, suite-result.result-status,
+               "run-tests returns $crashed when suite cleanup fails");
+  let test-result = suite-result.result-subresults.first;
+  assert-equal($passed, test-result.result-status,
+               "passing test passes when suite cleanup fails")
+end test;
 
 // The following tests and suites are defined without using their
 // respective -definer macros so that they don't get registered and
