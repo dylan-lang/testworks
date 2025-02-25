@@ -266,7 +266,8 @@ Benchmarks
 Benchmarks are like tests except for:
 
 * They do not require any assertions. (They pass unless they signal an error.)
-* They are automatically assigned the "benchmark" tag.
+* They are automatically assigned the "benchmark" tag so that they may be run by
+  specifying ``--tag benchmark`` on the command line.
 
 The :macro:`benchmark-definer` macro is like :macro:`test-definer`:
 
@@ -281,6 +282,17 @@ Benchmarks may be added to suites:
 .. code-block:: dylan
 
    define suite my-benchmarks-suite ()
+     benchmark my-benchmark;
+   end;
+
+If your benchmark requires setup or teardown that shouldn't be part of the timing
+results, create a suite with setup and cleanup functions:
+
+.. code-block:: dylan
+
+   define suite my-benchmarks-suite
+       (setup-function: my-setup,
+        cleanup-function: my-cleanup)
      benchmark my-benchmark;
    end;
 
