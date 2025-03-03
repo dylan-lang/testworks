@@ -113,6 +113,10 @@ end function run-tests;
 
 /// Execute component
 
+// If not #f, all suites and tests should be skipped for this reason.
+// Normally because a suite setup function failed.
+define thread variable *skip-reason* :: false-or(<string>) = #f;
+
 define open generic execute-component?
     (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>);
@@ -120,7 +124,9 @@ define open generic execute-component?
 define method execute-component?
     (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>)
-  ~member?(component, runner.runner-skip) & tags-match?(runner.runner-tags, component)
+  ~*skip-reason*                // Skipping due to suite setup failure.
+    & ~member?(component, runner.runner-skip)
+    & tags-match?(runner.runner-tags, component)
 end;
 
 define method maybe-execute-component
@@ -138,7 +144,7 @@ define method maybe-execute-component
         make(component-result-type(component),
              name: component.component-name,
              status: $skipped,
-             reason: #f,
+             reason: *skip-reason*,
              seconds: 0,
              microseconds: 0,
              bytes: 0)
@@ -154,16 +160,31 @@ end method maybe-execute-component;
 define method execute-component
     (suite :: <suite>, runner :: <test-runner>)
  => (result :: <component-result>)
+  local method run-suite-thunk (suite, thunk, context) => (msg :: false-or(<string>))
+          block ()
+            thunk();
+            #f
+          exception (err :: <serious-condition>, test: method (c) ~debug?() end)
+            format-to-string("Error in %s for suite %s: %s",
+                             context, suite.component-name, err)
+          end
+        end;
   let subresults :: <stretchy-vector> = make(<stretchy-vector>);
   let seconds :: <integer> = 0;
   let microseconds :: <integer> = 0;
   let bytes :: <integer> = 0;
   let indent = next-indent();
+  let error-message = #f;
   block ()
-    suite.suite-setup-function();
+    if (~*skip-reason*)
+      // Only run setup (and cleanup, later) if we're not skipping a nested suite due to
+      // a previous setup failure.
+      error-message := run-suite-thunk(suite, suite.suite-setup-function, "setup");
+    end;
     for (component in sort-components(suite.suite-components, runner.runner-order))
       let subresult
-        = dynamic-bind (*indent* = indent)
+        = dynamic-bind (*indent* = indent,
+                        *skip-reason* = error-message | *skip-reason*)
             maybe-execute-component(component, runner);
           end;
       add!(subresults, subresult);
@@ -182,12 +203,22 @@ define method execute-component
       end;
     end for;
   cleanup
-    suite.suite-cleanup-function();
+    if (~*skip-reason*)
+      let msg = run-suite-thunk(suite, suite.suite-cleanup-function, "cleanup");
+      error-message := error-message | msg;
+    end;
   end block;
+  // TODO: there doesn't seem to be any record-suite equivalent to record-check and
+  // record-benchmark. When the setup/cleanup functions fail does the error actually go
+  // into the report? Does it appear in the --progress?
   make(component-result-type(suite),
        name: suite.component-name,
-       status: decide-suite-status(subresults),
-       reason: #f,
+       status: if (error-message)
+                 $crashed
+               else
+                 decide-suite-status(subresults)
+               end,
+       reason: error-message | *skip-reason*,
        subresults: subresults,
        seconds: seconds,
        microseconds: microseconds,
@@ -368,6 +399,9 @@ define method show-progress-done
     end;
   end;
   test-output("\n");
+  if (result.result-reason)
+    test-output("%s%s%s\n", *indent*, $indent-step, result.result-reason);
+  end;
 end method;
 
 // assertions
@@ -376,15 +410,15 @@ define method show-progress-done
   if (~result-passing?(result)
         | runner.runner-progress == $progress-all)
     let status = result.result-status;
-    test-output("%s%=%s%=: %s\n%s%s%s\n",
+    test-output("%s%=%s%=: %s\n",
                 *indent*,
                 result-status-to-text-attributes(status),
                 status.status-name.as-uppercase,
                 $reset-text-attributes,
-                result.result-name,
-                *indent*,
-                $indent-step,
-                result.result-reason);
+                result.result-name);
+    if (result.result-reason)
+      test-output("%s%s%s\n", *indent*, $indent-step, result.result-reason);
+    end;
   end;
 end method;
 

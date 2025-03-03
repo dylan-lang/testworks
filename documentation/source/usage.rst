@@ -296,10 +296,10 @@ See also, :macro:`benchmark-repeat`.
 Suites
 ------
 
-Suites are an optional feature that may be used to organize your tests
-into a hierarchy.  Suites contain tests, benchmarks, and other
-suites. A suite is defined with the :macro:`suite-definer` macro.  The
-format is:
+Suites are an optional feature that may be used to organize your tests into a hierarchy
+or to provide a test "fixture" with setup and teardown/cleanup for a group of tests.
+Suites contain tests, benchmarks, and other suites. A suite is defined with the
+:macro:`suite-definer` macro.  The format is:
 
 .. code-block:: dylan
 
@@ -338,6 +338,11 @@ suite:
       suite http-server-test-suite;
       suite http-client-test-suite;
     end;
+
+.. note:: If a suite **setup** function signals a :drm:`<serious-condition>` the suite
+          components will not be executed and will be marked as skipped in the
+          results. If either the suite **setup** or **cleanup** function signals a
+          :drm:`<serious-condition>` the suite itself will be marked as crashed.
 
 Interface Specification Suites
 ------------------------------

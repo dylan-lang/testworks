@@ -15,9 +15,6 @@
     processes.  (There needs to be a way to mark a test as not being
     parallelizable.)
 
-  + Call the teardown method if there's a failure in the setup method.
-    (I don't know whether Testworks does this or not, actually.)
-
   + Ability to (optionally) generate a per-test log file.
 
   + Better reporting -- e.g., subunit/xunit output formats
