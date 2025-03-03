@@ -132,11 +132,15 @@ end;
 define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
-  if (runner.runner-progress ~== $progress-none)
+  let run? = execute-component?(component, runner);
+  let progress = runner.runner-progress;
+  let show-progress?
+    = progress == $progress-all | (run? & progress ~== $progress-none);
+  if (show-progress?)
     show-progress-start(runner, component);
   end;
   let result
-    = if (execute-component?(component, runner))
+    = if (run?)
         dynamic-bind (*component* = component)
           execute-component(component, runner)
         end
@@ -151,7 +155,7 @@ define method maybe-execute-component
       end;
   force-output(*standard-error*);
   force-output(*standard-output*);
-  if (runner.runner-progress ~== $progress-none)
+  if (show-progress?)
     show-progress-done(runner, component, result);
   end;
   result
