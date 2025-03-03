@@ -132,11 +132,15 @@ end;
 define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
-  if (runner.runner-progress ~== $progress-none)
+  let run? = execute-component?(component, runner);
+  let progress = runner.runner-progress;
+  let show-progress?
+    = progress == $progress-all | (run? & progress ~== $progress-none);
+  if (show-progress?)
     show-progress-start(runner, component);
   end;
   let result
-    = if (execute-component?(component, runner))
+    = if (run?)
         dynamic-bind (*component* = component)
           execute-component(component, runner)
         end
@@ -151,7 +155,7 @@ define method maybe-execute-component
       end;
   force-output(*standard-error*);
   force-output(*standard-output*);
-  if (runner.runner-progress ~== $progress-none)
+  if (show-progress?)
     show-progress-done(runner, component, result);
   end;
   result
@@ -252,20 +256,13 @@ define method execute-component
   let subresults = make(<stretchy-vector>);
   let (seconds, microseconds, bytes) = values(0, 0, 0);
   local
-    method record-check (result :: <result>)
-      add!(subresults, result);
-      if (runner.runner-progress ~== $progress-none)
-        show-progress-done(runner, #f, result);
-      end;
-      result
-    end,
-    method record-benchmark (result :: <result>)
+    method record-result (result :: <result>)
       add!(subresults, result);
       result
     end;
   let (status, reason)
-    = dynamic-bind (*check-recording-function* = record-check,
-                    *benchmark-recording-function* = record-benchmark,
+    = dynamic-bind (*check-recording-function* = record-result,
+                    *benchmark-recording-function* = record-result,
                     *indent* = next-indent())
         let cond
           = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
@@ -366,10 +363,9 @@ define generic show-progress-done
     (runner :: <test-runner>, component :: false-or(<component>), result :: <result>)
  => ();
 
-// suites, tests, benchmarks
 define method show-progress-start
     (runner :: <test-runner>, component :: <component>) => ()
-  test-output("%s%s %=%s%=:\n",
+  test-output("%s%s %=%s%=:",
               *indent*,
               capitalize(component.component-type-name),
               $component-name-text-attributes,
@@ -377,16 +373,21 @@ define method show-progress-start
               $reset-text-attributes);
 end method;
 
-// suites, tests, benchmarks
+define method show-progress-start
+    (runner :: <test-runner>, suite :: <suite>) => ()
+  next-method();
+  test-output("\n");
+end method;
+
 define method show-progress-done
-    (runner :: <test-runner>, component :: <component>, result :: <result>) => ()
+    (runner :: <test-runner>, suite :: <suite>, result :: <result>) => ()
+  // no output for suites
+end method;
+
+define method show-progress-done
+    (runner :: <test-runner>, r :: <runnable>, result :: <result>) => ()
   let status = result.result-status;
-  test-output("%s%s %=%s%= %=%s%=",
-              *indent*,
-              capitalize(component.component-type-name),
-              $component-name-text-attributes,
-              component.component-name,
-              $reset-text-attributes,
+  test-output(" %=%s%=",
               result-status-to-text-attributes(status),
               status.status-name.as-uppercase,
               $reset-text-attributes);
@@ -399,8 +400,11 @@ define method show-progress-done
     end;
   end;
   test-output("\n");
-  if (result.result-reason)
-    test-output("%s%s%s\n", *indent*, $indent-step, result.result-reason);
+  if (runner.runner-progress == $progress-all)
+    dynamic-bind (*indent* = next-indent())
+      do(curry(show-progress-done, runner, #f),
+         result.result-subresults);
+    end;
   end;
 end method;
 

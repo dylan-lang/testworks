@@ -176,17 +176,15 @@ For example:
 The result looks like this::
 
     $ _build/bin/my-test-suite
-    Running suite my-test-suite:
-    Running test my-test:
-      2 = 3: [2 and 3 are not =.]
-       FAILED in 0.000257s and 17KiB
+    Test my-test: FAILED in 0.000337s and 16KiB
+    FAILED: my-test
+      FAILED: 2 = 3
+        want: 2
+        got:  3
 
-    my-test failed
-      #f = #f passed
-      2 = 3 failed [2 and 3 are not =.]
-    Ran 2 checks: FAILED (1 failed)
-    Ran 1 test: FAILED (1 failed)
-    FAILED in 0.000257 seconds
+    Ran 1 assertion
+    Ran 1 test: 1 failed
+    FAILED in 0.000337 seconds
 
 Note that the third assertion was not executed since the second one failed and
 terminated ``my-test``.
@@ -268,7 +266,8 @@ Benchmarks
 Benchmarks are like tests except for:
 
 * They do not require any assertions. (They pass unless they signal an error.)
-* They are automatically assigned the "benchmark" tag.
+* They are automatically assigned the "benchmark" tag so that they may be run by
+  specifying ``--tag benchmark`` on the command line.
 
 The :macro:`benchmark-definer` macro is like :macro:`test-definer`:
 
@@ -286,6 +285,17 @@ Benchmarks may be added to suites:
      benchmark my-benchmark;
    end;
 
+If your benchmark requires setup or teardown that shouldn't be part of the timing
+results, create a suite with setup and cleanup functions:
+
+.. code-block:: dylan
+
+   define suite my-benchmarks-suite
+       (setup-function: my-setup,
+        cleanup-function: my-cleanup)
+     benchmark my-benchmark;
+   end;
+
 Benchmarks and tests may be combined in the same suite, but this is
 discouraged. It is preferable to have separate libraries for the two since
 benchmarks often take longer to run and may not necessarily need to be run for
@@ -296,10 +306,10 @@ See also, :macro:`benchmark-repeat`.
 Suites
 ------
 
-Suites are an optional feature that may be used to organize your tests into a hierarchy
-or to provide a test "fixture" with setup and teardown/cleanup for a group of tests.
-Suites contain tests, benchmarks, and other suites. A suite is defined with the
-:macro:`suite-definer` macro.  The format is:
+Suites may be used to organize your tests into a hierarchy and are necessary if you want
+to provide shared setup / cleanup for a group of tests.  Suites contain tests,
+benchmarks, and other suites. A suite is defined with the :macro:`suite-definer` macro.
+The format is:
 
 .. code-block:: dylan
 
