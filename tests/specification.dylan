@@ -7,12 +7,11 @@ define interface-specification-suite testworks-interface-specification-suite ()
   open generic function check-equal-failure-detail (<object>, <object>) => (false-or(<string>));
 
   // For extending the runner capabilities.
-  function runner-debug (<test-runner>) => (<debug-option>);
   function run-tests (<test-runner>, <component>) => (<component-result>);
+  function runner-debug         (<test-runner>) => (<debug-option>);
   function runner-output-stream (<test-runner>) => (<stream>);
-  function runner-progress (<test-runner>) => (<progress-option>);
-  function runner-skip (<test-runner>) => (<sequence>);
-  function runner-tags (<test-runner>) => (<sequence>);
+  function runner-progress      (<test-runner>) => (<progress-option>);
+  function runner-components    (<test-runner>) => (<collection>);
   function test-option (<string>, #"key", #"default") => (<string>);
   open instantiable class <test-runner> (<object>);
 end;

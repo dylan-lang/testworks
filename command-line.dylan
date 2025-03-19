@@ -137,18 +137,17 @@ end function;
 // Create a `<test-runner>` from command-line options.
 define function make-runner-from-command-line
     (top :: <component>, parser :: <command-line-parser>)
- => (c :: <component>, runner :: <test-runner>, report-function :: <function>)
-  // TODO(cgay): Use init-keywords rather than setters so we can make <test-runner>
-  //   immutable.
-  // TODO(cgay): The runner should either contain the top-level components to run
-  //   AND the components to skip, or neither one.
-
-  local method find-component (name :: <string>) => (component)
-          let i = find-key($components, method (c)
-                                          c.component-name = name
-                                        end);
-          (i & $components[i]) | usage-error("test component not found: %=", name);
-        end;
+ => (runner :: <test-runner>, reporter :: <function>)
+  let components
+    = compute-components(top,
+                         parse-tags(get-option-value(parser, "tag")),
+                         // --test and and --suite can just be --match.
+                         // --skip-test and --skip-suite can just be --skip.
+                         // https://github.com/dylan-lang/testworks/issues/121
+                         concatenate(get-option-value(parser, "suite"),
+                                     get-option-value(parser, "test")),
+                         concatenate(get-option-value(parser, "skip-suite"),
+                                     get-option-value(parser, "skip-test")));
   let debug = select (get-option-value(parser, "debug") by string-equal-ic?)
                 "none"    => $debug-none;
                 "crashes" => $debug-crashes;
@@ -160,43 +159,50 @@ define function make-runner-from-command-line
                    "all"     => $progress-all;
                  end;
   let report = get-option-value(parser, "report");
-  let report-function = element($report-functions, report);
+  let reporter = element($report-functions, report, default: #f)
+    | usage-error("unrecognized --report type: %s", report);
   let runner = make(<test-runner>,
+                    components: components,
                     debug: debug,
-                    skip: concatenate(map(find-component,
-                                          get-option-value(parser, "skip-suite")),
-                                      map(find-component,
-                                          get-option-value(parser, "skip-test"))),
-                    report: report,
                     progress: progress,
-                    tags: parse-tags(get-option-value(parser, "tag")),
                     order: as(<symbol>, get-option-value(parser, "order")),
                     options: get-option-value(parser, "options"));
-
-  // TODO(cgay): So...the --suite and --test options may specify
-  // something disjoint from `top`. This begs the question why do we
-  // ever bother passing a component to run-test-application?  Why not
-  // just assume all tests should be run and then filter tests in/out?
-  // If it was so that run-test-application could be used in the REPL,
-  // we should just make all test components callable instead, and
-  // provide a run-all-tests entry point without need of command-line
-  // args.
-  let components = concatenate(map(find-component,
-                                   get-option-value(parser, "suite")),
-                               map(find-component,
-                                   get-option-value(parser, "test")));
-  let top = select (components.size)
-              0 => top;
-              1 => components[0];
-              otherwise =>
-                // Multiple suites or tests specified.
-                make(<suite>,
-                     name: join(components, ", ", key: component-name),
-                     components: components);
-            end;
-  values(top, runner, report-function)
+  values(runner, reporter)
 end function make-runner-from-command-line;
 
+// Figure out the exact set of components to run based on command-line options.  Needs to
+// figure out the suites to run when --test is provided so that the setup/cleanup will be
+// executed.  The universe of components to consider is the subtree of components defined
+// by `top`.
+define function compute-components
+    (top :: <suite>, tags, run-names, skip-names)
+ => (components)
+  local method find-component (name :: <string>) => (component)
+          block (return)
+            do-components(top, method (c)
+                                 if (c.component-name = name)
+                                   return(c)
+                                 end;
+                               end);
+          end | usage-error("test component not found: %=", name);
+        end;
+  if (run-names.empty? & skip-names.empty?)
+    $components
+  else
+    let components = make(<set>);
+    for (name in run-names)
+      let comp = find-component(name);
+      do-components(comp, curry(add!, components));
+      // Gotta run the ancestor suites' setup/cleanup.
+      do-ancestors(comp, curry(add!, components));
+    end;
+    for (name in skip-names)
+      do-components(find-component(name), curry(remove!, components));
+    end;
+    // Not clear why choose requires a <sequence> and not a <collection>...
+    as(<set>, choose(curry(tags-match?, tags), key-sequence(components)))
+  end
+end function;
 
 // Run or list tests as filtered by the command-line options and then call
 // exit-application. Without any arguments, defaults to running all tests in
@@ -233,7 +239,8 @@ end function;
 
 define function process-command-line
     (parser :: <command-line-parser>, components)
- => (suite :: <component>, runner :: <test-runner>, reporter :: <function>)
+ => (suite :: <suite>, runner :: <test-runner>, reporter :: <function>)
+  assert(components.size <= 1);
   // Load more tests, if requested. Tests share a global namespace so this will
   // signal on duplicate names.
   let to-load = get-option-value(parser, "load");
@@ -247,16 +254,19 @@ define function process-command-line
     end;
     do-loads(to-load);
   end;
-
-  let suite
-    = if (empty?(components))
-        make(<suite>,
-             name: locator-base(as(<file-locator>, application-name())),
-             components: find-root-components())
-      else
+  let top
+    = if (~components.empty? & instance?(components[0], <suite>))
         components[0]
+      else
+        let suite-name = locator-base(as(<file-locator>, application-name()));
+        if (components.empty?)
+          make-suite(suite-name, find-root-components())
+        else
+          make-suite(suite-name, list(components[0]))
+        end
       end;
-  make-runner-from-command-line(suite, parser)
+  let (runner, reporter) = make-runner-from-command-line(top, parser);
+  values(top, runner, reporter)
 end function;
 
 define function run-or-list-tests
