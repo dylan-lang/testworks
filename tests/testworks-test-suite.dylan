@@ -10,6 +10,19 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 // TODO: anything that calls run-tests should turn off debug?() so that running
 // testworks-test-suite with --debug=crashes doesn't cause unwanted debugger entry.
+// Probably can change without-recording to be with-standard-test-environment or
+// something. Can test this with test-expect-failure-continues.
+
+define function run-component (comp, #key components)
+  if (~components)
+    components := make(<stretchy-vector>);
+    do-components(comp, curry(add!, components));
+  end;
+  let runner = make(<test-runner>,
+                    components: components,
+                    progress: $progress-none);
+  run-tests(runner, comp)
+end function;
 
 // Given a function that runs exactly one assertion, run it as a test and
 // return the assertion's result: $passed, $failed, etc.
@@ -18,8 +31,7 @@ define function do-with-result
   let test = make(<test>,
                   name: "anonymous",
                   function: thunk);
-  let result = run-tests(make(<test-runner>, progress: $progress-none),
-                         test);
+  let result = run-component(test);
   let subresults = result.result-subresults;
   assert-equal(1, subresults.size,
                "assertion-status thunk had exactly one assertion?");
@@ -481,8 +493,7 @@ end;
 /// Verify the result objects
 
 define test test-run-tests/test ()
-  let runner = make(<test-runner>, progress: $progress-none);
-  let test-results = run-tests(runner, testworks-check-test);
+  let test-results = run-component(testworks-check-test);
   assert-true(instance?(test-results, <test-result>),
               "run-tests returns <test-result> when running a <test>");
   assert-equal($passed, test-results.result-status,
@@ -490,15 +501,14 @@ define test test-run-tests/test ()
   assert-true(instance?(test-results.result-subresults, <vector>),
               "run-tests sub-results are in a vector");
 
-  let bench-results = run-tests(runner, basic-benchmark);
+  let bench-results = run-component(basic-benchmark);
   assert-true(instance?(bench-results, <benchmark-result>),
               "run-tests returns <benchmark-result> when running a <benchmark>");
 end test test-run-tests/test;
 
 define test test-run-tests/suite ()
   let suite-to-check = testworks-assertion-macros-suite;
-  let runner = make(<test-runner>, progress: $progress-none);
-  let suite-results = run-tests(runner, suite-to-check);
+  let suite-results = run-component(suite-to-check);
   assert-true(instance?(suite-results, <suite-result>),
               "run-tests returns <suite-result> when running a <suite>");
   assert-equal($passed, suite-results.result-status,
@@ -509,16 +519,13 @@ end test test-run-tests/suite;
 
 define test test-run-tests/suite-setup-failure ()
   let suite
-    = make(<suite>,
-           name: "setup-failure-suite",
-           components:
-             vector(make(<test>,
-                         name: "setup-failure-passing-test",
-                         function: method () assert-true(#t) end)),
-           setup-function:
-             curry(error, "error in setup-failure-suite setup function"));
-  let runner = make(<test-runner>, progress: $progress-none);
-  let suite-result = run-tests(runner, suite);
+    = make-suite("setup-failure-suite",
+                 vector(make(<test>,
+                             name: "setup-failure-passing-test",
+                             function: method () assert-true(#t) end)),
+                 setup-function:
+                   curry(error, "error in setup-failure-suite setup function"));
+  let suite-result = run-component(suite);
   assert-equal($crashed, suite-result.result-status,
                "run-tests returns $crashed when suite setup fails");
   assert-equal(1, suite-result.result-subresults.size);
@@ -537,13 +544,49 @@ define test test-run-tests/suite-cleanup-failure ()
                          function: method () assert-true(#t) end)),
            cleanup-function:
              curry(error, "error in cleanup-failure-suite cleanup function"));
-  let runner = make(<test-runner>, progress: $progress-none);
-  let suite-result = run-tests(runner, suite);
+  let suite-result = run-component(suite);
   assert-equal($crashed, suite-result.result-status,
                "run-tests returns $crashed when suite cleanup fails");
   let test-result = suite-result.result-subresults.first;
   assert-equal($passed, test-result.result-status,
                "passing test passes when suite cleanup fails")
+end test;
+
+// Verify that if a specific test is requested on the command-line and that test is part
+// of a suite with a setup function, the setup and cleanup are run.
+define test test-suite-setup-for-specified-test ()
+  let top-setup?       = #f;
+  let top-cleanup?     = #f;
+  let middle1-setup?   = #f;
+  let middle1-cleanup? = #f;
+  let middle2-setup?   = #f;
+  let middle2-cleanup? = #f;
+  let top
+    = make-suite("top",
+                 list(make-suite("middle1",
+                                 list(make(<test>,
+                                           name: "test1",
+                                           function: method () assert-true(#t) end),
+                                      make(<test>,
+                                           name: "test2",
+                                           function: curry(error, "test2 error"))),
+                                 setup-function:   method () middle1-setup?   := #t end,
+                                 cleanup-function: method () middle1-cleanup? := #t end),
+                      make-suite("middle2",
+                                 list(make(<test>,
+                                           name: "test3",
+                                           function: method () assert-true(#t) end)),
+                                 setup-function:   method () middle2-setup?   := #t end,
+                                 cleanup-function: method () middle2-cleanup? := #t end)),
+                 setup-function: method () top-setup? := #t end,
+                 cleanup-function: method () top-cleanup? := #t end);
+  let result = run-component(top, components: compute-components(top, #[], #["test2"], #[]));
+  expect(top-setup?);
+  expect(top-cleanup?);
+  expect(middle1-setup?);
+  expect(middle1-cleanup?);
+  expect(#f == middle2-setup?);
+  expect(#f == middle2-cleanup?);
 end test;
 
 // The following tests and suites are defined without using their
@@ -592,25 +635,22 @@ define constant unexpected-success-suite
          components: vector(test-unexpected-success));
 
 define test test-run-tests-expect-failure/suite ()
-  let runner = make(<test-runner>, progress: $progress-none);
-  assert-true(result-passing?(run-tests(runner, expected-to-fail-suite)),
+  assert-true(result-passing?(run-component(expected-to-fail-suite)),
               "expected-to-fail-suite should pass because all of its tests"
                 " fail and are expected to fail");
-  assert-false(result-passing?(run-tests(runner, unexpected-success-suite)),
+  assert-false(result-passing?(run-component(unexpected-success-suite)),
                "unexpected-success-suite should fail because its tests"
                  " pass but are expected to fail");
 end test;
 
 define test test-run-tests-expect-failure/test ()
-  let runner = make(<test-runner>, progress: $progress-none);
-
-  let test-results = run-tests(runner, test-expected-to-fail-always);
+  let test-results = run-component(test-expected-to-fail-always);
   assert-equal($expected-failure, test-results.result-status);
 
-  let test-results = run-tests(runner, test-expected-to-fail-maybe);
+  let test-results = run-component(test-expected-to-fail-maybe);
   assert-equal($expected-failure, test-results.result-status);
 
-  let test-results = run-tests(runner, test-unexpected-success);
+  let test-results = run-component(test-unexpected-success);
   assert-equal($unexpected-success, test-results.result-status);
   assert-true(find-substring(test-results.result-reason, "because of assert-true(#t)"));
 end test;
@@ -763,8 +803,7 @@ define test test-that-not-implemented-is-not-a-failure ()
   let suite = make(<suite>,
                    name: "not-implemented-suite",
                    components: vector(test));
-  let runner = make(<test-runner>, progress: $progress-none);
-  let result = run-tests(runner, suite);
+  let result = run-component(suite);
   assert-equal($not-implemented, result.result-status);
 end;
 
@@ -778,8 +817,7 @@ define test test-that-not-implemented-plus-passed-is-passed ()
   let suite = make(<suite>,
                    name: "not-implemented-suite",
                    components: vector(test1, test2));
-  let runner = make(<test-runner>, progress: $progress-none);
-  let result = run-tests(runner, suite);
+  let result = run-component(suite);
   assert-equal($passed, result.result-status);
 end;
 
@@ -813,8 +851,7 @@ define function check-description (test-function, want-string)
   let test = make(<test>,
                   name: "no name",
                   function: test-function);
-  let result = run-tests(make(<test-runner>, progress: $progress-none),
-                         test);
+  let result = run-component(test);
   let report = with-output-to-string (stream)
                  print-full-report(result, stream)
                end;

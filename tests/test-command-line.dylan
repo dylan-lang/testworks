@@ -33,7 +33,7 @@ define test command-line-options-test ()
                      options);
     else
       let parser = parse-args(split(options, " "));
-      let (_, runner, _) = make-runner-from-command-line($dummy-suite, parser);
+      let runner = make-runner-from-command-line($dummy-suite, parser);
       let actual = getter(runner);
       assert-equal(actual, expected, options);
     end;

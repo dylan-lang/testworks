@@ -7,6 +7,7 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define library testworks
+  use collections;
   use command-line-parser;
   use common-dylan,
     import: { common-dylan, simple-random, threads };
@@ -34,13 +35,11 @@ define module testworks
     run-tests,
     *runner*,
     <test-runner>,
+    runner-components,
     runner-debug,
     runner-options,
     runner-output-stream,
-    runner-progress,
-    runner-debug,
-    runner-skip,
-    runner-tags;
+    runner-progress;
 
   // Checks (deprecated, use assert-* or expect-*)
   create
@@ -126,6 +125,7 @@ define module %testworks
   use operating-system,
     prefix: "os/";
   use print, import: { print-object };
+  use set;
   use simple-random,
     import: { random };
   use standard-io;
@@ -154,6 +154,8 @@ define module %testworks
     <component>,
     $components,
     *component*,
+    compute-components,
+    do-components,
     register-component,
     execute-component?,
     component-name,

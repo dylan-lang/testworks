@@ -7,11 +7,13 @@ License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 
-// The class of objects that can be "performed" in a test suite.
+// Objects that can be part of a tree of tests, suites, and benchmarks.
 define abstract class <component> (<object>)
   constant slot component-name :: <string>,
     required-init-keyword: name:;
-end class <component>;
+  // If a component is part of a suite it has a parent.
+  slot component-parent :: false-or(<suite>) = #f;
+end class;
 
 // Things have changed since this was introduced. (Local) test names must be
 // unique now so there's no need to have a distinction between the full path to
@@ -69,6 +71,16 @@ define function do-components
     end;
   end;
 end function;
+
+define function do-ancestors
+    (comp :: <component>, func :: <function>)
+  func(comp);
+  let parent = comp.component-parent;
+  if (parent)
+    do-ancestors(parent, func);
+  end;
+end function;
+
 
 define generic test-tags (r :: <runnable>) => (tags :: <sequence> /* of <tag> */);
 define generic test-function (r :: <runnable>) => (fn :: <function>);
@@ -158,7 +170,7 @@ define method component-result-type
 end;
 
 // All tests, benchmarks, and suites are added to this when created.
-define constant $components = make(<stretchy-vector>);
+define constant $components = make(<set>);
 
 // Add `c` to `$components` or replace an existing component with the
 // same name.
@@ -185,6 +197,9 @@ define method make-suite
                     name: name,
                     components: components,
                     keyword-args);
+  for (comp in components)
+    comp.component-parent := suite;
+  end;
   register-component(suite);
   suite
 end method make-suite;

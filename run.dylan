@@ -56,13 +56,12 @@ define method sort-components (components :: <sequence>, order == $random-order)
   sort(components, test: method (a, b) random(100) < 50 end)
 end;
 
-define generic runner-tags     (runner :: <test-runner>) => (tags :: <sequence>);
-define generic runner-progress (runner :: <test-runner>) => (progress :: <progress-option>);
-define generic runner-debug    (runner :: <test-runner>) => (debug :: <debug-option>);
-define generic runner-skip     (runner :: <test-runner>) => (skip :: <sequence> /* of <component> */);
-define generic runner-order    (runner :: <test-runner>) => (order :: <order>);
+define generic runner-components (runner :: <test-runner>) => (components :: <collection>);
+define generic runner-debug      (runner :: <test-runner>) => (debug :: <debug-option>);
+define generic runner-options    (runner :: <test-runner>) => (options :: <table>);
+define generic runner-order      (runner :: <test-runner>) => (order :: <order>);
 define generic runner-output-stream (runner :: <test-runner>) => (stream :: <stream>);
-define generic runner-options  (runner :: <test-runner>) => (options :: <table>);
+define generic runner-progress   (runner :: <test-runner>) => (progress :: <progress-option>);
 
 
 // A <test-runner> holds options for the test run and collects results.
@@ -70,14 +69,14 @@ define open class <test-runner> (<object>)
   // TODO(cgay): <report> = one-of(#"failures", #"crashes", #"none", ...)
   //constant slot runner-report :: <string> = "failures",
   //  init-keyword: report:;
-  constant slot runner-tags :: <sequence> = #[],
-    init-keyword: tags:;
   constant slot runner-progress :: <progress-option> = $progress-minimal,
     init-keyword: progress:;
   constant slot runner-debug :: <debug-option> = $debug-none,
     init-keyword: debug:;
-  constant slot runner-skip :: <sequence> = #[],   // of components
-    init-keyword: skip:;
+  // Contains every component that should be executed during this test run based on
+  // command-line filtering with --test, --suite, --skip-test, --skip-suite, and --tag.
+  constant slot runner-components :: <collection> = $components,
+    init-keyword: components:;
   constant slot runner-order :: <order> = $default-order,
     init-keyword: order:;
 
@@ -125,8 +124,7 @@ define method execute-component?
     (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>)
   ~*skip-reason*                // Skipping due to suite setup failure.
-    & ~member?(component, runner.runner-skip)
-    & tags-match?(runner.runner-tags, component)
+    & member?(component, runner.runner-components)
 end;
 
 define method maybe-execute-component
