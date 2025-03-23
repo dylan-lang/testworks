@@ -307,7 +307,6 @@ end function;
 define function decide-test-status
     (test :: <runnable>, subresults, condition)
  => (status :: <result-status>, reason)
-  let benchmark? = ~test.test-requires-assertions?;
   case
     instance?(condition, <serious-condition>)
       => if (test.expected-to-fail?)
@@ -315,7 +314,7 @@ define function decide-test-status
          else
            values($crashed, format-to-string("%s", condition))
          end;
-    empty?(subresults) & ~benchmark?
+    empty?(subresults) & ~instance?(test, <benchmark>)
       => $not-implemented;
     every?(method (result :: <result>) => (passed? :: <boolean>)
              result.result-status == $passed

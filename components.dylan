@@ -82,7 +82,6 @@ end function;
 
 define generic test-tags (r :: <runnable>) => (tags :: <sequence> /* of <tag> */);
 define generic test-function (r :: <runnable>) => (fn :: <function>);
-define generic test-requires-assertions? (r :: <runnable>) => (required? :: <boolean>);
 
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
@@ -93,12 +92,6 @@ define abstract class <runnable> (<component>)
     init-keyword: expected-to-fail-test:;
   constant slot expected-to-fail-reason :: false-or(<string>) = #f,
     init-keyword: expected-to-fail-reason:;
-  // Benchmarks don't require assertions.  Needs to be an instance variable,
-  // not a bare method, because testworks-specs auto-generated tests often
-  // don't get filled in.  (This can be fixed now that specs has been
-  // redone. --cgay)
-  constant slot test-requires-assertions? :: <boolean> = #t,
-    init-keyword: requires-assertions?:;
   constant slot test-tags :: <sequence> /* of <tag> */ = #[],
     init-keyword: tags:;
 end class <runnable>;

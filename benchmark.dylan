@@ -10,7 +10,6 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 // Benchmarks don't require any assertions.
 // Benchmarks have the keyword "benchmark".
 define class <benchmark> (<runnable>)
-  inherited slot test-requires-assertions? = #f;
 end;
 
 define method make

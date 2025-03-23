@@ -167,7 +167,6 @@ define module %testworks
     <benchmark>,
     <test>,
     test-function,
-    test-requires-assertions?,
     test-tags;
 
   // Suites
