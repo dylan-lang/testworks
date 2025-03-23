@@ -144,7 +144,7 @@ define function test-temp-directory () => (d :: false-or(<directory-locator>))
     let safe-name = map(method (c)
                           if (c == '\\' | c == '/') '_' else c end
                         end,
-                        full-component-name(*component*));
+                        component-name(*component*));
     let test-directory
       = subdirectory-locator(base, "_test", uniquifier, safe-name);
     fs/ensure-directories-exist(test-directory);

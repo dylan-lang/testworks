@@ -20,13 +20,6 @@ define abstract class <component> (<object>)
   slot component-parent :: false-or(<suite>) = #f;
 end class;
 
-// Things have changed since this was introduced. (Local) test names must be
-// unique now so there's no need to have a distinction between the full path to
-// a component and the component's local name. This can be removed. --cgay
-define function full-component-name (c :: <component>) => (name :: <string>)
-  c.component-name
-end;
-
 define generic suite-components (suite :: <suite>) => (components :: <sequence> /* of <component> */);
 define generic suite-setup-function (suite :: <suite>) => (function :: <function>);
 define generic suite-cleanup-function (suite :: <suite>) => (function :: <function>);

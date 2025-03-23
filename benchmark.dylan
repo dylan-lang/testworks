@@ -56,7 +56,6 @@ define macro benchmark-repeat
            method benchmark-body ()
              ?body
            end;
-         let name = full-component-name(*component*);
          for (iteration :: <integer> from 0 below ?iterations,
               iteration-values = #[]
                 then begin
@@ -67,7 +66,7 @@ define macro benchmark-repeat
                          let (#rest iteration-values) = benchmark-body();
                          iteration-values
                        results
-                         record-benchmark-iteration(name,
+                         record-benchmark-iteration(component-name(*component*),
                                                     cpu-time-seconds,
                                                     cpu-time-microseconds,
                                                     allocation);
