@@ -19,12 +19,6 @@ define function add-times
 end function add-times;
 
 
-define method plural
-    (n :: <integer>) => (ending :: <string>)
-  if (n == 1) "" else "s" end if
-end;
-
-
 //// Tags
 
 define class <tag> (<object>)
