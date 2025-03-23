@@ -123,33 +123,27 @@ define open generic execute-component?
 define method execute-component?
     (component :: <component>, runner :: <test-runner>)
  => (execute? :: <boolean>)
-  ~*skip-reason*                // Skipping due to suite setup failure.
-    & member?(component, runner.runner-components)
+  member?(component, runner.runner-components)
 end;
 
 define method maybe-execute-component
     (component :: <component>, runner :: <test-runner>)
  => (result :: <component-result>)
-  let run? = execute-component?(component, runner);
+  let filtered-in? = execute-component?(component, runner);
   let progress = runner.runner-progress;
   let show-progress?
-    = progress == $progress-all | (run? & progress ~== $progress-none);
+    = progress == $progress-all | (filtered-in? & progress ~== $progress-none);
   if (show-progress?)
     show-progress-start(runner, component);
   end;
   let result
-    = if (run?)
+    = if (filtered-in?
+            & ~*skip-reason*)   // Skipping due to suite setup failure.
         dynamic-bind (*component* = component)
           execute-component(component, runner)
         end
       else
-        make(component-result-type(component),
-             name: component.component-name,
-             status: $skipped,
-             reason: *skip-reason*,
-             seconds: 0,
-             microseconds: 0,
-             bytes: 0)
+        make-skip-result(component, *skip-reason*)
       end;
   force-output(*standard-error*);
   force-output(*standard-output*);
@@ -162,31 +156,38 @@ end method maybe-execute-component;
 define method execute-component
     (suite :: <suite>, runner :: <test-runner>)
  => (result :: <component-result>)
-  local method run-suite-thunk (suite, thunk, context) => (msg :: false-or(<string>))
+  let skip-reason = #f;
+  let skip-result = #f;
+  local method run-suite-thunk (suite, thunk, context) => ()
           block ()
-            thunk();
-            #f
+            let (run-suite?, reason) = component-when(suite)();
+            if (run-suite?)
+              thunk()
+            else
+              skip-result := $skipped;
+              skip-reason := reason | format-to-string("disabled by when: option");
+            end
           exception (err :: <serious-condition>, test: method (c) ~debug?() end)
-            format-to-string("Error in %s for suite %s: %s",
-                             context, suite.component-name, err)
+            skip-result := $crashed;
+            skip-reason := format-to-string("Error in %s for suite %s: %s",
+                                             context, suite.component-name, err);
           end
-        end;
+        end method;
   let subresults :: <stretchy-vector> = make(<stretchy-vector>);
   let seconds :: <integer> = 0;
   let microseconds :: <integer> = 0;
   let bytes :: <integer> = 0;
   let indent = next-indent();
-  let error-message = #f;
   block ()
     if (~*skip-reason*)
       // Only run setup (and cleanup, later) if we're not skipping a nested suite due to
       // a previous setup failure.
-      error-message := run-suite-thunk(suite, suite.suite-setup-function, "setup");
+      run-suite-thunk(suite, suite.suite-setup-function, "setup");
     end;
     for (component in sort-components(suite.suite-components, runner.runner-order))
       let subresult
         = dynamic-bind (*indent* = indent,
-                        *skip-reason* = error-message | *skip-reason*)
+                        *skip-reason* = skip-reason | *skip-reason*)
             maybe-execute-component(component, runner);
           end;
       add!(subresults, subresult);
@@ -206,8 +207,7 @@ define method execute-component
     end for;
   cleanup
     if (~*skip-reason*)
-      let msg = run-suite-thunk(suite, suite.suite-cleanup-function, "cleanup");
-      error-message := error-message | msg;
+      run-suite-thunk(suite, suite.suite-cleanup-function, "cleanup");
     end;
   end block;
   // TODO: there doesn't seem to be any record-suite equivalent to record-check and
@@ -215,12 +215,8 @@ define method execute-component
   // into the report? Does it appear in the --progress?
   make(component-result-type(suite),
        name: suite.component-name,
-       status: if (error-message)
-                 $crashed
-               else
-                 decide-suite-status(subresults)
-               end,
-       reason: error-message | *skip-reason*,
+       status: skip-result | decide-suite-status(subresults),
+       reason: skip-reason | *skip-reason*,
        subresults: subresults,
        seconds: seconds,
        microseconds: microseconds,
@@ -251,47 +247,62 @@ end function;
 define method execute-component
     (test :: <runnable>, runner :: <test-runner>)
  => (result :: <component-result>)
-  let subresults = make(<stretchy-vector>);
-  let (seconds, microseconds, bytes) = values(0, 0, 0);
-  local
-    method record-result (result :: <result>)
-      add!(subresults, result);
-      result
-    end;
-  let (status, reason)
-    = dynamic-bind (*check-recording-function* = record-result,
-                    *benchmark-recording-function* = record-result,
-                    *indent* = next-indent())
-        let cond
-          = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
-              block ()
-                test.test-function();
-              exception (err :: <assertion-failure>,
-                         test: method (c) ~debug?() end)
-                // An assertion failure causes the remainder of a test to be
-                // skipped (by jumping here) to prevent cascading failures.
-                // The failure has already been recorded so nothing to do.
-                #f
-              exception (err :: <serious-condition>,
-                         test: method (c) ~debug?() end)
-                err
-              end;
-            results
-              seconds := cpu-time-seconds;
-              microseconds := cpu-time-microseconds;
-              bytes := allocation;
-            end profiling;
-        decide-test-status(test, subresults, cond)
-      end dynamic-bind;
-  make(component-result-type(test),
-       name: test.component-name,
-       status: status,
-       reason: reason,
-       subresults: subresults,
-       seconds: seconds,
-       microseconds: microseconds,
-       bytes: bytes)
+  let (run-test?, reason) = component-when(test)();
+  if (~run-test?)
+    make-skip-result(test, reason)
+  else
+    let subresults = make(<stretchy-vector>);
+    let (seconds, microseconds, bytes) = values(0, 0, 0);
+    local
+      method record-result (result :: <result>)
+        add!(subresults, result);
+        result
+      end;
+    let (status, reason)
+      = dynamic-bind (*check-recording-function* = record-result,
+                      *benchmark-recording-function* = record-result,
+                      *indent* = next-indent())
+          let cond
+            = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
+                block ()
+                  test.test-function();
+                exception (err :: <assertion-failure>,
+                           test: method (c) ~debug?() end)
+                  // An assertion failure causes the remainder of a test to be
+                  // skipped (by jumping here) to prevent cascading failures.
+                  // The failure has already been recorded so nothing to do.
+                  #f
+                exception (err :: <serious-condition>,
+                           test: method (c) ~debug?() end)
+                  err
+                end;
+                results
+                seconds := cpu-time-seconds;
+                microseconds := cpu-time-microseconds;
+                bytes := allocation;
+              end profiling;
+          decide-test-status(test, subresults, cond)
+        end dynamic-bind;
+    make(component-result-type(test),
+         name: test.component-name,
+         status: status,
+         reason: reason,
+         subresults: subresults,
+         seconds: seconds,
+         microseconds: microseconds,
+         bytes: bytes)
+  end if
 end method execute-component;
+
+define function make-skip-result (component, reason)
+  make(component-result-type(component),
+       name: component.component-name,
+       status: $skipped,
+       reason: reason,
+       seconds: 0,
+       microseconds: 0,
+       bytes: 0)
+end function;
 
 define function decide-test-status
     (test :: <runnable>, subresults, condition)
@@ -379,7 +390,8 @@ end method;
 
 define method show-progress-done
     (runner :: <test-runner>, suite :: <suite>, result :: <result>) => ()
-  // no output for suites
+  // TODO: show result for suite if we know it in advance, e.g. it's disabled by
+  // component-when or setup crashed.
 end method;
 
 define method show-progress-done

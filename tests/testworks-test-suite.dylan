@@ -996,6 +996,79 @@ define test test-decide-suite-status ()
   end for;
 end test;
 
+
+define test test-component-test/suite ()
+  let suite
+    = make-suite("ct-suite",
+                 list(make(<test>,
+                           name: "ct-test",
+                           function: method ()
+                                       expect(#t);
+                                     end)),
+                 when: method ()
+                         values(#f, "reason")
+                       end);
+  let result = run-component(suite);
+  assert-equal($skipped, result.result-status);
+  assert-equal("reason", result.result-reason);
+  assert-equal(1, result.result-subresults.size);
+
+  let test-result = result.result-subresults[0];
+  assert-equal($skipped, test-result.result-status,
+               "test skipped due to disabled suite");
+  assert-equal("reason", test-result.result-reason,
+               "test skipped due to disabled suite inherits the reason");
+end test;
+
+define test test-component-test/test ()
+  let suite
+    = make-suite("ct-suite2",
+                 list(make(<test>,
+                           name: "ct-test2",
+                           function: method ()
+                                       expect(#t);
+                                     end,
+                           when: method ()
+                                   values(#f, "reason")
+                                 end),
+                      make(<test>,
+                           name: "ct-test3",
+                           function: method ()
+                                       expect(#t);
+                                     end)));
+  let result = run-component(suite);
+  assert-equal($passed, result.result-status);
+  assert-false(result.result-reason);
+  assert-equal(2, result.result-subresults.size);
+
+  let test-result = result.result-subresults[0];
+  assert-equal($skipped, test-result.result-status,
+               "test skipped due to being disabled");
+  assert-equal("reason", test-result.result-reason,
+               "test result has non-#f reason due to being disabled");
+end test;
+
+// Make sure the when: keyword is exercised for each component type.
+define test test-component-test-true (when: always(#t))
+  expect(#t);
+end test;
+
+define test test-component-test-false (when: always(#f))
+  expect(#f);
+end test;
+
+define benchmark component-test-benchmark (when: always(#f))
+  expect(#f);
+end benchmark;
+
+define suite component-test-suite (when: always(#t))
+  test test-component-test/suite;
+  test test-component-test/test;
+  test test-component-test-true;      // should be PASSED
+  test test-component-test-false;     // should be SKIPPED
+  benchmark component-test-benchmark; // should be SKIPPED
+end suite;
+
 /* Leaving this here because actually running these failing checks makes it
  much easier to debug, compared to running the above test, and there's more
  work to be done in this area so I expect to use these more.
