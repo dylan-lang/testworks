@@ -173,11 +173,15 @@ define function compute-components
     $components
   else
     let components = make(<set>);
-    for (name in run)
-      let comp = find-component(name);
-      do-components(comp, curry(add!, components));
-      // Gotta run the ancestor suites' setup/cleanup.
-      do-ancestors(comp, curry(add!, components));
+    if (run.empty?)
+      do(curry(add!, components), $components);
+    else
+      for (name in run)
+        let comp = find-component(name);
+        do-components(comp, curry(add!, components));
+        // Gotta run the ancestor suites' setup/cleanup.
+        do-ancestors(comp, curry(add!, components));
+      end;
     end;
     for (name in skip)
       let comp = find-component(name);
