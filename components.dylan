@@ -6,11 +6,16 @@ Copyright:    Original Code is Copyright (c) 1995-2004 Functional Objects, Inc.
 License:      See License.txt in this distribution for details.
 Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
+// Work around https://github.com/dylan-lang/opendylan/issues/1675
+define constant component-when-default = always(#t);
 
 // Objects that can be part of a tree of tests, suites, and benchmarks.
 define abstract class <component> (<object>)
   constant slot component-name :: <string>,
     required-init-keyword: name:;
+  // A function to test whether or not to execute a component.
+  constant slot component-when = component-when-default,
+    init-keyword: when:;
   // If a component is part of a suite it has a parent.
   slot component-parent :: false-or(<suite>) = #f;
 end class;

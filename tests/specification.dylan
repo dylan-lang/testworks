@@ -39,6 +39,7 @@ define suite testworks-test-suite ()
   suite testworks-results-suite;
   suite command-line-test-suite;
   suite testworks-benchmarks-suite;
+  suite component-test-suite;
   test test-assertion-description;
   test test-assertion-failure-terminates;
   test test-check-failure-continues;
