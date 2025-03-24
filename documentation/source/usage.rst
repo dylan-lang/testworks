@@ -159,7 +159,7 @@ assertions. Each test may be part of a suite.  Use the
 
 .. code-block:: dylan
 
-    define test NAME (#key EXPECTED-FAILURE?, TAGS)
+    define test NAME (#key EXPECTED-FAILURE?, TAGS, WHEN)
       BODY
     end;
 
@@ -188,6 +188,9 @@ The result looks like this::
 
 Note that the third assertion was not executed since the second one failed and
 terminated ``my-test``.
+
+Tags
+~~~~
 
 Tests may be tagged with arbitrary strings, providing a way to select
 or filter out tests to run:
@@ -230,6 +233,9 @@ can be made aware of this:
       end if;
     end test;
 
+Expected Failure
+~~~~~~~~~~~~~~~~
+
 A test that is expected to fail and then fails is considered to be a passing
 test. If the test succeeds unexpectedly, it is considered a failing test. When
 marking a test as expected to fail, ``expected-to-fail-reason:`` is
@@ -260,10 +266,30 @@ Test setup and teardown is accomplished with normal Dylan code using
      end
    end;
 
+Conditional Execution
+~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you may want to run a test only under certain conditions. For example, maybe
+you're developing a library and parts of it don't yet work on Windows so you don't want
+to run some tests on Windows. To handle this you can use the ``when:`` keyword when
+creating a test and provide a method that returns :drm:`#f` on Windows:
+
+.. code:: dylan
+
+   define test test-non-windows-feature
+       (when: method ()
+                $os-name ~== #"win32"
+              end)
+     ...
+   end;
+
+Tests that aren't run because of the `when:` option are marked as ``SKIPPED`` in the
+results.
+
 Benchmarks
 ----------
 
-Benchmarks are like tests except for:
+Benchmarks accept all the same options as tests and are like tests except that:
 
 * They do not require any assertions. (They pass unless they signal an error.)
 * They are automatically assigned the "benchmark" tag so that they may be run by
@@ -313,7 +339,7 @@ The format is:
 
 .. code-block:: dylan
 
-    define suite NAME (#key setup-function, cleanup-function)
+    define suite NAME (#key setup-function, cleanup-function, when)
         test TEST-NAME;
         benchmark BENCHMARK-NAME;
         suite SUITE-NAME;
@@ -353,6 +379,9 @@ suite:
           components will not be executed and will be marked as skipped in the
           results. If either the suite **setup** or **cleanup** function signals a
           :drm:`<serious-condition>` the suite itself will be marked as crashed.
+
+If a suite should be run only under certain conditions, supply the ``when:`` option the
+same way as for tests.  See `Conditional Execution`_.
 
 Interface Specification Suites
 ------------------------------
