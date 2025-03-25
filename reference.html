@@ -254,7 +254,7 @@
 <dd><p>Define a new test.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>define test <em>test-name</em> (#key <em>expected-to-fail-reason, expected-to-fail-test, tags</em>) <em>body</em> end</p>
+<dd class="field-odd"><p>define test <em>test-name</em> (#key <em>expected-to-fail-reason</em>, <em>expected-to-fail-test</em>, <em>tags</em>, <em>when</em>) <em>body</em> end</p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -264,6 +264,8 @@ The reason this test is expected to fail.</p></li>
 <li><p><strong>expected-to-fail-test</strong> (<em>#key</em>) – An instance of <a class="reference external" href="https://opendylan.org/books/drm/Function_Classes#function"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;function&gt;</span></code></a>.
 A function to decide whether the test is expected to fail.</p></li>
 <li><p><strong>tags</strong> (<em>#key</em>) – A list of strings to tag this test.</p></li>
+<li><p><strong>when</strong> (<em>#key</em>) – A method of no arguments that returns true if the test
+should be run.</p></li>
 </ul>
 </dd>
 </dl>
@@ -356,11 +358,13 @@ to attempt to reduce variability across different executions.</p>
 <li><p><strong>suite-name</strong> – Name of the suite; a Dylan variable name.</p></li>
 <li><p><strong>setup-function</strong> (<em>#key</em>) – A function to perform setup before the suite starts.</p></li>
 <li><p><strong>cleanup-function</strong> (<em>#key</em>) – A function to perform teardown after the suite finishes.</p></li>
+<li><p><strong>when</strong> (<em>#key</em>) – A method of no arguments that returns true if the suite
+should be run.</p></li>
 </ul>
 </dd>
 </dl>
-<p>Suites provide a way to group tests and other suites into a single
-executable unit.  Suites may be nested arbitrarily.</p>
+<p>Suites provide a way to group tests and other suites into a single executable unit
+with shared setup and cleanup code.  Suites may be nested arbitrarily.</p>
 <p><em>setup-function</em> is executed before any tests or sub-suites are
 run.  If <em>setup-function</em> signals an error the entire suite is
 skipped and marked as “crashed”.</p>

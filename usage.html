@@ -376,7 +376,7 @@ arguments. These are all valid:</p>
 <p>Tests contain assertions and arbitrary code needed to support those
 assertions. Each test may be part of a suite.  Use the
 <a class="reference internal" href="reference.html#testworks:testworks:test-definer"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">test-definer</span></code></a> macro to define a test:</p>
-<div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">NAME</span><span class="w"> </span><span class="p">(</span><span class="k">#key</span><span class="w"> </span><span class="n">EXPECTED-FAILURE?</span><span class="p">,</span><span class="w"> </span><span class="n">TAGS</span><span class="p">,</span><span class="w"> </span><span class="k">WHEN</span><span class="p">)</span>
+<div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">NAME</span><span class="w"> </span><span class="p">(</span><span class="k">#key</span><span class="w"> </span><span class="n">expected-to-fail-reason</span><span class="p">,</span><span class="w"> </span><span class="n">expected-to-fail-test</span><span class="p">,</span><span class="w"> </span><span class="n">tags</span><span class="p">,</span><span class="w"> </span><span class="k">when</span><span class="p">)</span>
 <span class="w">  </span><span class="n">BODY</span>
 <span class="k">end</span><span class="p">;</span>
 </pre></div>
@@ -432,7 +432,7 @@ can be made aware of this:</p>
 <span class="k">end</span><span class="w"> </span><span class="n">test</span><span class="p">;</span>
 
 <span class="k">define</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">fails-on-windows</span>
-<span class="w">    </span><span class="p">(</span><span class="k">expected-to-fail?:</span><span class="w"> </span><span class="nb">method</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="no">$os-name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">#&quot;win32&quot;</span><span class="w"> </span><span class="k">end</span><span class="p">,</span>
+<span class="w">    </span><span class="p">(</span><span class="k">expected-to-fail-test:</span><span class="w"> </span><span class="nb">method</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="no">$os-name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">#&quot;win32&quot;</span><span class="w"> </span><span class="k">end</span><span class="p">,</span>
 <span class="w">     </span><span class="k">expected-to-fail-reason:</span><span class="w"> </span><span class="s">&quot;blah is not implemented for WIN32 platform&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="no">$os-name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">#&quot;win32&quot;</span><span class="p">)</span>
 <span class="w">    </span><span class="n">assert-false</span><span class="p">(</span><span class="l">#t</span><span class="p">);</span>
@@ -448,18 +448,17 @@ can be made aware of this:</p>
 <p>A test that is expected to fail and then fails is considered to be a passing
 test. If the test succeeds unexpectedly, it is considered a failing test. When
 marking a test as expected to fail, <code class="docutils literal notranslate"><span class="pre">expected-to-fail-reason:</span></code> is
-<strong>required</strong> and <code class="docutils literal notranslate"><span class="pre">expected-to-fail?:</span></code> is optional, and normally
+<strong>required</strong> and <code class="docutils literal notranslate"><span class="pre">expected-to-fail-test:</span></code> is optional, and normally
 unnecessary. An example of a good reason is a bug URL or other bug reference.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>When providing a value for <code class="docutils literal notranslate"><span class="pre">expected-to-fail?:</span></code> always provide a
-method of no arguments. For example, instead of <code class="docutils literal notranslate"><span class="pre">expected-to-fail?:</span>
-<span class="pre">$os-name</span> <span class="pre">==</span> <span class="pre">#&quot;win32&quot;</span></code> use <code class="docutils literal notranslate"><span class="pre">expected-to-fail?:</span> <span class="pre">method</span> <span class="pre">()</span> <span class="pre">$os-name</span> <span class="pre">==</span>
-<span class="pre">#&quot;win32&quot;</span> <span class="pre">end</span></code>. The former is equivalent to <code class="docutils literal notranslate"><span class="pre">expected-to-fail?:</span> <span class="pre">#f</span></code>
-on non-Windows platforms and results in an <code class="docutils literal notranslate"><span class="pre">UNEXPECTED</span> <span class="pre">SUCCESS</span></code>
-result. This is because the (required) reason string is used as
-shorthand to indicate that failure is expected even when
-<code class="docutils literal notranslate"><span class="pre">expected-to-fail?:</span></code> is <code class="docutils literal notranslate"><span class="pre">#f</span></code>.</p>
+<p>When providing a value for <code class="docutils literal notranslate"><span class="pre">expected-to-fail-test:</span></code> always provide a method
+of no arguments. For example, instead of <code class="docutils literal notranslate"><span class="pre">expected-to-fail-test:</span> <span class="pre">$os-name</span> <span class="pre">==</span>
+<span class="pre">#&quot;win32&quot;</span></code> use <code class="docutils literal notranslate"><span class="pre">expected-to-fail?:</span> <span class="pre">method</span> <span class="pre">()</span> <span class="pre">$os-name</span> <span class="pre">==</span> <span class="pre">#&quot;win32&quot;</span> <span class="pre">end</span></code>. The
+former is equivalent to <code class="docutils literal notranslate"><span class="pre">expected-to-fail-test:</span> <span class="pre">#f</span></code> on non-Windows platforms
+and results in an <code class="docutils literal notranslate"><span class="pre">UNEXPECTED</span> <span class="pre">SUCCESS</span></code> result. This is because the (required)
+reason string is used as shorthand to indicate that failure is expected even
+when <code class="docutils literal notranslate"><span class="pre">expected-to-fail-test:</span></code> is <code class="docutils literal notranslate"><span class="pre">#f</span></code>.</p>
 </div>
 <p>Test setup and teardown is accomplished with normal Dylan code using
 <code class="docutils literal notranslate"><span class="pre">block</span> <span class="pre">()</span> <span class="pre">...</span> <span class="pre">cleanup</span> <span class="pre">...</span> <span class="pre">end;</span></code>…</p>
@@ -474,6 +473,8 @@ shorthand to indicate that failure is expected even when
 <span class="k">end</span><span class="p">;</span>
 </pre></div>
 </div>
+<p>If you need to run setup/cleanup for a group of tests, put them all in a suite together
+and use the suite’s <code class="docutils literal notranslate"><span class="pre">setup-function</span></code> and <code class="docutils literal notranslate"><span class="pre">cleanup-function</span></code> options.</p>
 </section>
 <section id="conditional-execution">
 <h4>Conditional Execution<a class="headerlink" href="#conditional-execution" title="Link to this heading">¶</a></h4>

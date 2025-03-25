@@ -17,13 +17,15 @@ Suites, Tests, and Benchmarks
    Define a new test.
 
    :signature:
-      define test *test-name* (#key *expected-to-fail-reason, expected-to-fail-test, tags*) *body* end
+      define test *test-name* (#key *expected-to-fail-reason*, *expected-to-fail-test*, *tags*, *when*) *body* end
    :parameter test-name: Name of the test; a Dylan variable name.
    :parameter #key expected-to-fail-reason: A :drm:`<string>` or :drm:`#f`.
       The reason this test is expected to fail.
    :parameter #key expected-to-fail-test: An instance of :drm:`<function>`.
       A function to decide whether the test is expected to fail.
    :parameter #key tags: A list of strings to tag this test.
+   :parameter #key when: A method of no arguments that returns true if the test
+      should be run.
 
    Tests may contain arbitrary code, and must have at least one assertion. That
    is they must call one of the ``assert-*`` or ``check-*`` macros. If they
@@ -96,9 +98,11 @@ Suites, Tests, and Benchmarks
    :parameter suite-name: Name of the suite; a Dylan variable name.
    :parameter #key setup-function: A function to perform setup before the suite starts.
    :parameter #key cleanup-function: A function to perform teardown after the suite finishes.
+   :parameter #key when: A method of no arguments that returns true if the suite
+      should be run.
 
-   Suites provide a way to group tests and other suites into a single
-   executable unit.  Suites may be nested arbitrarily.
+   Suites provide a way to group tests and other suites into a single executable unit
+   with shared setup and cleanup code.  Suites may be nested arbitrarily.
 
    *setup-function* is executed before any tests or sub-suites are
    run.  If *setup-function* signals an error the entire suite is

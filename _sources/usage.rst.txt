@@ -159,7 +159,7 @@ assertions. Each test may be part of a suite.  Use the
 
 .. code-block:: dylan
 
-    define test NAME (#key EXPECTED-FAILURE?, TAGS, WHEN)
+    define test NAME (#key expected-to-fail-reason, expected-to-fail-test, tags, when)
       BODY
     end;
 
@@ -224,7 +224,7 @@ can be made aware of this:
     end test;
 
     define test fails-on-windows
-        (expected-to-fail?: method () $os-name = #"win32" end,
+        (expected-to-fail-test: method () $os-name = #"win32" end,
          expected-to-fail-reason: "blah is not implemented for WIN32 platform")
       if ($os-name = #"win32")
         assert-false(#t);
@@ -239,17 +239,16 @@ Expected Failure
 A test that is expected to fail and then fails is considered to be a passing
 test. If the test succeeds unexpectedly, it is considered a failing test. When
 marking a test as expected to fail, ``expected-to-fail-reason:`` is
-**required** and ``expected-to-fail?:`` is optional, and normally
+**required** and ``expected-to-fail-test:`` is optional, and normally
 unnecessary. An example of a good reason is a bug URL or other bug reference.
 
-.. note:: When providing a value for ``expected-to-fail?:`` always provide a
-          method of no arguments. For example, instead of ``expected-to-fail?:
-          $os-name == #"win32"`` use ``expected-to-fail?: method () $os-name ==
-          #"win32" end``. The former is equivalent to ``expected-to-fail?: #f``
-          on non-Windows platforms and results in an ``UNEXPECTED SUCCESS``
-          result. This is because the (required) reason string is used as
-          shorthand to indicate that failure is expected even when
-          ``expected-to-fail?:`` is ``#f``.
+.. note:: When providing a value for ``expected-to-fail-test:`` always provide a method
+          of no arguments. For example, instead of ``expected-to-fail-test: $os-name ==
+          #"win32"`` use ``expected-to-fail?: method () $os-name == #"win32" end``. The
+          former is equivalent to ``expected-to-fail-test: #f`` on non-Windows platforms
+          and results in an ``UNEXPECTED SUCCESS`` result. This is because the (required)
+          reason string is used as shorthand to indicate that failure is expected even
+          when ``expected-to-fail-test:`` is ``#f``.
 
 Test setup and teardown is accomplished with normal Dylan code using
 ``block () ... cleanup ... end;``...
@@ -265,6 +264,10 @@ Test setup and teardown is accomplished with normal Dylan code using
        do-teardown-stuff()
      end
    end;
+
+If you need to run setup/cleanup for a group of tests, put them all in a suite together
+and use the suite's ``setup-function`` and ``cleanup-function`` options.
+
 
 Conditional Execution
 ~~~~~~~~~~~~~~~~~~~~~
