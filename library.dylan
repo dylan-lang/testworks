@@ -145,10 +145,6 @@ define module %testworks
     debug-failures?,
     debug?;
 
-  // Formatting
-  export
-    plural;
-
   // Components
   export
     <component>,
@@ -167,7 +163,6 @@ define module %testworks
     <benchmark>,
     <test>,
     test-function,
-    test-requires-assertions?,
     test-tags;
 
   // Suites

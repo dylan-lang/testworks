@@ -79,28 +79,16 @@ define function parse-args
                   help: "Load the given shared library file before searching for"
                     " test suites. May be repeated."));
 
-  // TODO(cgay): Replace these 4 options with --skip and --match (or
-  // --include?).  Because Dylan is a Lisp-1 suites, tests, and
-  // benchmarks share a common namespace and --skip and --match will
-  // be unambiguous.
   add-option(parser,
              make(<repeated-parameter-option>,
-                  names: "suite",
-                  help: "Run (or list) only these named suites. May be repeated."));
-  add-option(parser,
-             make(<repeated-parameter-option>,
-                  names: "test",
-                  help: "Run (or list) only these named tests. May be repeated."));
-  add-option(parser,
-             make(<repeated-parameter-option>,
-                  names: "skip-suite",
-                  variable: "SUITE",
-                  help: "Skip these named suites. May be repeated."));
-  add-option(parser,
-             make(<repeated-parameter-option>,
-                  names: "skip-test",
+                  names: "run",
                   variable: "TEST",
-                  help: "Skip these named tests. May be repeated."));
+                  help: "Run only these named suites or tests. May be repeated."));
+  add-option(parser,
+             make(<repeated-parameter-option>,
+                  names: "skip",
+                  variable: "TEST",
+                  help: "Skip these named suites or tests. May be repeated."));
   add-option(parser,
              make(<choice-option>,
                   names: #("list", "l"),
@@ -141,13 +129,8 @@ define function make-runner-from-command-line
   let components
     = compute-components(top,
                          parse-tags(get-option-value(parser, "tag")),
-                         // --test and and --suite can just be --match.
-                         // --skip-test and --skip-suite can just be --skip.
-                         // https://github.com/dylan-lang/testworks/issues/121
-                         concatenate(get-option-value(parser, "suite"),
-                                     get-option-value(parser, "test")),
-                         concatenate(get-option-value(parser, "skip-suite"),
-                                     get-option-value(parser, "skip-test")));
+                         get-option-value(parser, "run"),
+                         get-option-value(parser, "skip"));
   let debug = select (get-option-value(parser, "debug") by string-equal-ic?)
                 "none"    => $debug-none;
                 "crashes" => $debug-crashes;
@@ -175,7 +158,7 @@ end function make-runner-from-command-line;
 // executed.  The universe of components to consider is the subtree of components defined
 // by `top`.
 define function compute-components
-    (top :: <suite>, tags, run-names, skip-names)
+    (top :: <suite>, tags, run, skip)
  => (components)
   local method find-component (name :: <string>) => (component)
           block (return)
@@ -184,20 +167,37 @@ define function compute-components
                                    return(c)
                                  end;
                                end);
-          end | usage-error("test component not found: %=", name);
+          end | usage-error("not found: %=", name);
         end;
-  if (run-names.empty? & skip-names.empty?)
+  if (run.empty? & skip.empty?)
     $components
   else
     let components = make(<set>);
-    for (name in run-names)
-      let comp = find-component(name);
-      do-components(comp, curry(add!, components));
-      // Gotta run the ancestor suites' setup/cleanup.
-      do-ancestors(comp, curry(add!, components));
+    if (run.empty?)
+      do(curry(add!, components), $components);
+    else
+      for (name in run)
+        let comp = find-component(name);
+        do-components(comp, curry(add!, components));
+        // Gotta run the ancestor suites' setup/cleanup.
+        do-ancestors(comp, curry(add!, components));
+      end;
     end;
-    for (name in skip-names)
-      do-components(find-component(name), curry(remove!, components));
+    for (name in skip)
+      let comp = find-component(name);
+      do-components(comp, curry(remove!, components));
+      // The remove! above could leave a suite in the `components`
+      // list even if it has no child components that will be run...
+      do-ancestors(comp, method (c)
+                           if (instance?(c, <suite>)
+                                 & ~any?(rcurry(member?, components),
+                                         c.suite-components))
+                             remove!(components, c);
+                           end
+                         end);
+    end for;
+    if (components.empty?)
+      usage-error("The given options did not specify any tests.");
     end;
     // Not clear why choose requires a <sequence> and not a <collection>...
     as(<set>, choose(curry(tags-match?, tags), key-sequence(components)))

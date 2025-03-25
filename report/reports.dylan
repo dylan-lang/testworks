@@ -256,7 +256,8 @@ define method print-benchmark-result-footer
   divider? & format-out("%s\n", $benchmark-result-divider);
   print-one-benchmark-result(title, time, allocation);
   if (crashes > 0)
-    format-out("\n    [*] %d benchmark%s crashed.\n", crashes, plural(crashes));
+    format-out("\n    [*] %d benchmark%s crashed.\n",
+               crashes, if (crashes.size == 1) "" else "s" end);
   end if;
 end method;
 

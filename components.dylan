@@ -20,13 +20,6 @@ define abstract class <component> (<object>)
   slot component-parent :: false-or(<suite>) = #f;
 end class;
 
-// Things have changed since this was introduced. (Local) test names must be
-// unique now so there's no need to have a distinction between the full path to
-// a component and the component's local name. This can be removed. --cgay
-define function full-component-name (c :: <component>) => (name :: <string>)
-  c.component-name
-end;
-
 define generic suite-components (suite :: <suite>) => (components :: <sequence> /* of <component> */);
 define generic suite-setup-function (suite :: <suite>) => (function :: <function>);
 define generic suite-cleanup-function (suite :: <suite>) => (function :: <function>);
@@ -89,7 +82,6 @@ end function;
 
 define generic test-tags (r :: <runnable>) => (tags :: <sequence> /* of <tag> */);
 define generic test-function (r :: <runnable>) => (fn :: <function>);
-define generic test-requires-assertions? (r :: <runnable>) => (required? :: <boolean>);
 
 define abstract class <runnable> (<component>)
   constant slot test-function :: <function>,
@@ -100,12 +92,6 @@ define abstract class <runnable> (<component>)
     init-keyword: expected-to-fail-test:;
   constant slot expected-to-fail-reason :: false-or(<string>) = #f,
     init-keyword: expected-to-fail-reason:;
-  // Benchmarks don't require assertions.  Needs to be an instance variable,
-  // not a bare method, because testworks-specs auto-generated tests often
-  // don't get filled in.  (This can be fixed now that specs has been
-  // redone. --cgay)
-  constant slot test-requires-assertions? :: <boolean> = #t,
-    init-keyword: requires-assertions?:;
   constant slot test-tags :: <sequence> /* of <tag> */ = #[],
     init-keyword: tags:;
 end class <runnable>;

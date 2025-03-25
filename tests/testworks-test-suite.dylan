@@ -1058,8 +1058,7 @@ define test test-component-test-false (when: always(#f))
 end test;
 
 define benchmark component-test-benchmark (when: always(#f))
-  expect(#f);
-end benchmark;
+end;
 
 define suite component-test-suite (when: always(#t))
   test test-component-test/suite;
