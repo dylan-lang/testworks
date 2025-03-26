@@ -15,7 +15,6 @@ define library testworks
   use io,
     import: { format, print, standard-io, streams };
   use coloring-stream;
-  use strings;
   use system,
     import: { date, file-system, locators, operating-system };
   use memory-manager;
@@ -130,7 +129,6 @@ define module %testworks
     import: { random };
   use standard-io;
   use streams;
-  use strings;
   use testworks;
   use threads,
     import: { dynamic-bind };
