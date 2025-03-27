@@ -131,12 +131,12 @@ define function make-runner-from-command-line
                          parse-tags(get-option-value(parser, "tag")),
                          get-option-value(parser, "run"),
                          get-option-value(parser, "skip"));
-  let debug = select (get-option-value(parser, "debug") by string-equal-ic?)
+  let debug = select (as-lowercase(get-option-value(parser, "debug")) by \=)
                 "none"    => $debug-none;
                 "crashes" => $debug-crashes;
                 "all"     => $debug-all;
               end;
-  let progress = select (get-option-value(parser, "progress") by string-equal-ic?)
+  let progress = select (as-lowercase(get-option-value(parser, "progress")) by \=)
                    "none"    => $progress-none;
                    "minimal" => $progress-minimal;
                    "all"     => $progress-all;

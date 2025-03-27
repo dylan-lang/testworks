@@ -33,7 +33,7 @@ end;
 
 define method make-tag
     (spec :: <string>) => (tag :: <tag>)
-  let negated? = starts-with?(spec, "-");
+  let negated? = (~empty?(spec) & spec[0] == '-');
   let name = copy-sequence(spec, start: negated? & 1 | 0);
   if (empty?(name))
     error("Invalid tag: %=", spec);
