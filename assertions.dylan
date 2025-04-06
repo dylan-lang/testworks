@@ -44,7 +44,7 @@ end macro;
 
 define macro expect
     { expect(?expr:expression) }
- => { expect(?expr, ?"expr" " is true") }
+ => { expect(?expr, ?"expr") }
 
     { expect(?expr:expression, ?description:*) }
  => { do-check-true(method () values(?description) end,
@@ -57,7 +57,7 @@ end macro;
 // This is for symmetry with expect-false. Usually expect is preferred.
 define macro expect-true
     { expect-true(?expr:expression) }
- => { expect-true(?expr, ?"expr" " is true") }
+ => { expect-true(?expr, ?"expr") }
 
     { expect-true(?expr:expression, ?description:*) }
  => { do-check-true(method () values(?description) end,
@@ -324,13 +324,13 @@ define function do-check-instance?
     description := eval-check-description(description-thunk);
     phase := format-to-string("evaluating %s expressions", caller);
     let (type :: <type>, value, value-expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if %= is %=an instance of %s",
+    phase := format-to-string("checking if expression %s is %=an instance of %s",
                               value-expr, if (negate?) "not " else "" end, type);
     if (instance?(value, type) ~= negate?)
       record-check(description, $passed, #f);
     else
       record-check(description, $failed,
-                   format-to-string("%s (from expression %=) is not an instance of %s.",
+                   format-to-string("%=, from expression %s, is not an instance of %s.",
                                     value, value-expr, type));
       terminate? & signal(make(<assertion-failure>));
     end;
@@ -351,7 +351,7 @@ end macro;
 define macro assert-true
   { assert-true (?expr:expression)
   } => {
-    assert-true(?expr, ?"expr" " is true")
+    assert-true(?expr, ?"expr")
   }
 
   { assert-true (?expr:expression, ?description:*)
@@ -373,12 +373,12 @@ define function do-check-true
     description := eval-check-description(description-thunk);
     phase := format-to-string("evaluating %s expression", caller);
     let (value, value-expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if %= evaluates to true", value-expr);
+    phase := format-to-string("checking if expression %s is true", value-expr);
     if (value)
       record-check(description, $passed, #f);
     else
       record-check(description, $failed,
-                   format-to-string("expression %= evaluates to #f.", value-expr));
+                   format-to-string("expression %s is false.", value-expr));
       terminate? & signal(make(<assertion-failure>));
     end;
   exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
@@ -434,12 +434,12 @@ define function do-check-false
     description := eval-check-description(description-thunk);
     phase := format-to-string("evaluating %s expression", caller);
     let (value, value-expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if %= evaluates to #f", value-expr);
+    phase := format-to-string("checking if expression %s is false", value-expr);
     if (~value)
       record-check(description, $passed, #f);
     else
       record-check(description, $failed,
-                   format-to-string("expression %= evaluates to %=; expected #f.",
+                   format-to-string("expression %s evaluates to %=; expected #f.",
                                     value-expr, value));
       terminate? & signal(make(<assertion-failure>));
     end;
@@ -507,7 +507,7 @@ define function do-check-condition
     description := eval-check-description(description-thunk);
     phase := format-to-string("evaluating %s expression", caller);
     let (condition-class, thunk :: <function>, expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if %= signals a condition of class %s",
+    phase := format-to-string("checking if expression %s signals a condition of class %s",
                               expr, condition-class);
     block ()
       thunk();
