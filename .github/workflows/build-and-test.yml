@@ -37,7 +37,7 @@ jobs:
 
       - name: Run testworks-test-suite-app
         run: |
-          _build/bin/testworks-test-suite-app --progress none --report surefire > _build/TEST-testworks.xml
+          _build/bin/testworks-test-suite-app --report surefire --report-file _build/TEST-testworks.xml
 
       - name: Publish Test Report
         if: success() || failure()
