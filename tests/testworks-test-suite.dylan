@@ -867,7 +867,7 @@ define test test-assertion-description ()
   check-description(method () assert-equal(#t, #t, "%d", 456); end, "456");
 
   // assert-true
-  check-description(method () assert-true(#t);            end, "#t is true");
+  check-description(method () assert-true(#t);            end, "PASSED: #t");
   check-description(method () assert-true(#t, 123);       end, "123");
   check-description(method () assert-true(#t, "abc");     end, "abc");
   check-description(method () assert-true(#t, "%d", 456); end, "456");
