@@ -17,7 +17,8 @@ define abstract class <component> (<object>)
   constant slot component-when = component-when-default,
     init-keyword: when:;
   // If a component is part of a suite it has a parent.
-  slot component-parent :: false-or(<suite>) = #f;
+  slot component-parent :: false-or(<suite>) = #f,
+    init-keyword: parent:;
 end class;
 
 define generic suite-components (suite :: <suite>) => (components :: <sequence> /* of <component> */);
