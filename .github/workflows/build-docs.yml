@@ -5,10 +5,6 @@ on:
     # all branches
     paths:
       - 'documentation/**'
-  pull_request:
-    # all branches
-    paths:
-      - 'documentation/**'
 
   # This enables the Run Workflow button on the Actions tab.
   workflow_dispatch:
