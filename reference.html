@@ -1142,7 +1142,7 @@ evaluates to <a class="reference external" href="https://opendylan.org/books/drm
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>suite-or-test</strong> – (optional) An instance of
-<code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;suite&gt;</span></code> or <code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code>. If not supplied
+<a class="reference internal" href="#testworks:testworks:[suite]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;suite&gt;</span></code></a> or <a class="reference internal" href="#testworks:testworks:[runnable]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code></a>. If not supplied
 then all tests and benchmarks are run.</p></li>
 </ul>
 </dd>
@@ -1248,6 +1248,132 @@ create them. Examples:</p>
 </dd></dl>
 
 </section>
+<section id="programmatic-api">
+<h2>Programmatic API<a class="headerlink" href="#programmatic-api" title="Link to this heading">¶</a></h2>
+<p>This section describes the APIs necessary for creating a test suite
+programmatically. This is sometimes useful if, for example, tests can be generated from
+available data or are more easily described in a format like JSON.</p>
+<p>Create and <a class="reference internal" href="#testworks:testworks:register-component"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">register</span></code></a> your test components and then call
+<a class="reference internal" href="#testworks:testworks:run-test-application"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">run-test-application</span></code></a> as usual.</p>
+<dl class="dylan class">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:[component]">
+<span class="sig-name descname"><span class="pre">&lt;component&gt;</span></span> <em class="property"><span class="pre">Abstract</span> <span class="pre">Sealed</span> <span class="pre">Class</span></em><a class="headerlink" href="#testworks:testworks:[component]" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code> is a non-exported superclass of <a class="reference internal" href="#testworks:testworks:[runnable]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code></a> which is
+documented here only to show the init keywords inherited by tests, benchmarks, and
+suites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Init-Keywords<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the component, an instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a>.</p></li>
+<li><p><strong>parent</strong> – The parent of this component, an instance of <a class="reference internal" href="#testworks:testworks:[component]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a>.</p></li>
+<li><p><strong>when</strong> – A <a class="reference external" href="https://opendylan.org/books/drm/Function_Classes#function"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;function&gt;</span></code></a> to decide whether or not to execute the component during a test
+run. The function must accept one argument, the component and return a true value
+if the component should be executed or <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a> if it should be skipped.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan class">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:[runnable]">
+<span class="sig-name descname"><span class="pre">&lt;runnable&gt;</span></span> <em class="property"><span class="pre">Abstract</span> <span class="pre">Sealed</span> <span class="pre">Class</span></em><a class="headerlink" href="#testworks:testworks:[runnable]" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code> is a non-exported superclass of <a class="reference internal" href="#testworks:testworks:[benchmark]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;benchmark&gt;</span></code></a> and
+<a class="reference internal" href="#testworks:testworks:[test]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;test&gt;</span></code></a> which is documented here only to show the init keywords inherited by
+those two classes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Superclasses<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#testworks:testworks:[component]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a></p>
+</dd>
+<dt class="field-even">Init-Keywords<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>function</strong> – The <a class="reference external" href="https://opendylan.org/books/drm/Function_Classes#function"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;function&gt;</span></code></a> that implements the test or benchmark.  This function must
+accept no arguments and its return value, if any, is ignored.</p></li>
+<li><p><strong>expected-to-fail-test</strong> – <a class="reference external" href="https://opendylan.org/books/drm/Other_Built-In_Objects_Defined#false"><code class="xref drm docutils literal notranslate"><span class="pre">#f</span></code></a> or a function that accepts no arguments and returns a true value to
+indicate that the test or benchmark is expected to fail.  Useful if the test is
+only expected to fail on one operating system, for example.</p></li>
+<li><p><strong>expected-to-fail-reason</strong> – A <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#string"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;string&gt;</span></code></a> describing why the test or benchmark is expected to fail. This is
+a convenience for the common case of a consistent failure on all platforms.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Discussion<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If either <code class="docutils literal notranslate"><span class="pre">expected-to-fail-test</span></code> or <code class="docutils literal notranslate"><span class="pre">expected-to-fail-reason</span></code> is specified,
+the runnable’s result will be <code class="docutils literal notranslate"><span class="pre">EXPECTED-TO-FAIL</span></code>. However, if the runnable’s
+function returns without error (for example, it has no failed assertions) the
+result will be <code class="docutils literal notranslate"><span class="pre">UNEXPECTED-SUCCESS</span></code>.  If both keywords are specified,
+<code class="docutils literal notranslate"><span class="pre">expected-to-fail-test</span></code> takes precedence.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="dylan class">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:[benchmark]">
+<span class="sig-name descname"><span class="pre">&lt;benchmark&gt;</span></span> <em class="property"><span class="pre">Instantiable</span> <span class="pre">Sealed</span> <span class="pre">Class</span></em><a class="headerlink" href="#testworks:testworks:[benchmark]" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Superclasses<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#testworks:testworks:[runnable]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code></a></p>
+</dd>
+</dl>
+<p>See <a class="reference internal" href="#testworks:testworks:[runnable]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code></a> for a list of init keywords.</p>
+</dd></dl>
+
+<dl class="dylan class">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:[test]">
+<span class="sig-name descname"><span class="pre">&lt;test&gt;</span></span> <em class="property"><span class="pre">Instantiable</span> <span class="pre">Sealed</span> <span class="pre">Class</span></em><a class="headerlink" href="#testworks:testworks:[test]" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Superclasses<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#testworks:testworks:[runnable]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code></a></p>
+</dd>
+</dl>
+<p>See <a class="reference internal" href="#testworks:testworks:[runnable]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code></a> for a list of init keywords.</p>
+</dd></dl>
+
+<dl class="dylan class">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:[suite]">
+<span class="sig-name descname"><span class="pre">&lt;suite&gt;</span></span> <em class="property"><span class="pre">Instantiable</span> <span class="pre">Sealed</span> <span class="pre">Class</span></em><a class="headerlink" href="#testworks:testworks:[suite]" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Superclasses<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#testworks:testworks:[component]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a></p>
+</dd>
+<dt class="field-even">Init-Keywords<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>components</strong> – <p>A <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#sequence"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;sequence&gt;</span></code></a> of child components (tests, benchmarks, or
+suites) for this suite.  Each child component should specific this suite as its
+parent.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Due to the bidirectional relationship between a suite and its children it
+may be convenient to supply an instance of <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#stretchy-vector"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;stretchy-vector&gt;</span></code></a> here
+so that the suite may be created first; it can then be used as the value
+of the <code class="docutils literal notranslate"><span class="pre">parent:</span></code> init keyword when creating the child components, and
+they can be added to the <a class="reference external" href="https://opendylan.org/books/drm/Collection_Classes#stretchy-vector"><code class="xref drm docutils literal notranslate"><span class="pre">&lt;stretchy-vector&gt;</span></code></a> afterwards.</p>
+</div>
+</p></li>
+<li><p><strong>setup-function</strong> – See <a class="reference internal" href="#testworks:testworks:suite-definer"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">suite-definer</span></code></a> for details.</p></li>
+<li><p><strong>cleanup-function</strong> – See <a class="reference internal" href="#testworks:testworks:suite-definer"><code class="xref dylan dylan-macro docutils literal notranslate"><span class="pre">suite-definer</span></code></a> for details.</p></li>
+</ul>
+</dd>
+</dl>
+<p>See <a class="reference internal" href="#testworks:testworks:[component]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a> for additional init keywords.</p>
+</dd></dl>
+
+<dl class="dylan function">
+<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:register-component">
+<span class="sig-name descname"><span class="pre">register-component</span></span> <em class="property"><span class="pre">Function</span></em><a class="headerlink" href="#testworks:testworks:register-component" title="Link to this definition">¶</a></dt>
+<dd><p>Register a component (a test, benchmark, or suite) with Testworks so that it will be
+found and executed during a test run.  All components should be registered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Signature<span class="colon">:</span></dt>
+<dd class="field-odd"><p>register-component ( <em>component</em> )</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>component</strong> – An instance of <a class="reference internal" href="#testworks:testworks:[component]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
         </article>
@@ -1347,6 +1473,15 @@ create them. Examples:</p>
 <li><a class="reference internal" href="#testworks:testworks:test-option"><code class="docutils literal notranslate"><span class="pre">test-option</span></code></a></li>
 <li><a class="reference internal" href="#testworks:testworks:test-temp-directory"><code class="docutils literal notranslate"><span class="pre">test-temp-directory</span></code></a></li>
 <li><a class="reference internal" href="#testworks:testworks:write-test-file"><code class="docutils literal notranslate"><span class="pre">write-test-file</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#programmatic-api">Programmatic API</a><ul>
+<li><a class="reference internal" href="#testworks:testworks:[component]"><code class="docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a></li>
+<li><a class="reference internal" href="#testworks:testworks:[runnable]"><code class="docutils literal notranslate"><span class="pre">&lt;runnable&gt;</span></code></a></li>
+<li><a class="reference internal" href="#testworks:testworks:[benchmark]"><code class="docutils literal notranslate"><span class="pre">&lt;benchmark&gt;</span></code></a></li>
+<li><a class="reference internal" href="#testworks:testworks:[test]"><code class="docutils literal notranslate"><span class="pre">&lt;test&gt;</span></code></a></li>
+<li><a class="reference internal" href="#testworks:testworks:[suite]"><code class="docutils literal notranslate"><span class="pre">&lt;suite&gt;</span></code></a></li>
+<li><a class="reference internal" href="#testworks:testworks:register-component"><code class="docutils literal notranslate"><span class="pre">register-component</span></code></a></li>
 </ul>
 </li>
 </ul>
