@@ -829,3 +829,115 @@ Test Execution
      let locator = write-test-file("a/b/c.log", contents: "abc");
 
 .. TODO(cgay): document the remaining exported names.
+
+Programmatic API
+================
+
+This section describes the APIs necessary for creating a test suite
+programmatically. This is sometimes useful if, for example, tests can be generated from
+available data or are more easily described in a format like JSON.
+
+Create and :func:`register <register-component>` your test components and then call
+:func:`run-test-application` as usual.
+
+.. class:: <component>
+   :sealed:
+   :abstract:
+
+   ``<component>`` is a non-exported superclass of :class:`<runnable>` which is
+   documented here only to show the init keywords inherited by tests, benchmarks, and
+   suites.
+
+   :keyword name: The name of the component, an instance of :drm:`<string>`.
+
+   :keyword parent: The parent of this component, an instance of :class:`<component>`.
+
+   :keyword when:
+
+      A :drm:`<function>` to decide whether or not to execute the component during a test
+      run. The function must accept one argument, the component and return a true value
+      if the component should be executed or :drm:`#f` if it should be skipped.
+
+.. class:: <runnable>
+   :sealed:
+   :abstract:
+
+   ``<runnable>`` is a non-exported superclass of :class:`<benchmark>` and
+   :class:`<test>` which is documented here only to show the init keywords inherited by
+   those two classes.
+
+   :supers: `<component>`:class:
+
+   :keyword function:
+
+      The :drm:`<function>` that implements the test or benchmark.  This function must
+      accept no arguments and its return value, if any, is ignored.
+
+   :keyword expected-to-fail-test:
+
+      :drm:`#f` or a function that accepts no arguments and returns a true value to
+      indicate that the test or benchmark is expected to fail.  Useful if the test is
+      only expected to fail on one operating system, for example.
+
+   :keyword expected-to-fail-reason:
+
+      A :drm:`<string>` describing why the test or benchmark is expected to fail. This is
+      a convenience for the common case of a consistent failure on all platforms.
+
+   :discussion:
+
+      If either ``expected-to-fail-test`` or ``expected-to-fail-reason`` is specified,
+      the runnable's result will be ``EXPECTED-TO-FAIL``. However, if the runnable's
+      function returns without error (for example, it has no failed assertions) the
+      result will be ``UNEXPECTED-SUCCESS``.  If both keywords are specified,
+      ``expected-to-fail-test`` takes precedence.
+
+.. class:: <benchmark>
+   :sealed:
+   :instantiable:
+
+   :supers: `<runnable>`:class:
+
+   See :class:`<runnable>` for a list of init keywords.
+
+.. class:: <test>
+   :sealed:
+   :instantiable:
+
+   :supers: `<runnable>`:class:
+
+   See :class:`<runnable>` for a list of init keywords.
+
+.. class:: <suite>
+   :sealed:
+   :instantiable:
+
+   :supers: `<component>`:class:
+
+   :keyword components: A :drm:`<sequence>` of child components (tests, benchmarks, or
+      suites) for this suite.  Each child component should specific this suite as its
+      parent.
+
+      .. note:: Due to the bidirectional relationship between a suite and its children it
+                may be convenient to supply an instance of `<stretchy-vector>`:drm: here
+                so that the suite may be created first; it can then be used as the value
+                of the ``parent:`` init keyword when creating the child components, and
+                they can be added to the `<stretchy-vector>`:drm: afterwards.
+
+   :keyword setup-function:
+
+      See :macro:`suite-definer` for details.
+
+   :keyword cleanup-function:
+
+      See :macro:`suite-definer` for details.
+
+   See :class:`<component>` for additional init keywords.
+
+.. function:: register-component
+
+   Register a component (a test, benchmark, or suite) with Testworks so that it will be
+   found and executed during a test run.  All components should be registered.
+
+   :signature: register-component ( *component* )
+   :parameter component: An instance of :class:`<component>`.

@@ -103,6 +103,13 @@ define module testworks
     interface-specification-class-instantiable?,
     make-test-instance,
     destroy-test-instance;
+
+  // API to create tests programmatically.
+  create
+    <benchmark>,
+    <test>,
+    <suite>,
+    register-component;
 end module testworks;
 
 
@@ -150,7 +157,6 @@ define module %testworks
     *component*,
     compute-components,
     do-components,
-    register-component,
     execute-component?,
     component-name,
     status-name;
@@ -158,14 +164,11 @@ define module %testworks
   // Tests and benchmarks
   export
     <runnable>,
-    <benchmark>,
-    <test>,
     test-function,
     test-tags;
 
   // Suites
   export
-    <suite>,
     make-suite,   //--- Needed for macro hygiene problems
     suite-setup-function, suite-cleanup-function,
     suite-components;
