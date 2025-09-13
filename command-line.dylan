@@ -31,11 +31,11 @@ define function parse-args
   add-option(parser,
              make(<choice-option>,
                   names: "debug",
-                  choices: #("none", "crashes", "all"),
+                  choices: #("none", "crashes", "failures", "all"),
                   default: "none",
                   variable: "WHAT",
-                  help: "Enter the debugger? None, crashes, or all"
-                    " (crashes and failures). [%default%]"));
+                  help: "Enter the debugger? none, crashes, failures, or all."
+                    " [%default%]"));
   add-option(parser,
              make(<choice-option>,
                   names: #("progress", "p"),
@@ -132,9 +132,10 @@ define function make-runner-from-command-line
                          get-option-value(parser, "run"),
                          get-option-value(parser, "skip"));
   let debug = select (as-lowercase(get-option-value(parser, "debug")) by \=)
-                "none"    => $debug-none;
-                "crashes" => $debug-crashes;
-                "all"     => $debug-all;
+                "none"     => $debug-none;
+                "crashes"  => $debug-crashes;
+                "failures" => $debug-failures;
+                "all"      => $debug-all;
               end;
   let progress = select (as-lowercase(get-option-value(parser, "progress")) by \=)
                    "none"    => $progress-none;

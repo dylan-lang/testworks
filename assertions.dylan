@@ -8,8 +8,15 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 define constant $invalid-description = "*** invalid description ***";
 
-// This is used to do a non-local exit to the end of a test and skip remaining assertions.
-define class <assertion-failure> (<condition>) end;
+// This is used to do a non-local exit to the end of a test and skip remaining
+// assertions.  It's a subclass of <serious-condition> so that the debugger will be
+// invoked if we don't handle it, e.g., for '--debug failures'.
+define class <assertion-failure> (<simple-error>)
+end class;
+
+define method condition-to-string (c :: <assertion-failure>) => (s :: <string>)
+  apply(format-to-string, c.condition-format-string, c.condition-format-arguments)
+end method;
 
 /// Assertion macros
 
@@ -100,6 +107,10 @@ define macro expect-equal
                      terminate?: #f) }
 end macro;
 
+define function handle-assertion-condition? (c :: <condition>)
+  ~instance?(c, <assertion-failure>) & handle-condition?(*runner*, c)
+end function;
+
 define function do-check-equal
     (description-thunk :: <function>, arguments-thunk :: <function>, caller :: <string>,
      #key terminate? :: <boolean>)
@@ -128,7 +139,7 @@ define function do-check-equal
                                     want, *indent*, $indent-step, got, detail));
       terminate? & signal(make(<assertion-failure>));
     end;
-  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+  exception (err :: <serious-condition>, test: handle-assertion-condition?)
     record-check(description | $invalid-description,
                  $crashed,
                  format-to-string("Error %s: %s", phase, err));
@@ -183,7 +194,7 @@ define function do-check-not-equal
                    format-to-string("%= and %= are =.", val1, val2));
       terminate? & signal(make(<assertion-failure>));
     end;
-  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+  exception (err :: <serious-condition>, test: handle-assertion-condition?)
     record-check(description | $invalid-description,
                  $crashed,
                  format-to-string("Error %s: %s", phase, err));
@@ -324,7 +335,7 @@ define function do-check-instance?
     description := eval-check-description(description-thunk);
     phase := format-to-string("evaluating %s expressions", caller);
     let (type :: <type>, value, value-expr :: <string>) = get-arguments();
-    phase := format-to-string("checking if expression %s is %=an instance of %s",
+    phase := format-to-string("checking if expression %s is %san instance of %s",
                               value-expr, if (negate?) "not " else "" end, type);
     if (instance?(value, type) ~= negate?)
       record-check(description, $passed, #f);
@@ -334,7 +345,7 @@ define function do-check-instance?
                                     value, value-expr, type));
       terminate? & signal(make(<assertion-failure>));
     end;
-  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+  exception (err :: <serious-condition>, test: handle-assertion-condition?)
     record-check(description | $invalid-description,
                  $crashed,
                  format-to-string("Error %s: %s", phase, err));
@@ -381,7 +392,7 @@ define function do-check-true
                    format-to-string("expression %s is false.", value-expr));
       terminate? & signal(make(<assertion-failure>));
     end;
-  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+  exception (err :: <serious-condition>, test: handle-assertion-condition?)
     record-check(description | $invalid-description,
                  $crashed,
                  format-to-string("Error %s: %s", phase, err));
@@ -443,7 +454,7 @@ define function do-check-false
                                     value-expr, value));
       terminate? & signal(make(<assertion-failure>));
     end;
-  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+  exception (err :: <serious-condition>, test: handle-assertion-condition?)
     record-check(description | $invalid-description,
                  $crashed,
                  format-to-string("Error %s: %s", phase, err));
@@ -515,9 +526,10 @@ define function do-check-condition
       terminate? & signal(make(<assertion-failure>));
     exception (ex :: condition-class)
       record-check(description, $passed, #f);
-      // Not really sure if this should catch something broader, like
-      // <condition>, but leaving it this way for compat with old code.
-    exception (ex :: <serious-condition>)
+    exception (ex :: <condition>,
+               test: method (c)
+                       ~instance?(c, <assertion-failure>)
+                     end)
       record-check(description, $failed,
                    format-to-string("condition of class %s signaled; "
                                       "expected a condition of class %s. "
@@ -525,7 +537,7 @@ define function do-check-condition
                                     ex.object-class, condition-class, ex));
       terminate? & signal(make(<assertion-failure>));
     end;
-  exception (err :: <serious-condition>, test: method (cond) ~debug?() end)
+  exception (err :: <serious-condition>, test: handle-assertion-condition?)
     record-check(description | $invalid-description,
                  $crashed,
                  format-to-string("Error %s: %s", phase, err));
