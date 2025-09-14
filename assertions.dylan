@@ -11,12 +11,17 @@ define constant $invalid-description = "*** invalid description ***";
 // This is used to do a non-local exit to the end of a test and skip remaining
 // assertions.  It's a subclass of <serious-condition> so that the debugger will be
 // invoked if we don't handle it, e.g., for '--debug failures'.
-define class <assertion-failure> (<simple-error>)
+define class <assertion-failure> (<error>)
+  constant slot %reason :: <string>, required-init-keyword: reason:;
 end class;
 
 define method condition-to-string (c :: <assertion-failure>) => (s :: <string>)
-  apply(format-to-string, c.condition-format-string, c.condition-format-arguments)
+  c.%reason
 end method;
+
+define function assertion-failure (reason :: <string>)
+  signal(make(<assertion-failure>, reason: reason))
+end function;
 
 /// Assertion macros
 
@@ -134,16 +139,15 @@ define function do-check-equal
                    else
                      ""
                    end;
-      record-check(description, $failed,
-                   format-to-string("want: %=\n%s%sgot:  %=%s",
-                                    want, *indent*, $indent-step, got, detail));
-      terminate? & signal(make(<assertion-failure>));
+      let reason = format-to-string("want: %=\n%s%sgot:  %=%s",
+                                    want, *indent*, $indent-step, got, detail);
+      record-check(description, $failed, reason);
+      terminate? & assertion-failure(concatenate(caller, ": ", reason));
     end;
   exception (err :: <serious-condition>, test: handle-assertion-condition?)
-    record-check(description | $invalid-description,
-                 $crashed,
-                 format-to-string("Error %s: %s", phase, err));
-    terminate? & signal(make(<assertion-failure>));
+    let reason = format-to-string("Error %s: %s", phase, err);
+    record-check(description | $invalid-description, $crashed, reason);
+    terminate? & assertion-failure(reason);
   end block
 end function;
 
@@ -190,15 +194,14 @@ define function do-check-not-equal
       record-check(description, $passed, #f);
     else
       phase := format-to-string("getting %s failure detail", caller);
-      record-check(description, $failed,
-                   format-to-string("%= and %= are =.", val1, val2));
-      terminate? & signal(make(<assertion-failure>));
+      let reason = format-to-string("%= and %= are =.", val1, val2);
+      record-check(description, $failed, reason);
+      terminate? & assertion-failure(concatenate(caller, ": ", reason));
     end;
   exception (err :: <serious-condition>, test: handle-assertion-condition?)
-    record-check(description | $invalid-description,
-                 $crashed,
-                 format-to-string("Error %s: %s", phase, err));
-    terminate? & signal(make(<assertion-failure>));
+    let reason = format-to-string("Error %s: %s", phase, err);
+    record-check(description | $invalid-description, $crashed, reason);
+    terminate? & assertion-failure(reason);
   end block
 end function;
 
@@ -340,16 +343,15 @@ define function do-check-instance?
     if (instance?(value, type) ~= negate?)
       record-check(description, $passed, #f);
     else
-      record-check(description, $failed,
-                   format-to-string("%=, from expression %s, is not an instance of %s.",
-                                    value, value-expr, type));
-      terminate? & signal(make(<assertion-failure>));
+      let reason = format-to-string("%=, from expression %s, is not an instance of %s.",
+                                    value, value-expr, type);
+      record-check(description, $failed, reason);
+      terminate? & assertion-failure(concatenate(caller, ": ", reason));
     end;
   exception (err :: <serious-condition>, test: handle-assertion-condition?)
-    record-check(description | $invalid-description,
-                 $crashed,
-                 format-to-string("Error %s: %s", phase, err));
-    terminate? & signal(make(<assertion-failure>));
+    let reason = format-to-string("Error %s: %s", phase, err);
+    record-check(description | $invalid-description, $crashed, reason);
+    terminate? & assertion-failure(reason);
   end block
 end function do-check-instance?;
 
@@ -388,15 +390,14 @@ define function do-check-true
     if (value)
       record-check(description, $passed, #f);
     else
-      record-check(description, $failed,
-                   format-to-string("expression %s is false.", value-expr));
-      terminate? & signal(make(<assertion-failure>));
+      let reason = format-to-string("expression %s is false.", value-expr);
+      record-check(description, $failed, reason);
+      terminate? & assertion-failure(concatenate(caller, ": ", reason));
     end;
   exception (err :: <serious-condition>, test: handle-assertion-condition?)
-    record-check(description | $invalid-description,
-                 $crashed,
-                 format-to-string("Error %s: %s", phase, err));
-    terminate? & signal(make(<assertion-failure>));
+    let reason = format-to-string("Error %s: %s", phase, err);
+    record-check(description | $invalid-description, $crashed, reason);
+    terminate? & assertion-failure(reason);
   end block
 end function do-check-true;
 
@@ -449,16 +450,15 @@ define function do-check-false
     if (~value)
       record-check(description, $passed, #f);
     else
-      record-check(description, $failed,
-                   format-to-string("expression %s evaluates to %=; expected #f.",
-                                    value-expr, value));
-      terminate? & signal(make(<assertion-failure>));
+      let reason = format-to-string("expression %s evaluates to %=; expected #f.",
+                                    value-expr, value);
+      record-check(description, $failed, reason);
+      terminate? & assertion-failure(concatenate(caller, ": ", reason));
     end;
   exception (err :: <serious-condition>, test: handle-assertion-condition?)
-    record-check(description | $invalid-description,
-                 $crashed,
-                 format-to-string("Error %s: %s", phase, err));
-    terminate? & signal(make(<assertion-failure>));
+    let reason = format-to-string("Error %s: %s", phase, err);
+    record-check(description | $invalid-description, $crashed, reason);
+    terminate? & assertion-failure(reason);
   end block
 end function do-check-false;
 
@@ -522,26 +522,26 @@ define function do-check-condition
                               expr, condition-class);
     block ()
       thunk();
-      record-check(description, $failed, "no condition signaled");
-      terminate? & signal(make(<assertion-failure>));
+      let reason = "no condition signaled";
+      record-check(description, $failed, reason);
+      terminate? & assertion-failure(concatenate(caller, ": ", reason));
     exception (ex :: condition-class)
       record-check(description, $passed, #f);
     exception (ex :: <condition>,
                test: method (c)
                        ~instance?(c, <assertion-failure>)
                      end)
-      record-check(description, $failed,
-                   format-to-string("condition of class %s signaled; "
+      let reason = format-to-string("condition of class %s signaled; "
                                       "expected a condition of class %s. "
                                       "The error was: %s",
-                                    ex.object-class, condition-class, ex));
-      terminate? & signal(make(<assertion-failure>));
+                                    ex.object-class, condition-class, ex);
+      record-check(description, $failed, reason);
+      terminate? & assertion-failure(concatenate(caller, ": ", reason));
     end;
   exception (err :: <serious-condition>, test: handle-assertion-condition?)
-    record-check(description | $invalid-description,
-                 $crashed,
-                 format-to-string("Error %s: %s", phase, err));
-    terminate? & signal(make(<assertion-failure>));
+    let reason = format-to-string("Error %s: %s", phase, err);
+    record-check(description | $invalid-description, $crashed, reason);
+    terminate? & assertion-failure(reason);
   end block
 end function do-check-condition;
 
