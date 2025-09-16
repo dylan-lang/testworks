@@ -17,20 +17,11 @@ define constant <progress-option>
   = one-of($progress-none, $progress-minimal, $progress-all);
 
 define constant $debug-none    = #"debug-none";
+define constant $debug-failures = #"debug-failures";
 define constant $debug-crashes = #"debug-crashes";
 define constant $debug-all     = #"debug-all";
 define constant <debug-option>
-  = one-of($debug-none, $debug-crashes, $debug-all);
-
-define inline function debug-failures?
-    () => (debug-failures? :: <boolean>)
-  runner-debug(*runner*) == $debug-all
-end function;
-
-define inline function debug?
-    () => (debug? :: <boolean>)
-  runner-debug(*runner*) ~= $debug-none
-end function;
+  = one-of($debug-none, $debug-crashes, $debug-failures, $debug-all);
 
 define constant $source-order  = #"source"; // order they appear in the source code.
 define constant $lexical-order = #"lexical";
@@ -167,7 +158,8 @@ define method execute-component
               skip-result := $skipped;
               skip-reason := reason | format-to-string("disabled by when: option");
             end
-          exception (err :: <serious-condition>, test: method (c) ~debug?() end)
+          exception (err :: <serious-condition>,
+                     test: curry(handle-condition?, runner))
             skip-result := $crashed;
             skip-reason := format-to-string("Error in %s for suite %s: %s",
                                              context, suite.component-name, err);
@@ -267,16 +259,16 @@ define method execute-component
                 block ()
                   test.test-function();
                 exception (err :: <assertion-failure>,
-                           test: method (c) ~debug?() end)
+                           test: curry(handle-condition?, runner))
                   // An assertion failure causes the remainder of a test to be
                   // skipped (by jumping here) to prevent cascading failures.
                   // The failure has already been recorded so nothing to do.
                   #f
                 exception (err :: <serious-condition>,
-                           test: method (c) ~debug?() end)
+                           test: curry(handle-condition?, runner))
                   err
                 end;
-                results
+              results
                 seconds := cpu-time-seconds;
                 microseconds := cpu-time-microseconds;
                 bytes := allocation;
@@ -293,6 +285,30 @@ define method execute-component
          bytes: bytes)
   end if
 end method execute-component;
+
+define generic handle-condition?
+  (runner :: <test-runner>, cond :: <condition>) => (b :: <boolean>);
+
+define method handle-condition?
+    (runner :: <test-runner>, cond :: <condition>) => (b :: <boolean>)
+  #f
+end method;
+
+define method handle-condition?
+    (runner :: <test-runner>, cond :: <assertion-failure>) => (b :: <boolean>)
+  select (runner.runner-debug)
+    $debug-failures, $debug-all => #f;
+    otherwise => #t;
+  end
+end method;
+
+define method handle-condition?
+    (runner :: <test-runner>, cond :: <serious-condition>) => (b :: <boolean>)
+  select (runner.runner-debug)
+    $debug-crashes, $debug-all => #f;
+    otherwise => #t;
+  end
+end method;
 
 define function make-skip-result (component, reason)
   make(component-result-type(component),

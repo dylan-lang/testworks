@@ -8,11 +8,6 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// Some utilities for testing TestWorks
 
-// TODO: anything that calls run-tests should turn off debug?() so that running
-// testworks-test-suite with --debug=crashes doesn't cause unwanted debugger entry.
-// Probably can change without-recording to be with-standard-test-environment or
-// something. Can test this with test-expect-failure-continues.
-
 define function run-component (comp, #key components)
   if (~components)
     components := make(<stretchy-vector>);
@@ -346,23 +341,11 @@ define test test-assert-not-instance? ()
 end test;
 
 define test testworks-check-condition-test ()
-  begin
-    let success? = #f;
-    assert-equal($passed,
-                 with-result-status ()
-                   check-condition($internal-check-name,
-                                   <test-error>,
-                                   begin
-                                     // default-handler for <warning> returns #f
-                                     test-warning();
-                                     success? := #t;
-                                     test-error()
-                                   end)
-                 end,
-                 "check-condition catches <test-error>");
-    assert-true(success?,
-                "check-condition for <test-error> doesn't catch <warning>");
-  end;
+  assert-equal($passed,
+               with-result-status ()
+                 check-condition($internal-check-name, <test-error>, test-error())
+               end,
+               "check-condition catches <test-error>");
   assert-equal($failed,
                with-result-status ()
                  check-condition($internal-check-name, <test-error>, #f)
@@ -376,22 +359,11 @@ define test testworks-check-condition-test ()
 end test;
 
 define test test-expect-condition ()
-  begin
-    let success? = #f;
-    assert-equal($passed,
-                 with-result-status ()
-                   expect-condition(<test-error>,
-                                    begin
-                                      // default-handler for <warning> returns #f
-                                      test-warning();
-                                      success? := #t;
-                                      test-error()
-                                    end)
-                 end,
-                 "expect-condition catches <test-error>");
-    assert-true(success?,
-                "expect-condition for <test-error> doesn't catch <warning>");
-  end;
+  assert-equal($passed,
+               with-result-status ()
+                 expect-condition(<test-error>, test-error())
+               end,
+               "expect-condition catches <test-error>");
   assert-equal($failed,
                with-result-status ()
                  expect-condition(<test-error>, #f)
@@ -407,20 +379,10 @@ end test;
 define test testworks-assert-condition-test ()
   assert-condition(<error>, error("foo"));
   assert-condition(<error>, error("foo"), "error signals error w/ description");
-  begin
-    let success? = #f;
-    assert-equal($passed,
-                 with-result-status ()
-                   assert-condition(<test-error>,
-                                    begin
-                                      // default-handler for <warning> returns #f
-                                      test-warning();
-                                      success? := #t;
-                                      test-error()
-                                    end)
-                 end);
-    assert-true(success?);
-  end;
+  assert-equal($passed,
+               with-result-status ()
+                 assert-condition(<test-error>, test-error())
+               end);
   assert-equal($failed,
                with-result-status ()
                  assert-condition(<test-error>, #f)
@@ -1106,3 +1068,74 @@ define test test-assert-equal-output ()
               tabling("a" => 1, "x" => 2, "c" => 3));
 end test;
 */
+
+define test test-debug-option--crashes ()
+  let crashing-test
+    = make(<test>,
+           name: "test-debug-option-1",
+           function: curry(error, "error in test-debug-option-1"));
+  let result-1 = #f;
+  let runner-1 = make(<test-runner>,
+                      components: list(crashing-test),
+                      progress: $progress-none,
+                      debug: $debug-none);
+  assert-no-errors(result-1 := run-tests(runner-1, crashing-test),
+                   "crashes are handled by default");
+  assert-equal($crashed, result-1.result-status);
+
+  let result-2 = #f;
+  let runner-2 = make(<test-runner>,
+                      components: list(crashing-test),
+                      progress: $progress-none,
+                      debug: $debug-crashes);
+  assert-signals(<error>, result-2 := run-tests(runner-2, crashing-test),
+                 "--debug crashes allows errors to escape");
+  assert-equal(#f, result-2);
+end test;
+
+define test test-debug-option--failures ()
+  let failing-test
+    = make(<test>,
+           name: "test-debug-option-2",
+           function: method ()
+                       assert-true(#f, "failed assertion in test-debug-option-2");
+                     end);
+  let result-1 = #f;
+  let runner-1 = make(<test-runner>,
+                      components: list(failing-test),
+                      progress: $progress-none,
+                      debug: $debug-none);
+  assert-no-errors(result-1 := run-tests(runner-1, failing-test),
+                   "failures are handled by default");
+  assert-equal($failed, result-1.result-status);
+
+  let result-2 = #f;
+  let runner-2 = make(<test-runner>,
+                      components: list(failing-test),
+                      progress: $progress-none,
+                      debug: $debug-failures);
+  assert-signals(<assertion-failure>,
+                 result-2 := run-tests(runner-2, failing-test),
+                 "--debug failures signals <assertion-failure>");
+  assert-equal(#f, result-2);
+end test;
+
+// https://github.com/dylan-lang/testworks/issues/183 --debug crashes should not cause
+// assertions to act like expectations.
+define test test-bug-183 ()
+  let it = #f;
+  let failing-test
+    = make(<test>,
+           name: "test-bug-183",
+           function: method ()
+                       assert-true(#f);
+                       it := #t;
+                     end);
+  let runner = make(<test-runner>,
+                    components: list(failing-test),
+                    progress: $progress-none,
+                    debug: $debug-crashes);
+  let result = run-tests(runner, failing-test);
+  assert-equal($failed, result.result-status);
+  assert-false(it);
+end test;

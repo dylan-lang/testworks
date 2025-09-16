@@ -146,9 +146,8 @@ define module %testworks
     <debug-option>,
     $debug-none,
     $debug-crashes,
-    $debug-all,
-    debug-failures?,
-    debug?;
+    $debug-failures,
+    $debug-all;
 
   // Components
   export
@@ -241,6 +240,10 @@ define module %testworks
 
   // Specs accessors
   export spec-name,
-         spec-title;
+    spec-title;
+
+  // Conditions
+  export
+    <assertion-failure>;
 
 end module %testworks;
