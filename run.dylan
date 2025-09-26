@@ -85,6 +85,10 @@ define open class <test-runner> (<object>)
   // to tests. For example, test data directory pathname.
   constant slot runner-options :: <string-table> = make(<string-table>),
     init-keyword: options:;
+
+  // A place to put temp files created by tests or the runner itself, one subdirectory
+  // per test.
+  constant slot runner-temp-directory :: <locator> = default-runner-temp-directory();
 end class <test-runner>;
 
 

@@ -292,11 +292,10 @@ define function run-or-list-tests
       report-function(result, *standard-output*);
     end;
     if (*output-captured?*)
-      // TODO: be more specific about where the files are after fixing various problems
-      // with test-temp-directory, i.e., store one _test subdir per runner.
-      test-output("NOTE: Some test output was captured. See files named %s "
-                    "in the _test directory.\n",
-                  $captured-output-filename);
+      test-output("NOTE: Some test output was captured. See %s\n",
+                  file-locator(runner-temp-directory(runner),
+                               "*",
+                               $captured-output-filename));
     end;
     if (result.result-status == $passed) 0 else 1 end
   end
