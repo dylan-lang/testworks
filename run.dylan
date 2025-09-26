@@ -250,14 +250,23 @@ define method execute-component
         add!(subresults, result);
         result
       end;
+    let ostream = make(<string-stream>, direction: #"output");
     let (status, reason)
       = dynamic-bind (*check-recording-function* = record-result,
                       *benchmark-recording-function* = record-result,
-                      *indent* = next-indent())
+                      *indent* = next-indent(),
+                      // This (intentionally) doesn't affect `test-output` because it
+                      // uses `runner-output-stream`.
+                      *standard-output* = ostream,
+                      *standard-error* = ostream)
           let cond
             = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
                 block ()
                   test.test-function();
+                cleanup
+                  let output = stream-contents(ostream);
+                  ~empty?(output)
+                    & write-captured-output(output);
                 exception (err :: <assertion-failure>,
                            test: curry(handle-condition?, runner))
                   // An assertion failure causes the remainder of a test to be
