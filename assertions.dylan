@@ -521,8 +521,10 @@ define function do-check-condition
     phase := format-to-string("checking if expression %s signals a condition of class %s",
                               expr, condition-class);
     block ()
-      thunk();
-      let reason = "no condition signaled";
+      let (#rest v) = thunk();
+      let reason
+        = concatenate("no condition signaled; return values: ",
+                      join(v, ", ", key: curry(format-to-string, "%s")));
       record-check(description, $failed, reason);
       terminate? & assertion-failure(concatenate(caller, ": ", reason));
     exception (ex :: condition-class)

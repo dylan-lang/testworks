@@ -120,27 +120,44 @@ define function next-indent () => (indent :: <string>)
   concatenate(*indent*, $indent-step)
 end function;
 
-// Return a temporary directory unique to the current test or benchmark. The
-// directory is created the first time this is called for a given test.
-// The directory is _test/<user>-<yyyymmdd-hhmmss>/<full-test-name>/, relative
-// to ${DYLAN}/, if defined, or relative to fs/working-directory() otherwise.
+define function default-runner-temp-directory () => (dir :: <directory-locator>)
+  let dylan = os/environment-variable("DYLAN");
+  let base = if (dylan)
+               as(<directory-locator>, dylan)
+             else
+               fs/working-directory()
+             end;
+  let dated-dir
+    = concatenate(os/login-name() | "unknown",
+                  "-",
+                  date/format("%Y%m%d-%H%M%S", date/now()));
+  // We could just include milliseconds (%F) in the date format below but currently
+  // <date> milliseconds are always zero, at least on Unix.
+  // https://github.com/dylan-lang/testworks/issues/199
+  iterate loop (i = 1)
+    let uniquifier = format-to-string("%s.%d", dated-dir, i);
+    let dir = subdirectory-locator(base, "_test", uniquifier);
+    if (block ()
+          fs/file-exists?(dir)
+        exception (ex :: fs/<file-system-error>)
+          #f
+        end)
+      loop(i + 1)
+    else
+      dir
+    end
+  end
+end function;
+
+// Return a temporary directory unique to the current test or benchmark.
 define function test-temp-directory () => (d :: false-or(<directory-locator>))
   if (instance?(*component*, <runnable>))
-    let dylan = os/environment-variable("DYLAN");
-    let base = if (dylan)
-                 as(<directory-locator>, dylan)
-               else
-                 fs/working-directory()
-               end;
-    let uniquifier
-      = format-to-string("%s-%s", os/login-name() | "unknown",
-                         date/format("%Y%m%d-%H%M%S", date/now()));
     let safe-name = map(method (c)
                           if (c == '\\' | c == '/') '_' else c end
                         end,
                         component-name(*component*));
     let test-directory
-      = subdirectory-locator(base, "_test", uniquifier, safe-name);
+      = subdirectory-locator(runner-temp-directory(*runner*), safe-name);
     fs/ensure-directories-exist(test-directory);
     test-directory
   end
@@ -165,9 +182,8 @@ define function write-test-file
   locator
 end function;
 
-// For tests to do debugging output.
-// TODO(cgay): Collect this and stdio into a log file per test run
-// or per test.  The Surefire report has a place for stdout, too.
+// For output to the main output stream for the test run.  That is, this output is never
+// redirected to the _captured-stdout.txt file in a test's temp directory.
 define method test-output
     (format-string :: <string>, #rest format-args) => ()
   let stream = if (*runner*)
@@ -180,3 +196,17 @@ define method test-output
     force-output(stream);
   end;
 end method;
+
+define constant $captured-output-filename :: <string> = "_captured-stdout.txt";
+
+define variable *output-captured?* :: <boolean> = #f;
+
+define function write-captured-output (output :: <string>)
+  block ()
+    let file = file-locator(test-temp-directory(), $captured-output-filename);
+    write-test-file(file, contents: output);
+    *output-captured?* := #t;
+  exception (err :: <error>)
+    test-output("ERROR writing to test's output file: %s\n%s\n", err, output);
+  end;
+end function;

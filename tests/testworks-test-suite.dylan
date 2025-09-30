@@ -745,6 +745,9 @@ define test test-write-test-file ()
   assert-equal("abc", fs/with-open-file (stream = y)
                         read-to-end(stream)
                       end);
+
+  let z = write-test-file("1/2/3", contents: "123");
+  assert-equal(file-locator(test-temp-directory(), "1", "2", "3"), z);
 end test;
 
 define test test-register-component--duplicate-test-name-causes-error ()

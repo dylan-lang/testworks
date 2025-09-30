@@ -801,7 +801,7 @@ Test Execution
    temporary files created by the test or benchmark. The directory is created
    the first time this function is called for each test or benchmark and is not
    deleted after the test run is complete in case it's useful for post-mortem
-   analysis.  The directory is named ``_test/<user>-<timestamp>/<test-name>``
+   analysis.  The directory is named ``_test/<user>-<timestamp>.1/<test-name>``
    and is rooted at ``$DYLAN``, if defined, or in the current directory
    otherwise.
 

@@ -85,6 +85,10 @@ define open class <test-runner> (<object>)
   // to tests. For example, test data directory pathname.
   constant slot runner-options :: <string-table> = make(<string-table>),
     init-keyword: options:;
+
+  // A place to put temp files created by tests or the runner itself, one subdirectory
+  // per test.
+  constant slot runner-temp-directory :: <locator> = default-runner-temp-directory();
 end class <test-runner>;
 
 
@@ -250,14 +254,23 @@ define method execute-component
         add!(subresults, result);
         result
       end;
+    let ostream = make(<string-stream>, direction: #"output");
     let (status, reason)
       = dynamic-bind (*check-recording-function* = record-result,
                       *benchmark-recording-function* = record-result,
-                      *indent* = next-indent())
+                      *indent* = next-indent(),
+                      // This (intentionally) doesn't affect `test-output` because it
+                      // uses `runner-output-stream`.
+                      *standard-output* = ostream,
+                      *standard-error* = ostream)
           let cond
             = profiling (cpu-time-seconds, cpu-time-microseconds, allocation)
                 block ()
                   test.test-function();
+                cleanup
+                  let output = stream-contents(ostream);
+                  ~empty?(output)
+                    & write-captured-output(output);
                 exception (err :: <assertion-failure>,
                            test: curry(handle-condition?, runner))
                   // An assertion failure causes the remainder of a test to be

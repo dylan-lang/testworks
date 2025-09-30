@@ -291,6 +291,12 @@ define function run-or-list-tests
     else
       report-function(result, *standard-output*);
     end;
+    if (*output-captured?*)
+      test-output("NOTE: Some test output was captured. See %s\n",
+                  file-locator(runner-temp-directory(runner),
+                               "*",
+                               $captured-output-filename));
+    end;
     if (result.result-status == $passed) 0 else 1 end
   end
 end function;
