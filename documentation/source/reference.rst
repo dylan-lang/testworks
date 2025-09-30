@@ -837,8 +837,7 @@ This section describes the APIs necessary for creating a test suite
 programmatically. This is sometimes useful if, for example, tests can be generated from
 available data or are more easily described in a format like JSON.
 
-Create and :func:`register <register-component>` your test components and then call
-:func:`run-test-application` as usual.
+Create your test components and then call :func:`run-test-application` as usual.
 
 .. class:: <component>
    :sealed:
@@ -933,11 +932,3 @@ Create and :func:`register <register-component>` your test components and then c
       See :macro:`suite-definer` for details.
 
    See :class:`<component>` for additional init keywords.
-
-.. function:: register-component
-
-   Register a component (a test, benchmark, or suite) with Testworks so that it will be
-   found and executed during a test run.  All components should be registered.
-
-   :signature: register-component ( *component* )
-   :parameter component: An instance of :class:`<component>`.

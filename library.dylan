@@ -109,7 +109,7 @@ define module testworks
     <benchmark>,
     <test>,
     <suite>,
-    register-component;
+    register-component;         // DEPRECATED: no longer required
 end module testworks;
 
 
