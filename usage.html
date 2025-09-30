@@ -493,6 +493,30 @@ creating a test and provide a method that returns <a class="reference external" 
 <p>Tests that aren’t run because of the <cite>when:</cite> option are marked as <code class="docutils literal notranslate"><span class="pre">SKIPPED</span></code> in the
 results.</p>
 </section>
+<section id="standard-output-error">
+<h4>Standard Output / Error<a class="headerlink" href="#standard-output-error" title="Link to this heading">¶</a></h4>
+<p>Any output to <code class="xref dylan dylan-var docutils literal notranslate"><span class="pre">*standard-output*</span></code> or <code class="xref dylan dylan-var docutils literal notranslate"><span class="pre">*standard-error*</span></code> during a test is
+automatically captured and stored in a file named <code class="file docutils literal notranslate"><span class="pre">_captured-stdout.txt</span></code> in the
+<a class="reference internal" href="reference.html#testworks:testworks:test-temp-directory"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">test's</span> <span class="pre">temporary</span> <span class="pre">directory</span></code></a> so that it doesn’t clutter the
+console output but also can be examined upon test failure.</p>
+</section>
+<section id="temporary-files">
+<h4>Temporary Files<a class="headerlink" href="#temporary-files" title="Link to this heading">¶</a></h4>
+<p>If you need to create temporary files for a test, you can of course use the system temp
+directory, but after multiple test runs it may not be easy to figure out which is the
+correct file to look at when debugging your test.  Instead, use
+<a class="reference internal" href="reference.html#testworks:testworks:test-temp-directory"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">test-temp-directory</span></code></a> and its companion function <a class="reference internal" href="reference.html#testworks:testworks:write-test-file"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">write-test-file</span></code></a> to create
+the files in a directory created specifically for the test.</p>
+<p>Example:</p>
+<div class="highlight-dylan notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">test-something</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="k">let</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">file-locator</span><span class="p">(</span><span class="n">test-temp-directory</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;something.txt&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">write-test-file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="k">contents:</span><span class="w"> </span><span class="s">&quot;hi there&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">...</span>
+<span class="k">end</span><span class="w"> </span><span class="n">test</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">file-locator</span></code> is exported from the <code class="docutils literal notranslate"><span class="pre">locators</span></code> module of the <code class="docutils literal notranslate"><span class="pre">system</span></code> library.</p>
+</section>
 </section>
 <section id="benchmarks">
 <h3>Benchmarks<a class="headerlink" href="#benchmarks" title="Link to this heading">¶</a></h3>
@@ -828,6 +852,8 @@ with full detail.</p>
 <li><a class="reference internal" href="#tags">Tags</a></li>
 <li><a class="reference internal" href="#expected-failure">Expected Failure</a></li>
 <li><a class="reference internal" href="#conditional-execution">Conditional Execution</a></li>
+<li><a class="reference internal" href="#standard-output-error">Standard Output / Error</a></li>
+<li><a class="reference internal" href="#temporary-files">Temporary Files</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#benchmarks">Benchmarks</a></li>

@@ -289,6 +289,36 @@ creating a test and provide a method that returns :drm:`#f` on Windows:
 Tests that aren't run because of the `when:` option are marked as ``SKIPPED`` in the
 results.
 
+Standard Output / Error
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Any output to :var:`*standard-output*` or :var:`*standard-error*` during a test is
+automatically captured and stored in a file named :file:`_captured-stdout.txt` in the
+:func:`test's temporary directory <test-temp-directory>` so that it doesn't clutter the
+console output but also can be examined upon test failure.
+
+Temporary Files
+~~~~~~~~~~~~~~~
+
+If you need to create temporary files for a test, you can of course use the system temp
+directory, but after multiple test runs it may not be easy to figure out which is the
+correct file to look at when debugging your test.  Instead, use
+:func:`test-temp-directory` and its companion function :func:`write-test-file` to create
+the files in a directory created specifically for the test.
+
+Example:
+
+.. code:: dylan
+
+   define test test-something ()
+     let file = file-locator(test-temp-directory(), "something.txt");
+     write-test-file(file, contents: "hi there");
+     ...
+   end test;
+
+:func:`file-locator` is exported from the ``locators`` module of the ``system`` library.
+
+
 Benchmarks
 ----------
 
