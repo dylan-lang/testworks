@@ -8,6 +8,13 @@ Warranty:     Distributed WITHOUT WARRANTY OF ANY KIND
 
 /// Some utilities for testing TestWorks
 
+// Make tests with this so that register?: #f is provided.  make-suite is already
+// exported from %testworks so there is no equivalent for making suites; just remember to
+// pass register?: #f to make(<suite>) or make-suite.
+define function make-test (name, function, #rest args)
+  apply(make, <test>, name: name, function: function, register?: #f, args)
+end function;
+
 define function run-component (comp, #key components)
   if (~components)
     components := make(<stretchy-vector>);
@@ -23,9 +30,7 @@ end function;
 // return the assertion's result: $passed, $failed, etc.
 define function do-with-result
     (thunk :: <function>) => (status :: <result>)
-  let test = make(<test>,
-                  name: "anonymous",
-                  function: thunk);
+  let test = make-test("anonymous", thunk);
   let result = run-component(test);
   let subresults = result.result-subresults;
   assert-equal(1, subresults.size,
@@ -482,11 +487,11 @@ end test test-run-tests/suite;
 define test test-run-tests/suite-setup-failure ()
   let suite
     = make-suite("setup-failure-suite",
-                 vector(make(<test>,
-                             name: "setup-failure-passing-test",
-                             function: method () assert-true(#t) end)),
+                 vector(make-test("setup-failure-passing-test",
+                                  method () assert-true(#t) end)),
                  setup-function:
-                   curry(error, "error in setup-failure-suite setup function"));
+                   curry(error, "error in setup-failure-suite setup function"),
+                 register?: #f);
   let suite-result = run-component(suite);
   assert-equal($crashed, suite-result.result-status,
                "run-tests returns $crashed when suite setup fails");
@@ -501,11 +506,11 @@ define test test-run-tests/suite-cleanup-failure ()
     = make(<suite>,
            name: "cleanup-failure-suite",
            components:
-             vector(make(<test>,
-                         name: "cleanup-failure-passing-test",
-                         function: method () assert-true(#t) end)),
+             vector(make-test("cleanup-failure-passing-test",
+                              method () assert-true(#t) end)),
            cleanup-function:
-             curry(error, "error in cleanup-failure-suite cleanup function"));
+             curry(error, "error in cleanup-failure-suite cleanup function"),
+           register?: #f);
   let suite-result = run-component(suite);
   assert-equal($crashed, suite-result.result-status,
                "run-tests returns $crashed when suite cleanup fails");
@@ -526,22 +531,20 @@ define test test-suite-setup-for-specified-test ()
   let top
     = make-suite("top",
                  list(make-suite("middle1",
-                                 list(make(<test>,
-                                           name: "test1",
-                                           function: method () assert-true(#t) end),
-                                      make(<test>,
-                                           name: "test2",
-                                           function: curry(error, "test2 error"))),
+                                 list(make-test("test1",
+                                                method () assert-true(#t) end),
+                                      make-test("test2",
+                                                curry(error, "test2 error"))),
                                  setup-function:   method () middle1-setup?   := #t end,
                                  cleanup-function: method () middle1-cleanup? := #t end),
                       make-suite("middle2",
-                                 list(make(<test>,
-                                           name: "test3",
-                                           function: method () assert-true(#t) end)),
+                                 list(make-test("test3",
+                                                method () assert-true(#t) end)),
                                  setup-function:   method () middle2-setup?   := #t end,
                                  cleanup-function: method () middle2-cleanup? := #t end)),
                  setup-function: method () top-setup? := #t end,
-                 cleanup-function: method () top-cleanup? := #t end);
+                 cleanup-function: method () top-cleanup? := #t end,
+                 register?: #f);
   let result = run-component(top, components: compute-components(top, #[], #["test2"], #[]));
   expect(top-setup?);
   expect(top-cleanup?);
@@ -556,45 +559,43 @@ end test;
 // then run as normal tests (which would fail).
 
 define constant test-expected-to-fail-always
-  = make(<test>,
-         name: "test-expected-to-fail-always",
-         function: method () assert-true(#f) end,
-         // Intentionally not passing `expected-to-fail-test:` here. The test
-         // should be expected to fail because a reason is provided.
-         expected-to-fail-reason: "because of assert-true(#f)");
+  = make-test("test-expected-to-fail-always",
+              method () assert-true(#f) end,
+              // Intentionally not passing `expected-to-fail-test:` here. The test
+              // should be expected to fail because a reason is provided.
+              expected-to-fail-reason: "because of assert-true(#f)");
 
 define constant test-expected-to-fail-maybe
-  = make(<test>,
-         name: "test-expected-to-fail-maybe",
-         function: method () assert-true(#f) end,
-         expected-to-fail-test: method () #t end,
-         expected-to-fail-reason: "because of assert-true(#f)");
+  = make-test("test-expected-to-fail-maybe",
+              method () assert-true(#f) end,
+              expected-to-fail-test: method () #t end,
+              expected-to-fail-reason: "because of assert-true(#f)");
 
 define constant test-expected-to-crash-always
-  = make(<test>,
-         name: "test-expected-to-crash-always",
-         function: curry(error, "test-expected-to-crash-always"),
-         expected-to-fail-test: method () #t end,
-         expected-to-fail-reason: "because of error(...)");
+  = make-test("test-expected-to-crash-always",
+              curry(error, "test-expected-to-crash-always"),
+              expected-to-fail-test: method () #t end,
+              expected-to-fail-reason: "because of error(...)");
 
 define constant expected-to-fail-suite
   = make(<suite>,
          name: "expected-to-fail-suite",
          components: vector(test-expected-to-fail-always,
                             test-expected-to-fail-maybe,
-                            test-expected-to-crash-always));
+                            test-expected-to-crash-always),
+         register?: #f);
 
 define constant test-unexpected-success
-  = make(<test>,
-         name: "test-unexpected-success",
-         function: method () assert-true(#t) end,
-         expected-to-fail-test: always(#t),
-         expected-to-fail-reason: "because of assert-true(#t)");
+  = make-test("test-unexpected-success",
+              method () assert-true(#t) end,
+              expected-to-fail-test: always(#t),
+              expected-to-fail-reason: "because of assert-true(#t)");
 
 define constant unexpected-success-suite
   = make(<suite>,
          name: "unexpected-success-suite",
-         components: vector(test-unexpected-success));
+         components: vector(test-unexpected-success),
+         register?: #f);
 
 define test test-run-tests-expect-failure/suite ()
   assert-true(result-passing?(run-component(expected-to-fail-suite)),
@@ -688,28 +689,25 @@ define test test-tags-match? ()
   for (input in inputs)
     let (match-expected?, input-strings) = apply(values, input);
     let requested-tags = parse-tags(input-strings);
-    let test = make(<test>,
-                    tags: test-tags,
-                    name: "test",
-                    function: method () end);
+    let test = make-test("test", method () end, tags: test-tags);
     assert-equal(match-expected?, tags-match?(requested-tags, test),
                  format-to-string("Requested tags: %=", requested-tags));
   end;
   assert-true(tags-match?(parse-tags(#("-verbose")),
-                          make(<test>, tags: #(), name: "test", function: method() end)),
+                          make-test("test", method() end, tags: #())),
               "Negative tags match tests with no tags.");
   assert-false(tags-match?(parse-tags(#("verbose")),
-                           make(<test>, tags: #(), name: "test", function: method() end)),
+                           make-test("test", method() end, tags: #())),
               "Positive tags do not match tests with no tags.");
 end test test-tags-match?;
 
 // Negated tags shouldn't be allowed in test definitions.
 define test test-negative-tags-on-tests ()
-  assert-signals(<error>, make(<test>, name: "t", tags: #("-foo"), function: method() end));
+  assert-signals(<error>, make-test("t", method() end, tags: #("-foo")));
 end;
 
 define test test-make-test-converts-strings-to-tags ()
-  let test = make(<test>, name: "t", tags: #("foo"), function: method() end);
+  let test = make-test("t", method() end, tags: #("foo"));
   assert-true(every?(rcurry(instance?, <tag>), test.test-tags));
 end;
 
@@ -752,8 +750,8 @@ end test;
 
 define test test-register-component--duplicate-test-name-causes-error ()
   let n = size($components);
+  // Exlicitly using make(<test>) instead of make-test, so test is registered.
   let test = make(<test>, name: "t", function: method() end);
-  assert-no-errors(register-component(test));
   assert-equal(size($components), n + 1);
   assert-signals(<error>, register-component(test));
   assert-equal(size($components), n + 1); // no change
@@ -762,60 +760,59 @@ define test test-register-component--duplicate-test-name-causes-error ()
 end;
 
 define test test-that-not-implemented-is-not-a-failure ()
-  let test = make(<test>,
-                  name: "not-implemented-test",
-                  function: method () end);
+  let test = make-test("not-implemented-test",
+                       method () end);
   let suite = make(<suite>,
                    name: "not-implemented-suite",
-                   components: vector(test));
+                   components: vector(test),
+                   register?: #f);
   let result = run-component(suite);
   assert-equal($not-implemented, result.result-status);
 end;
 
 define test test-that-not-implemented-plus-passed-is-passed ()
-  let test1 = make(<test>,
-                   name: "not-implemented",
-                   function: method () end);
-  let test2 = make(<test>,
-                   name: "passed",
-                   function: method () assert-true(#t); end);
+  let test1 = make-test("not-implemented",
+                        method () end);
+  let test2 = make-test("passed",
+                        method () assert-true(#t); end);
   let suite = make(<suite>,
                    name: "not-implemented-suite",
-                   components: vector(test1, test2));
+                   components: vector(test1, test2),
+                   register?: #f);
   let result = run-component(suite);
   assert-equal($passed, result.result-status);
 end;
 
 define test test-included-in-suite-multiple-times ()
-  let test1 = make(<test>,
-                   name: "tarantella",
-                   function: always("tarantella"));
-  let test2 = make(<test>,
-                   name: "bach cello suites",
-                   function: always("bach cello suites"));
+  let test1 = make-test("tarantella",
+                        always("tarantella"));
+  let test2 = make-test("bach cello suites",
+                        always("bach cello suites"));
   let benchmark1 = make(<benchmark>,
                         name: "initials",
                         function: always("initials"));
   assert-no-errors(make(<suite>,
                         name: "suite 1",
-                        components: list(test1, test2, benchmark1)));
+                        components: list(test1, test2, benchmark1),
+                        register?: #f));
   // TODO(cgay): signal <testwork-error> throughout testworks code
   assert-signals(<error>,
                  make(<suite>,
                       name: "suite 2",
-                      components: list(test1, test1)));
+                      components: list(test1, test1),
+                      register?: #f));
   assert-signals(<error>,
                  make(<suite>,
                       name: "suite 3",
                       components: list(test1, make(<suite>,
                                                    name: "suite 4",
-                                                   components: list(test1)))));
+                                                   components: list(test1))),
+                      register?: #f));
 end test;
 
 define function check-description (test-function, want-string)
-  let test = make(<test>,
-                  name: "no name",
-                  function: test-function);
+  let test = make-test("no name",
+                       test-function);
   let result = run-component(test);
   let report = with-output-to-string (stream)
                  print-full-report(result, stream)
@@ -965,14 +962,12 @@ end test;
 define test test-component-test/suite ()
   let suite
     = make-suite("ct-suite",
-                 list(make(<test>,
-                           name: "ct-test",
-                           function: method ()
-                                       expect(#t);
-                                     end)),
+                 list(make-test("ct-test",
+                                method () expect(#t); end)),
                  when: method ()
                          values(#f, "reason")
-                       end);
+                       end,
+                 register?: #f);
   let result = run-component(suite);
   assert-equal($skipped, result.result-status);
   assert-equal("reason", result.result-reason);
@@ -988,19 +983,18 @@ end test;
 define test test-component-test/test ()
   let suite
     = make-suite("ct-suite2",
-                 list(make(<test>,
-                           name: "ct-test2",
-                           function: method ()
-                                       expect(#t);
-                                     end,
-                           when: method ()
-                                   values(#f, "reason")
-                                 end),
-                      make(<test>,
-                           name: "ct-test3",
-                           function: method ()
-                                       expect(#t);
-                                     end)));
+                 list(make-test("ct-test2",
+                                method ()
+                                  expect(#t);
+                                end,
+                                when: method ()
+                                        values(#f, "reason")
+                                      end),
+                      make-test("ct-test3",
+                                method ()
+                                  expect(#t);
+                                end)),
+                 register?: #f);
   let result = run-component(suite);
   assert-equal($passed, result.result-status);
   assert-false(result.result-reason);
@@ -1074,9 +1068,8 @@ end test;
 
 define test test-debug-option--crashes ()
   let crashing-test
-    = make(<test>,
-           name: "test-debug-option-1",
-           function: curry(error, "error in test-debug-option-1"));
+    = make-test("test-debug-option-1",
+                curry(error, "error in test-debug-option-1"));
   let result-1 = #f;
   let runner-1 = make(<test-runner>,
                       components: list(crashing-test),
@@ -1098,11 +1091,10 @@ end test;
 
 define test test-debug-option--failures ()
   let failing-test
-    = make(<test>,
-           name: "test-debug-option-2",
-           function: method ()
-                       assert-true(#f, "failed assertion in test-debug-option-2");
-                     end);
+    = make-test("test-debug-option-2",
+                method ()
+                  assert-true(#f, "failed assertion in test-debug-option-2");
+                end);
   let result-1 = #f;
   let runner-1 = make(<test-runner>,
                       components: list(failing-test),
@@ -1128,12 +1120,11 @@ end test;
 define test test-bug-183 ()
   let it = #f;
   let failing-test
-    = make(<test>,
-           name: "test-bug-183",
-           function: method ()
-                       assert-true(#f);
-                       it := #t;
-                     end);
+    = make-test("test-bug-183",
+                method ()
+                  assert-true(#f);
+                  it := #t;
+                end);
   let runner = make(<test-runner>,
                     components: list(failing-test),
                     progress: $progress-none,
