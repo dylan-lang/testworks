@@ -1253,8 +1253,7 @@ create them. Examples:</p>
 <p>This section describes the APIs necessary for creating a test suite
 programmatically. This is sometimes useful if, for example, tests can be generated from
 available data or are more easily described in a format like JSON.</p>
-<p>Create and <a class="reference internal" href="#testworks:testworks:register-component"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">register</span></code></a> your test components and then call
-<a class="reference internal" href="#testworks:testworks:run-test-application"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">run-test-application</span></code></a> as usual.</p>
+<p>Create your test components and then call <a class="reference internal" href="#testworks:testworks:run-test-application"><code class="xref dylan dylan-func docutils literal notranslate"><span class="pre">run-test-application</span></code></a> as usual.</p>
 <dl class="dylan class">
 <dt class="sig sig-object dylan-api dylan" id="testworks:testworks:[component]">
 <span class="sig-name descname"><span class="pre">&lt;component&gt;</span></span> <em class="property"><span class="pre">Abstract</span> <span class="pre">Sealed</span> <span class="pre">Class</span></em><a class="headerlink" href="#testworks:testworks:[component]" title="Link to this definition">¶</a></dt>
@@ -1354,23 +1353,6 @@ they can be added to the <a class="reference external" href="https://opendylan.o
 </dd>
 </dl>
 <p>See <a class="reference internal" href="#testworks:testworks:[component]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a> for additional init keywords.</p>
-</dd></dl>
-
-<dl class="dylan function">
-<dt class="sig sig-object dylan-api dylan" id="testworks:testworks:register-component">
-<span class="sig-name descname"><span class="pre">register-component</span></span> <em class="property"><span class="pre">Function</span></em><a class="headerlink" href="#testworks:testworks:register-component" title="Link to this definition">¶</a></dt>
-<dd><p>Register a component (a test, benchmark, or suite) with Testworks so that it will be
-found and executed during a test run.  All components should be registered.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Signature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>register-component ( <em>component</em> )</p>
-</dd>
-<dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>component</strong> – An instance of <a class="reference internal" href="#testworks:testworks:[component]"><code class="xref dylan dylan-class docutils literal notranslate"><span class="pre">&lt;component&gt;</span></code></a>.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </section>
@@ -1481,7 +1463,6 @@ found and executed during a test run.  All components should be registered.</p>
 <li><a class="reference internal" href="#testworks:testworks:[benchmark]"><code class="docutils literal notranslate"><span class="pre">&lt;benchmark&gt;</span></code></a></li>
 <li><a class="reference internal" href="#testworks:testworks:[test]"><code class="docutils literal notranslate"><span class="pre">&lt;test&gt;</span></code></a></li>
 <li><a class="reference internal" href="#testworks:testworks:[suite]"><code class="docutils literal notranslate"><span class="pre">&lt;suite&gt;</span></code></a></li>
-<li><a class="reference internal" href="#testworks:testworks:register-component"><code class="docutils literal notranslate"><span class="pre">register-component</span></code></a></li>
 </ul>
 </li>
 </ul>
