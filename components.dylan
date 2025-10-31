@@ -34,8 +34,15 @@ define class <suite> (<component>)
     init-keyword: cleanup-function:;
 end class <suite>;
 
-define method make (class == <suite>, #rest args, #key) => (suite :: <suite>)
+define method make
+    (class == <suite>, #rest args, #key register? = #t) => (suite :: <suite>)
   let suite = next-method();
+  for (comp in suite.suite-components)
+    comp.component-parent := suite;
+  end;
+  when (register?)
+    register-component(suite);
+  end;
   check-for-tests-included-multiple-times(suite);
   suite
 end;
@@ -98,7 +105,7 @@ define abstract class <runnable> (<component>)
 end class <runnable>;
 
 define method make
-    (class :: subclass(<runnable>), #rest args, #key name, tags)
+    (class :: subclass(<runnable>), #rest args, #key name, tags, register? = #t)
  => (runnable :: <runnable>)
   let tags = map(make-tag, tags | #[]);
   let negative = choose(tag-negated?, tags);
@@ -106,7 +113,11 @@ define method make
     error("tags associated with tests or benchmarks may not be negated."
             " test = %s, tags = %s", name, negative);
   end;
-  apply(next-method, class, tags: tags, args)
+  let runnable = apply(next-method, class, tags: tags, args);
+  when (register?)
+    register-component(runnable);
+  end;
+  runnable
 end method;
 
 define method expected-to-fail? (runnable :: <runnable>)
@@ -182,18 +193,11 @@ end;
 
 /// Suites
 
+// DEPRECATED: use make(<suite>) directly
 define method make-suite
     (name :: <string>, components, #rest keyword-args)
  => (suite :: <suite>)
-  let suite = apply(make, <suite>,
-                    name: name,
-                    components: components,
-                    keyword-args);
-  for (comp in components)
-    comp.component-parent := suite;
-  end;
-  register-component(suite);
-  suite
+  apply(make, <suite>, name: name, components: components, keyword-args)
 end method make-suite;
 
 define macro suite-definer
@@ -220,7 +224,7 @@ define macro test-definer
                                       name: ?"test-name",
                                       function: "%%" ## ?test-name,
                                       ?keyword-args);
-    register-component(?test-name);
+    ignorable(?test-name);
   }
 end macro test-definer;
 
@@ -233,7 +237,7 @@ define macro benchmark-definer
              name: ?"test-name",
              function: "%%" ## ?test-name,
              ?keyword-args);
-    register-component(?test-name);
+    ignorable(?test-name);
   }
 end macro benchmark-definer;
 
