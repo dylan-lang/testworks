@@ -83,7 +83,7 @@ accomplish this:
               run.
 
 #.  Compile your test library as a shared library and run it with the
-    ``testworks-run`` application. For example, for the `foo-test` library::
+    ``testworks-run`` application. For example, for the ``foo-test`` library::
 
       _build/bin/testworks-run --load libfoo-test.so
 
@@ -286,7 +286,7 @@ creating a test and provide a method that returns :drm:`#f` on Windows:
      ...
    end;
 
-Tests that aren't run because of the `when:` option are marked as ``SKIPPED`` in the
+Tests that aren't run because of the ``when:`` option are marked as ``SKIPPED`` in the
 results.
 
 Standard Output / Error
