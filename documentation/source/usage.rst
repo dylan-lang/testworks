@@ -625,3 +625,52 @@ Quick version:
 *  (master branch)$ my-test-suite --report json --report-file out1.json
 *  (your branch)$ my-test-suite --report json --report-file out2.json
 *  $ testworks-report out1.json out2.json
+
+Code Coverage
+=============
+
+When using the LLVM back-end, it is possible to enable the code
+generator's support for :program:`gcov` code coverage
+tooling. Measuring code coverage is often useful when writing unit
+tests with :lib:`testworks` to ensure that all significant code in
+the library under test is being exercised.
+
+To enable code coverage, edit the
+:file:`share/opendylan/build-scripts/config.jam` file and add a line
+to set the ``COVERAGE`` Jam variable to a non-empty value::
+
+    COVERAGE ?= true ;
+
+This will add the ``--coverage`` command-line flag to
+:program:`dylan-compiler` invocations of the LLVM code generator,
+causing ``.gcno`` coverage note files to be generated alongside the
+object files in the :file:`build` directories.
+
+Note that since compiler optimizations can collapse or reorder program
+code, it is usually a good idea to lower the code generator
+optimization level, e.g., by changing the ``-O2`` or higher flag in
+the ``CCFLAGS`` configuration variable (also found in
+:file:`config.jam`) to ``-Og`` or ``-O``.
+
+After doing a clean build of :program:`testworks-run` and the test
+suite library with the ``COVERAGE`` flag enabled, you can execute the
+test target, for example::
+
+    ./_build/bin/testworks-run --load ./_build/lib/libsystem-test-suite.so \
+        --run system-test-suite
+
+After the test executes, the :program:`gcov` runtime will write
+``.gcda`` coverage data files alongside the build object files. You
+can analyze the test suite's coverage of the library being tested
+using the :program:`llvm-cov` program included in the LLVM tools:
+
+.. code-block:: console
+
+    $ for da in ./_build/build/system/*.gcda; do
+    >   llvm-cov gcov $da
+    > done
+
+This will write a number of ``.dylan.gcov`` annotation files in the
+current directory. These indicate which of the instrumented locations
+in the test target were actually executed (and thus exercised by the
+test suite, or by testworks itself), and if so how many times.
