@@ -787,6 +787,49 @@ with full detail.</p>
 <li><p>$ testworks-report out1.json out2.json</p></li>
 </ul>
 </section>
+<section id="code-coverage">
+<h2>Code Coverage<a class="headerlink" href="#code-coverage" title="Link to this heading">¶</a></h2>
+<p>When using the LLVM back-end, it is possible to enable the code
+generator’s support for <strong class="program">gcov</strong> code coverage
+tooling. Measuring code coverage is often useful when writing unit
+tests with <code class="xref dylan dylan-lib docutils literal notranslate"><span class="pre">testworks</span></code> to ensure that all significant code in
+the library under test is being exercised.</p>
+<p>To enable code coverage, edit the
+<code class="file docutils literal notranslate"><span class="pre">share/opendylan/build-scripts/config.jam</span></code> file and add a line
+to set the <code class="docutils literal notranslate"><span class="pre">COVERAGE</span></code> Jam variable to a non-empty value:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>COVERAGE ?= true ;
+</pre></div>
+</div>
+<p>This will add the <code class="docutils literal notranslate"><span class="pre">--coverage</span></code> command-line flag to
+<strong class="program">dylan-compiler</strong> invocations of the LLVM code generator,
+causing <code class="docutils literal notranslate"><span class="pre">.gcno</span></code> coverage note files to be generated alongside the
+object files in the <code class="file docutils literal notranslate"><span class="pre">build</span></code> directories.</p>
+<p>Note that since compiler optimizations can collapse or reorder program
+code, it is usually a good idea to lower the code generator
+optimization level, e.g., by changing the <code class="docutils literal notranslate"><span class="pre">-O2</span></code> or higher flag in
+the <code class="docutils literal notranslate"><span class="pre">CCFLAGS</span></code> configuration variable (also found in
+<code class="file docutils literal notranslate"><span class="pre">config.jam</span></code>) to <code class="docutils literal notranslate"><span class="pre">-Og</span></code> or <code class="docutils literal notranslate"><span class="pre">-O</span></code>.</p>
+<p>After doing a clean build of <strong class="program">testworks-run</strong> and the test
+suite library with the <code class="docutils literal notranslate"><span class="pre">COVERAGE</span></code> flag enabled, you can execute the
+test target, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">_build</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">testworks</span><span class="o">-</span><span class="n">run</span> <span class="o">--</span><span class="n">load</span> <span class="o">./</span><span class="n">_build</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">libsystem</span><span class="o">-</span><span class="n">test</span><span class="o">-</span><span class="n">suite</span><span class="o">.</span><span class="n">so</span> \
+    <span class="o">--</span><span class="n">run</span> <span class="n">system</span><span class="o">-</span><span class="n">test</span><span class="o">-</span><span class="n">suite</span>
+</pre></div>
+</div>
+<p>After the test executes, the <strong class="program">gcov</strong> runtime will write
+<code class="docutils literal notranslate"><span class="pre">.gcda</span></code> coverage data files alongside the build object files. You
+can analyze the test suite’s coverage of the library being tested
+using the <strong class="program">llvm-cov</strong> program included in the LLVM tools:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="k">for</span><span class="w"> </span>da<span class="w"> </span><span class="k">in</span><span class="w"> </span>./_build/build/system/*.gcda<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="go">&gt;   llvm-cov gcov $da</span>
+<span class="go">&gt; done</span>
+</pre></div>
+</div>
+<p>This will write a number of <code class="docutils literal notranslate"><span class="pre">.dylan.gcov</span></code> annotation files in the
+current directory. These indicate which of the instrumented locations
+in the test target were actually executed (and thus exercised by the
+test suite, or by testworks itself), and if so how many times.</p>
+</section>
 </section>
 
         </article>
@@ -865,6 +908,7 @@ with full detail.</p>
 <li><a class="reference internal" href="#running-tests-as-a-stand-alone-application">Running Tests As A Stand-alone Application</a></li>
 <li><a class="reference internal" href="#reports">Reports</a></li>
 <li><a class="reference internal" href="#comparing-test-results">Comparing Test Results</a></li>
+<li><a class="reference internal" href="#code-coverage">Code Coverage</a></li>
 </ul>
 </li>
 </ul>
